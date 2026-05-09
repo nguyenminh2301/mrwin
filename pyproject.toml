@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mrwin"
+version = "0.5.2"
+description = "Causal Win Statistics for Hierarchical Composite Endpoints"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Nguyen Thien Minh", email = "minhnt@ump.edu.vn"},
+    {name = "N. Ahmad Aziz", email = "Ahmad.Aziz@dzne.de"},
+]
+keywords = [
+    "win ratio",
+    "Mendelian randomization",
+    "instrumental variables",
+    "causal inference",
+    "composite endpoints",
+    "multiplier bootstrap",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+dependencies = [
+    "numpy>=2.0",
+    "scipy>=1.13",
+    "statsmodels>=0.14",
+]
+
+[project.urls]
+Homepage = "https://github.com/nguyenminh2301/mrwin"
+Repository = "https://github.com/nguyenminh2301/mrwin"
+Issues = "https://github.com/nguyenminh2301/mrwin/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-timeout>=2.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["python"]
+include = ["p1_engine_v5*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/python"]
+pythonpath = ["python"]
+addopts = "-v --timeout=120"
