@@ -1,8 +1,8 @@
 # mrwin
 
-`mrwin` is a work-in-progress code repository for causal win-statistic methods.
+`mrwin` is a work-in-progress R package for causal win-statistic methods on hierarchical composite endpoints.
 
-The repository is being organized around an R package as the primary interface. The current Python implementation is retained only as a prototype and test harness while the R package code is developed.
+The primary implementation is now under `R/`. The Python implementation is retained under `python/` as a prototype and validation harness while the R package matures.
 
 ## Current layout
 
@@ -10,17 +10,50 @@ The repository is being organized around an R package as the primary interface. 
 mrwin/
 ├── DESCRIPTION          R package metadata scaffold
 ├── NAMESPACE            R namespace scaffold
-├── R/                   Future R package code
+├── R/                   R package implementation
 ├── python/              Python prototype code used for validation
 ├── tests/
 │   ├── python/          Python prototype tests
-│   └── testthat/        Future R package tests
+│   └── testthat/        R package tests
 ├── requirements.txt     Python prototype dependencies
 ├── pyproject.toml       Python prototype packaging/test config
 └── run_all.sh           Optional Python prototype runner
 ```
 
-## Python prototype
+## R API
+
+Core exported functions:
+
+- `mrwin_config()` and `mrwin_simulate()` create v5-style simulation inputs.
+- `mrwin_kernel()` computes the hierarchical pairwise win/loss/tie kernel.
+- `mrwin_estimate()` computes adjacent-stratum log-CWR and ISG point estimates.
+- `mrwin_multiplier_bootstrap()` estimates DS-CWR, GLS standard error, bivariate-Delta CI, Fieller CI, and Q heterogeneity diagnostics.
+- `mrwin_aalen_per_snp()`, `mrwin_cox_per_snp()`, and `mrwin_mr_egger()` implement SDPD components.
+- `mrwin_pleiotropy_bounded_ci()` widens the DS-CWR CI by an SDPD-implied bias band.
+
+Minimal example:
+
+```r
+cfg <- mrwin_config(n_outcome = 500, m_snps = 20, seed = 1)
+dat <- mrwin_simulate(cfg)
+
+fit <- mrwin_multiplier_bootstrap(
+  time = dat$time,
+  status = dat$status,
+  G = dat$G,
+  X = dat$X,
+  beta_hat = dat$true_betas,
+  sigma_beta = rep(0.01, length(dat$true_betas)),
+  n_strata = 5,
+  B = 100,
+  seed = 2
+)
+
+fit$dscwr
+fit$ci95_dscwr
+```
+
+## Python Prototype
 
 The Python code is not the intended long-term package interface. It is kept to preserve the current computational checks while the R implementation is written.
 
@@ -29,8 +62,6 @@ python -m pip install -r requirements.txt
 python -m pytest
 ```
 
-## R package scaffold
+## Scope
 
-R package code should be added under `R/`. Tests for the R package should go under `tests/testthat/`.
-
-The scaffold is intentionally minimal so manuscript drafts, replication outputs, and generated report files do not become part of the code repository.
+The repository intentionally excludes manuscript drafts, replication outputs, and generated report files. Code and package tests belong here; paper text and publication artifacts should stay outside the repository or in a separate manuscript repository.

@@ -1,0 +1,79 @@
+mrwin_simulate <- function(config = mrwin_config(), seed = config$seed) {
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
+
+  n <- config$n_outcome
+  m <- config$m_snps
+  k <- 3L
+
+  mafs <- stats::runif(m, config$maf_low, config$maf_high)
+  g_raw <- vapply(mafs, function(p) stats::rbinom(n, 2L, p), numeric(n))
+  g <- scale(g_raw)
+  storage.mode(g) <- "double"
+
+  true_betas <- stats::rnorm(m, 0, config$sigma_beta)
+  s_true <- drop(g %*% true_betas)
+  u <- stats::rnorm(n)
+
+  if (config$theta_f > 0) {
+    w <- stats::rgamma(n, shape = 1 / config$theta_f, scale = config$theta_f)
+  } else {
+    w <- rep(1, n)
+  }
+
+  x <- config$alpha_s * s_true + config$alpha_u * u + stats::rnorm(n)
+  log_w <- log(w)
+
+  event_time <- matrix(NA_real_, nrow = n, ncol = k)
+  for (j in seq_len(k)) {
+    lp <- config$alpha_x[j] * x +
+      config$nu_u[j] * u +
+      config$gamma_direct[j] * s_true +
+      log_w
+    event_time[, j] <- .mrwin_weibull_inv(
+      rate = config$baseline_haz[j],
+      shape = config$shape_weibull,
+      lp = lp
+    )
+  }
+
+  censor_time <- pmin(
+    stats::rexp(n, rate = config$censoring_rate),
+    config$max_follow_up
+  )
+
+  t_death <- event_time[, 1L]
+  t_hf <- event_time[, 2L]
+  t_renal <- event_time[, 3L]
+
+  time <- cbind(
+    pmin(t_death, censor_time),
+    pmin(t_hf, censor_time, t_death),
+    pmin(t_renal, censor_time, t_death)
+  )
+  status <- cbind(
+    as.integer(t_death <= censor_time),
+    as.integer(t_hf <= censor_time & t_hf <= t_death),
+    as.integer(t_renal <= censor_time & t_renal <= t_death)
+  )
+  colnames(time) <- colnames(status) <- c("death", "hf", "renal")
+
+  list(
+    G = g,
+    mafs = mafs,
+    true_betas = true_betas,
+    S_true = s_true,
+    U = u,
+    W = w,
+    X = x,
+    time = time,
+    status = status,
+    censor_time = censor_time,
+    config = config
+  )
+}
+
+.mrwin_weibull_inv <- function(rate, shape, lp) {
+  (-log(stats::runif(length(lp))) / (rate * exp(lp)))^(1 / shape)
+}
