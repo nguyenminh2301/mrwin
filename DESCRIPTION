@@ -3,6 +3,8 @@ Title: Causal Win Statistics
 Version: 0.0.0.9000
 Authors@R:
     person("Nguyen Thien", "Minh", email = "minhnt@ump.edu.vn", role = c("aut", "cre"))
+Author: Nguyen Thien Minh [aut, cre]
+Maintainer: Nguyen Thien Minh <minhnt@ump.edu.vn>
 Description: R implementation of causal win-statistic methods for hierarchical
     composite endpoints, including the hierarchical comparison kernel,
     adjacent-stratum causal win ratios, dose-standardised GLS pooling,

@@ -152,19 +152,23 @@ mrwin <- function(
     )
   }
 
-  endpoint <- if (inherits(endpoint, "mrwin_endpoint_spec")) {
-    endpoint
-  } else if (is.list(endpoint) && !is.null(endpoint$time) && !is.null(endpoint$status)) {
-    mrwin_endpoint(endpoint$time, endpoint$status, endpoint$priority)
-  } else {
-    stop("`endpoint` must be an `mrwin_endpoint()` object or a list with `time` and `status`.", call. = FALSE)
-  }
-
-  endpoint_data <- .mrwin_resolve_endpoint(endpoint, data)
-  G <- .mrwin_resolve_matrix(genotype, data, "genotype")
-  X <- .mrwin_resolve_vector(exposure, data, "exposure")
-  gwas <- .mrwin_resolve_gwas(gwas, beta_gwas, se_gwas)
-  .mrwin_validate_analysis_inputs(endpoint_data$time, endpoint_data$status, G, X, gwas)
+  validated <- mrwin_validate_data(
+    data = data,
+    endpoint = endpoint,
+    genotype = genotype,
+    exposure = exposure,
+    gwas = gwas,
+    beta_gwas = beta_gwas,
+    se_gwas = se_gwas,
+    covariates = covariates,
+    controls = controls
+  )
+  endpoint <- validated$endpoint
+  endpoint_data <- list(time = validated$time, status = validated$status)
+  G <- validated$G
+  X <- validated$X
+  gwas <- validated$gwas
+  warning_log <- c(warning_log, .mrwin_issue_warnings_to_fit_warnings(validated$issues))
 
   if (!is.null(gwas$covariance)) {
     warning_log <- .mrwin_add_warning(
@@ -223,7 +227,8 @@ mrwin <- function(
       m_snps = ncol(G),
       n_priorities = ncol(endpoint_data$time),
       n_strata = controls$n_strata,
-      bootstrap = controls$bootstrap
+      bootstrap = controls$bootstrap,
+      rows_used = validated$rows_used
     ),
     endpoint_info = list(priority = endpoint$priority),
     instrument_info = list(
@@ -252,6 +257,7 @@ mrwin <- function(
       q_p_value = boot$q_p_value
     ),
     diagnostics = list(
+      validation = validated$issues,
       ledoit_wolf_rho = boot$ledoit_wolf_rho,
       kurtosis_log_theta = boot$kurtosis_log_theta,
       kurtosis_delta_x = boot$kurtosis_delta_x,
@@ -348,31 +354,6 @@ mrwin <- function(
     stop("Supply `gwas = mrwin_gwas(...)` or `beta_gwas`.", call. = FALSE)
   }
   mrwin_gwas(beta_gwas, se_gwas)
-}
-
-.mrwin_validate_analysis_inputs <- function(time, status, G, X, gwas) {
-  if (!all(dim(time) == dim(status))) {
-    stop("Endpoint `time` and `status` must have the same dimensions.", call. = FALSE)
-  }
-  if (nrow(time) != nrow(G) || length(X) != nrow(G)) {
-    stop("Endpoint, genotype, and exposure inputs must have the same number of rows.", call. = FALSE)
-  }
-  if (ncol(G) != length(gwas$beta)) {
-    stop("Number of genotype columns must match GWAS beta length.", call. = FALSE)
-  }
-  if (anyNA(time) || anyNA(status) || anyNA(G) || anyNA(X)) {
-    stop("WP1 requires complete endpoint, genotype, and exposure data.", call. = FALSE)
-  }
-  if (any(!is.finite(time)) || any(time < 0)) {
-    stop("Endpoint times must be finite and non-negative.", call. = FALSE)
-  }
-  if (!all(status %in% c(0, 1))) {
-    stop("Endpoint status values must be binary 0/1.", call. = FALSE)
-  }
-  if (any(apply(G, 2L, stats::sd) <= 0)) {
-    stop("All genotype columns must have non-zero variance.", call. = FALSE)
-  }
-  invisible(TRUE)
 }
 
 .mrwin_lm_per_snp <- function(G, X) {

@@ -1,0 +1,12 @@
+^\.git$
+^\.github$
+^\.gitattributes$
+^\.gitignore$
+^\.pytest_cache$
+^.*\.Rcheck$
+^\.\.Rcheck$
+^python$
+^tests/python$
+^pyproject\.toml$
+^requirements\.txt$
+^run_all\.sh$

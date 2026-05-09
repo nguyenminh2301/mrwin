@@ -46,6 +46,13 @@ htmlcov/
 # mypy
 .mypy_cache/
 
+# R
+*.Rcheck/
+*.tar.gz
+.Rhistory
+.RData
+.Ruserdata
+
 # Manuscript drafts and generated writing artifacts
 manuscript/
 drafts/

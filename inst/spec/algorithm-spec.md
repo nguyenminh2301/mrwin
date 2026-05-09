@@ -809,7 +809,7 @@ User-facing summaries must avoid overclaiming:
 | Gap | Priority | Blocking for full package? |
 |---|---:|---|
 | High-level `mrwin()` workflow | P0 | Yes |
-| Data validation layer | P0 | Yes |
+| Data validation layer | P0 | Implemented in WP2; expand as new backends/adjustment modes are added |
 | Production IPTW with bootstrap refit | P0 | Yes |
 | ESS and bridging | P0 | Yes |
 | Sparse backend | P1 | Required for large data, not for first small release |

@@ -26,6 +26,7 @@ Core exported functions:
 
 - `mrwin()` runs the high-level individual-level workflow.
 - `mrwin_endpoint()`, `mrwin_gwas()`, and `mrwin_controls()` define analysis inputs explicitly.
+- `mrwin_validate_data()` checks endpoint, genotype, exposure, GWAS, covariates, strata, and terminal-event consistency before estimation.
 - `mrwin_config()` and `mrwin_simulate()` create v5-style simulation inputs.
 - `mrwin_kernel()` computes the hierarchical pairwise win/loss/tie kernel.
 - `mrwin_estimate()` computes adjacent-stratum log-CWR and ISG point estimates.
