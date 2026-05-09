@@ -24,6 +24,8 @@ mrwin/
 
 Core exported functions:
 
+- `mrwin()` runs the high-level individual-level workflow.
+- `mrwin_endpoint()`, `mrwin_gwas()`, and `mrwin_controls()` define analysis inputs explicitly.
 - `mrwin_config()` and `mrwin_simulate()` create v5-style simulation inputs.
 - `mrwin_kernel()` computes the hierarchical pairwise win/loss/tie kernel.
 - `mrwin_estimate()` computes adjacent-stratum log-CWR and ISG point estimates.
@@ -37,20 +39,16 @@ Minimal example:
 cfg <- mrwin_config(n_outcome = 500, m_snps = 20, seed = 1)
 dat <- mrwin_simulate(cfg)
 
-fit <- mrwin_multiplier_bootstrap(
-  time = dat$time,
-  status = dat$status,
-  G = dat$G,
-  X = dat$X,
-  beta_hat = dat$true_betas,
-  sigma_beta = rep(0.01, length(dat$true_betas)),
-  n_strata = 5,
-  B = 100,
-  seed = 2
+fit <- mrwin(
+  endpoint = mrwin_endpoint(dat$time, dat$status, c("death", "hf", "renal")),
+  genotype = dat$G,
+  exposure = dat$X,
+  gwas = mrwin_gwas(dat$true_betas, rep(0.01, length(dat$true_betas))),
+  controls = mrwin_controls(n_strata = 5, bootstrap = 100, seed = 2)
 )
 
-fit$dscwr
-fit$ci95_dscwr
+summary(fit)
+plot(fit)
 ```
 
 ## Python Prototype

@@ -1,0 +1,443 @@
+mrwin_endpoint <- function(time, status, priority = NULL) {
+  if (missing(time) || missing(status)) {
+    stop("`time` and `status` are required.", call. = FALSE)
+  }
+  if (is.character(time) != is.character(status)) {
+    stop("`time` and `status` must both be column names or both be matrices.", call. = FALSE)
+  }
+
+  n_priority <- if (is.character(time)) {
+    length(time)
+  } else {
+    ncol(as.matrix(time))
+  }
+  if (length(status) != length(time) && is.character(time)) {
+    stop("`time` and `status` column vectors must have the same length.", call. = FALSE)
+  }
+  if (!is.character(time) && !all(dim(as.matrix(time)) == dim(as.matrix(status)))) {
+    stop("`time` and `status` matrices must have the same dimensions.", call. = FALSE)
+  }
+
+  if (is.null(priority)) {
+    priority <- if (!is.character(time) && !is.null(colnames(as.matrix(time)))) {
+      colnames(as.matrix(time))
+    } else {
+      paste0("priority_", seq_len(n_priority))
+    }
+  }
+  if (length(priority) != n_priority) {
+    stop("`priority` must match the number of endpoint columns.", call. = FALSE)
+  }
+
+  structure(
+    list(time = time, status = status, priority = as.character(priority)),
+    class = "mrwin_endpoint_spec"
+  )
+}
+
+mrwin_gwas <- function(beta, se = NULL, snp = NULL, covariance = NULL) {
+  if (missing(beta)) {
+    stop("`beta` is required.", call. = FALSE)
+  }
+  beta <- as.numeric(beta)
+  if (any(!is.finite(beta))) {
+    stop("`beta` must contain finite values.", call. = FALSE)
+  }
+
+  if (!is.null(covariance)) {
+    covariance <- as.matrix(covariance)
+    if (!all(dim(covariance) == c(length(beta), length(beta)))) {
+      stop("`covariance` must be an M x M matrix matching `beta`.", call. = FALSE)
+    }
+    if (is.null(se)) {
+      se <- sqrt(pmax(diag(covariance), 0))
+    }
+  }
+  if (is.null(se)) {
+    se <- rep(0, length(beta))
+  }
+  se <- as.numeric(se)
+  if (length(se) != length(beta)) {
+    stop("`se` must have the same length as `beta`.", call. = FALSE)
+  }
+  if (any(!is.finite(se)) || any(se < 0)) {
+    stop("`se` must be finite and non-negative.", call. = FALSE)
+  }
+  if (is.null(snp)) {
+    snp <- paste0("snp_", seq_along(beta))
+  }
+  if (length(snp) != length(beta)) {
+    stop("`snp` must have the same length as `beta`.", call. = FALSE)
+  }
+
+  structure(
+    list(beta = beta, se = se, snp = as.character(snp), covariance = covariance),
+    class = "mrwin_gwas_spec"
+  )
+}
+
+mrwin_controls <- function(
+    n_strata = 10L,
+    bootstrap = 200L,
+    seed = NULL,
+    block_size = 4000L,
+    run_sdpd = TRUE,
+    sdpd_scale = c("aalen", "cox", "both", "none"),
+    sdpd_alpha = 0.05,
+    adjustment = c("none", "ordinal_iptw", "gps"),
+    backend = c("dense", "sparse", "rcpp"),
+    delta_x_tol = 1e-8
+) {
+  sdpd_scale <- match.arg(sdpd_scale)
+  adjustment <- match.arg(adjustment)
+  backend <- match.arg(backend)
+
+  out <- list(
+    n_strata = as.integer(n_strata),
+    bootstrap = as.integer(bootstrap),
+    seed = seed,
+    block_size = as.integer(block_size),
+    run_sdpd = isTRUE(run_sdpd),
+    sdpd_scale = sdpd_scale,
+    sdpd_alpha = sdpd_alpha,
+    adjustment = adjustment,
+    backend = backend,
+    delta_x_tol = delta_x_tol
+  )
+  .mrwin_validate_controls(out)
+  structure(out, class = "mrwin_controls")
+}
+
+mrwin <- function(
+    data = NULL,
+    endpoint,
+    genotype,
+    exposure,
+    gwas = NULL,
+    beta_gwas = NULL,
+    se_gwas = NULL,
+    covariates = NULL,
+    controls = mrwin_controls(),
+    n_strata = NULL,
+    bootstrap = NULL,
+    seed = NULL,
+    run_sdpd = NULL,
+    ...
+) {
+  call <- match.call()
+  dots <- list(...)
+  if (length(dots) > 0L) {
+    stop("Unused arguments: ", paste(names(dots), collapse = ", "), call. = FALSE)
+  }
+
+  controls <- .mrwin_as_controls(controls)
+  if (!is.null(n_strata)) controls$n_strata <- as.integer(n_strata)
+  if (!is.null(bootstrap)) controls$bootstrap <- as.integer(bootstrap)
+  if (!is.null(seed)) controls$seed <- seed
+  if (!is.null(run_sdpd)) controls$run_sdpd <- isTRUE(run_sdpd)
+  .mrwin_validate_controls(controls)
+
+  warning_log <- list()
+  if (controls$backend != "dense") {
+    stop("WP1 supports only `backend = \"dense\"`; sparse/Rcpp backends are planned.", call. = FALSE)
+  }
+  if (controls$adjustment != "none") {
+    stop("WP1 supports only `adjustment = \"none\"`; IPTW/GPS is planned for a later work package.", call. = FALSE)
+  }
+  if (!is.null(covariates)) {
+    warning_log <- .mrwin_add_warning(
+      warning_log,
+      "covariates_ignored",
+      "Covariates were supplied, but adjustment = 'none', so they were not used."
+    )
+  }
+
+  endpoint <- if (inherits(endpoint, "mrwin_endpoint_spec")) {
+    endpoint
+  } else if (is.list(endpoint) && !is.null(endpoint$time) && !is.null(endpoint$status)) {
+    mrwin_endpoint(endpoint$time, endpoint$status, endpoint$priority)
+  } else {
+    stop("`endpoint` must be an `mrwin_endpoint()` object or a list with `time` and `status`.", call. = FALSE)
+  }
+
+  endpoint_data <- .mrwin_resolve_endpoint(endpoint, data)
+  G <- .mrwin_resolve_matrix(genotype, data, "genotype")
+  X <- .mrwin_resolve_vector(exposure, data, "exposure")
+  gwas <- .mrwin_resolve_gwas(gwas, beta_gwas, se_gwas)
+  .mrwin_validate_analysis_inputs(endpoint_data$time, endpoint_data$status, G, X, gwas)
+
+  if (!is.null(gwas$covariance)) {
+    warning_log <- .mrwin_add_warning(
+      warning_log,
+      "full_covariance_not_used",
+      "Full GWAS covariance was supplied but WP1 bootstrap uses the diagonal standard errors."
+    )
+  }
+
+  boot <- mrwin_multiplier_bootstrap(
+    time = endpoint_data$time,
+    status = endpoint_data$status,
+    G = G,
+    X = X,
+    beta_hat = gwas$beta,
+    sigma_beta = gwas$se,
+    n_strata = controls$n_strata,
+    B = controls$bootstrap,
+    seed = controls$seed,
+    block_size = controls$block_size
+  )
+
+  if (any(abs(boot$point_delta_x) <= controls$delta_x_tol, na.rm = TRUE) ||
+      any(!is.finite(boot$ci95_delta_fieller))) {
+    warning_log <- .mrwin_add_warning(
+      warning_log,
+      "weak_instrument",
+      "At least one adjacent phenotypic shift is near zero or the Fieller interval is unbounded."
+    )
+  }
+
+  sdpd <- NULL
+  if (controls$run_sdpd && controls$sdpd_scale != "none") {
+    sdpd <- .mrwin_run_sdpd(
+      G = G,
+      X = X,
+      time = endpoint_data$time[, 1L],
+      status = endpoint_data$status[, 1L],
+      scale = controls$sdpd_scale,
+      alpha = controls$sdpd_alpha
+    )
+    rejected <- vapply(sdpd$results, function(x) isTRUE(x$rejected), logical(1))
+    if (any(rejected)) {
+      warning_log <- .mrwin_add_warning(
+        warning_log,
+        "sdpd_rejected",
+        "SDPD MR-Egger intercept rejected on at least one scale; cCWR validity is questionable."
+      )
+    }
+  }
+
+  fit <- list(
+    call = call,
+    data_info = list(
+      n = nrow(G),
+      m_snps = ncol(G),
+      n_priorities = ncol(endpoint_data$time),
+      n_strata = controls$n_strata,
+      bootstrap = controls$bootstrap
+    ),
+    endpoint_info = list(priority = endpoint$priority),
+    instrument_info = list(
+      snp = gwas$snp,
+      beta = gwas$beta,
+      se = gwas$se,
+      diagonal_gwas_covariance = is.null(gwas$covariance)
+    ),
+    point = list(
+      log_theta = boot$point_log_theta,
+      delta_x = boot$point_delta_x,
+      delta_isg = boot$delta_isg,
+      delta_gls = boot$delta_gls,
+      dscwr = boot$dscwr
+    ),
+    inference = list(
+      se_delta_gls = boot$se_delta_gls,
+      ci95_delta = boot$ci95_delta,
+      ci95_dscwr = boot$ci95_dscwr,
+      ci95_delta_fieller = boot$ci95_delta_fieller,
+      ci95_dscwr_fieller = boot$ci95_dscwr_fieller
+    ),
+    heterogeneity = list(
+      q = boot$q,
+      q_df = boot$q_df,
+      q_p_value = boot$q_p_value
+    ),
+    diagnostics = list(
+      ledoit_wolf_rho = boot$ledoit_wolf_rho,
+      kurtosis_log_theta = boot$kurtosis_log_theta,
+      kurtosis_delta_x = boot$kurtosis_delta_x,
+      skew_log_theta = boot$skew_log_theta,
+      skew_delta_x = boot$skew_delta_x,
+      n_valid_bootstrap = boot$n_valid
+    ),
+    sdpd = sdpd,
+    warnings = warning_log,
+    controls = controls,
+    bootstrap = boot,
+    session_info = list(r_version = R.version.string)
+  )
+  class(fit) <- c("mrwin_fit", "list")
+  fit
+}
+
+.mrwin_as_controls <- function(controls) {
+  if (inherits(controls, "mrwin_controls")) {
+    return(controls)
+  }
+  if (is.list(controls)) {
+    return(do.call(mrwin_controls, controls))
+  }
+  stop("`controls` must be an `mrwin_controls()` object or a list.", call. = FALSE)
+}
+
+.mrwin_validate_controls <- function(controls) {
+  if (!is.numeric(controls$n_strata) || controls$n_strata < 2L) {
+    stop("`n_strata` must be at least 2.", call. = FALSE)
+  }
+  if (!is.numeric(controls$bootstrap) || controls$bootstrap < 2L) {
+    stop("`bootstrap` must be at least 2.", call. = FALSE)
+  }
+  if (!is.numeric(controls$block_size) || controls$block_size < 1L) {
+    stop("`block_size` must be positive.", call. = FALSE)
+  }
+  if (!is.numeric(controls$sdpd_alpha) || controls$sdpd_alpha <= 0 || controls$sdpd_alpha >= 1) {
+    stop("`sdpd_alpha` must be between 0 and 1.", call. = FALSE)
+  }
+  if (!is.numeric(controls$delta_x_tol) || controls$delta_x_tol < 0) {
+    stop("`delta_x_tol` must be non-negative.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+.mrwin_resolve_endpoint <- function(endpoint, data) {
+  time <- .mrwin_resolve_matrix(endpoint$time, data, "endpoint time")
+  status <- .mrwin_resolve_matrix(endpoint$status, data, "endpoint status")
+  storage.mode(status) <- "integer"
+  list(time = time, status = status)
+}
+
+.mrwin_resolve_matrix <- function(x, data, label) {
+  if (is.character(x)) {
+    if (is.null(data)) {
+      stop("`data` is required when ", label, " is specified by column names.", call. = FALSE)
+    }
+    missing_cols <- setdiff(x, names(data))
+    if (length(missing_cols) > 0L) {
+      stop("Missing ", label, " columns: ", paste(missing_cols, collapse = ", "), call. = FALSE)
+    }
+    out <- as.matrix(data[, x, drop = FALSE])
+  } else {
+    out <- as.matrix(x)
+  }
+  storage.mode(out) <- "double"
+  out
+}
+
+.mrwin_resolve_vector <- function(x, data, label) {
+  if (is.character(x) && length(x) == 1L) {
+    if (is.null(data)) {
+      stop("`data` is required when ", label, " is specified by a column name.", call. = FALSE)
+    }
+    if (!x %in% names(data)) {
+      stop("Missing ", label, " column: ", x, call. = FALSE)
+    }
+    out <- data[[x]]
+  } else {
+    out <- x
+  }
+  as.numeric(out)
+}
+
+.mrwin_resolve_gwas <- function(gwas, beta_gwas, se_gwas) {
+  if (inherits(gwas, "mrwin_gwas_spec")) {
+    return(gwas)
+  }
+  if (is.list(gwas) && !is.null(gwas$beta)) {
+    return(mrwin_gwas(gwas$beta, gwas$se, gwas$snp, gwas$covariance))
+  }
+  if (is.null(beta_gwas)) {
+    stop("Supply `gwas = mrwin_gwas(...)` or `beta_gwas`.", call. = FALSE)
+  }
+  mrwin_gwas(beta_gwas, se_gwas)
+}
+
+.mrwin_validate_analysis_inputs <- function(time, status, G, X, gwas) {
+  if (!all(dim(time) == dim(status))) {
+    stop("Endpoint `time` and `status` must have the same dimensions.", call. = FALSE)
+  }
+  if (nrow(time) != nrow(G) || length(X) != nrow(G)) {
+    stop("Endpoint, genotype, and exposure inputs must have the same number of rows.", call. = FALSE)
+  }
+  if (ncol(G) != length(gwas$beta)) {
+    stop("Number of genotype columns must match GWAS beta length.", call. = FALSE)
+  }
+  if (anyNA(time) || anyNA(status) || anyNA(G) || anyNA(X)) {
+    stop("WP1 requires complete endpoint, genotype, and exposure data.", call. = FALSE)
+  }
+  if (any(!is.finite(time)) || any(time < 0)) {
+    stop("Endpoint times must be finite and non-negative.", call. = FALSE)
+  }
+  if (!all(status %in% c(0, 1))) {
+    stop("Endpoint status values must be binary 0/1.", call. = FALSE)
+  }
+  if (any(apply(G, 2L, stats::sd) <= 0)) {
+    stop("All genotype columns must have non-zero variance.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+.mrwin_lm_per_snp <- function(G, X) {
+  G <- as.matrix(G)
+  X <- as.numeric(X)
+  m <- ncol(G)
+  beta <- se <- rep(NA_real_, m)
+  for (j in seq_len(m)) {
+    design <- cbind(1, G[, j])
+    xtx <- crossprod(design)
+    inv <- tryCatch(solve(xtx), error = function(e) NULL)
+    if (is.null(inv)) {
+      beta[j] <- 0
+      se[j] <- Inf
+      next
+    }
+    coef <- inv %*% crossprod(design, X)
+    resid <- X - drop(design %*% coef)
+    sigma2 <- sum(resid^2) / max(length(X) - 2L, 1L)
+    vcov <- sigma2 * inv
+    beta[j] <- coef[2L, 1L]
+    se[j] <- sqrt(max(vcov[2L, 2L], 1e-20))
+  }
+  list(beta = beta, se = se)
+}
+
+.mrwin_run_sdpd <- function(G, X, time, status, scale, alpha) {
+  beta_x <- .mrwin_lm_per_snp(G, X)
+  scales <- if (scale == "both") c("aalen", "cox") else scale
+  results <- lapply(scales, function(one_scale) {
+    outcome <- if (one_scale == "aalen") {
+      mrwin_aalen_per_snp(G, time, status)
+    } else {
+      mrwin_cox_per_snp(G, time, status)
+    }
+    egger <- tryCatch(
+      mrwin_mr_egger(beta_x$beta, outcome$beta, outcome$se),
+      error = function(e) list(error = conditionMessage(e))
+    )
+    if (is.null(egger$error)) {
+      egger$rejected <- isTRUE(egger$intercept_p_value < alpha)
+    }
+    egger$scale <- one_scale
+    egger
+  })
+  names(results) <- scales
+  list(
+    alpha = alpha,
+    exposure_summary = beta_x,
+    results = results
+  )
+}
+
+.mrwin_add_warning <- function(warnings, code, message) {
+  warnings[[length(warnings) + 1L]] <- list(code = code, message = message)
+  warnings
+}
+
+.mrwin_warnings_df <- function(warnings) {
+  if (length(warnings) == 0L) {
+    return(data.frame(code = character(), message = character()))
+  }
+  data.frame(
+    code = vapply(warnings, `[[`, character(1), "code"),
+    message = vapply(warnings, `[[`, character(1), "message"),
+    stringsAsFactors = FALSE
+  )
+}

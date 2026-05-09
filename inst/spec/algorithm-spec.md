@@ -597,6 +597,10 @@ Already present or partially present:
 
 | Function | Status | Notes |
 |---|---|---|
+| `mrwin()` | implemented | WP1 high-level dense/no-adjustment workflow. Sparse and IPTW/GPS are blocked until later work packages. |
+| `mrwin_endpoint()` | implemented | Declares endpoint columns/matrices and priority order. |
+| `mrwin_gwas()` | implemented | Declares GWAS beta/se/covariance; full covariance stored but diagonal bootstrap only in WP1. |
+| `mrwin_controls()` | implemented | Declares strata/bootstrap/backend/SDPD options. |
 | `mrwin_config()` | implemented | Needs validation tests for invalid parameter lengths/ranges. |
 | `mrwin_simulate()` | implemented | Simplified v5 DGP; needs parity fixtures. |
 | `mrwin_kernel()` | implemented | Dense R backend; needs sparse/Rcpp backend. |
