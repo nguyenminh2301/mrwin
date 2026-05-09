@@ -4,6 +4,7 @@ Version: WP0 freeze, 2026-05-09
 Repository target: `mrwin` R package
 Primary manuscript source: Paper 1 v5.2, with v5 and v5.1 review deltas reconciled
 Implementation policy: R is the user-facing package; Python remains a reference oracle until parity is proven.
+Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP3.
 
 ## 1. Source Audit
 

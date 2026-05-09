@@ -69,3 +69,5 @@ The repository intentionally excludes manuscript drafts, replication outputs, an
 ## Implementation Spec
 
 The package implementation plan is frozen in [inst/spec/algorithm-spec.md](inst/spec/algorithm-spec.md). This document maps the paper v5.1/v5.2 methods to R package functions, test oracles, edge cases, and remaining implementation gaps.
+
+The canonical work-package sequence is tracked in [inst/spec/work-package-roadmap.md](inst/spec/work-package-roadmap.md). It records WP0 plus the 12 main work packages WP1-WP12, with progress complete through WP3.
