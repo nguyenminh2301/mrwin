@@ -65,3 +65,7 @@ python -m pytest
 ## Scope
 
 The repository intentionally excludes manuscript drafts, replication outputs, and generated report files. Code and package tests belong here; paper text and publication artifacts should stay outside the repository or in a separate manuscript repository.
+
+## Implementation Spec
+
+The package implementation plan is frozen in [inst/spec/algorithm-spec.md](inst/spec/algorithm-spec.md). This document maps the paper v5.1/v5.2 methods to R package functions, test oracles, edge cases, and remaining implementation gaps.
