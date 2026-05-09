@@ -109,7 +109,7 @@ Required properties:
 Package API:
 
 - low-level dense: `mrwin_kernel(time, status, block_size)`.
-- low-level block/sparse backend: to be added, equivalent to Python `kernel_sparse.py`.
+- low-level block/sparse backend: `mrwin_pair_kernel()`, `mrwin_pair_win_loss()`, `mrwin_pair_log_cwr()`, and `mrwin_sparse_adjacent_win_loss()`.
 - weighted aggregation: `mrwin_stratum_win_loss(kernel, idx_high, idx_low, weights)`.
 - log contrast: `mrwin_stratum_log_cwr(...)`.
 
@@ -603,7 +603,11 @@ Already present or partially present:
 | `mrwin_controls()` | implemented | Declares strata/bootstrap/backend/SDPD options. |
 | `mrwin_config()` | implemented | Needs validation tests for invalid parameter lengths/ranges. |
 | `mrwin_simulate()` | implemented | Simplified v5 DGP; needs parity fixtures. |
-| `mrwin_kernel()` | implemented | Dense R backend; needs sparse/Rcpp backend. |
+| `mrwin_kernel()` | implemented | Dense R backend. |
+| `mrwin_pair_kernel()` | implemented | Sparse/block kernel for one high-vs-low stratum pair. |
+| `mrwin_pair_win_loss()` | implemented | Sparse win/loss/total aggregation for one stratum pair. |
+| `mrwin_pair_log_cwr()` | implemented | Sparse log-CWR for one stratum pair. |
+| `mrwin_sparse_adjacent_win_loss()` | implemented | Sparse adjacent stratum summaries; high-level sparse bootstrap not wired yet. |
 | `mrwin_stratum_win_loss()` | implemented | Needs more weighted edge-case tests. |
 | `mrwin_stratum_log_cwr()` | implemented | Needs floor warning metadata. |
 | `mrwin_prs_strata()` | implemented | Needs deterministic tie tests. |

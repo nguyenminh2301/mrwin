@@ -29,6 +29,7 @@ Core exported functions:
 - `mrwin_validate_data()` checks endpoint, genotype, exposure, GWAS, covariates, strata, and terminal-event consistency before estimation.
 - `mrwin_config()` and `mrwin_simulate()` create v5-style simulation inputs.
 - `mrwin_kernel()` computes the hierarchical pairwise win/loss/tie kernel.
+- `mrwin_pair_kernel()` and related pair functions compute sparse stratum-pair kernel blocks equivalent to dense kernel slices.
 - `mrwin_estimate()` computes adjacent-stratum log-CWR and ISG point estimates.
 - `mrwin_multiplier_bootstrap()` estimates DS-CWR, GLS standard error, bivariate-Delta CI, Fieller CI, and Q heterogeneity diagnostics.
 - `mrwin_aalen_per_snp()`, `mrwin_cox_per_snp()`, and `mrwin_mr_egger()` implement SDPD components.
