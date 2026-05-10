@@ -4,7 +4,7 @@ Version: WP0 freeze, 2026-05-09
 Repository target: `mrwin` R package
 Primary manuscript source: Paper 1 v5.2, with v5 and v5.1 review deltas reconciled
 Implementation policy: R is the user-facing package; Python remains a reference oracle until parity is proven.
-Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP3.
+Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP4.
 
 ## 1. Source Audit
 
@@ -612,8 +612,8 @@ Already present or partially present:
 | `mrwin_stratum_win_loss()` | implemented | Needs more weighted edge-case tests. |
 | `mrwin_stratum_log_cwr()` | implemented | Needs floor warning metadata. |
 | `mrwin_prs_strata()` | implemented | Needs deterministic tie tests. |
-| `mrwin_estimate()` | implemented | Point adjacent contrasts; no AL-CWR yet. |
-| `mrwin_gls_pool()` | implemented | Uses approximate shrinkage; needs production LW review. |
+| `mrwin_estimate()` | implemented | WP4 point estimator: adjacent CWR, log-CWR, Delta-X, ISG, validated inputs, Python oracle fixture. |
+| `mrwin_gls_pool()` | implemented | WP4 GLS DS-CWR and Q statistic; uses approximate shrinkage when requested, production LW review remains later. |
 | `mrwin_multiplier_bootstrap()` | implemented | No IPTW/bridging yet. |
 | `mrwin_aalen_per_snp()` | implemented | Needs validation against survival-package reference or Python. |
 | `mrwin_cox_per_snp()` | implemented | Approximate Cox; needs parity/reference tests. |
@@ -724,6 +724,7 @@ Create fixed-seed fixtures under `inst/extdata/oracle/`:
 | Fixture | Python source | R target |
 |---|---|---|
 | `kernel_small.rds/json` | `kernel.py` | exact equality. |
+| `wp4_estimator_small.R` | `kernel.py` plus Python GLS formula | fixed point-estimator and no-shrink GLS/Q parity. |
 | `dgp_small.rds/json` | `dgp.py` | dimension and summary parity, not exact RNG parity unless generated externally. |
 | `bootstrap_small.json` | `multiplier_bootstrap.py` | tolerance parity for `delta_GLS`, `se`, covariance dimensions. |
 | `sdpd_small.json` | `inference.py` | tolerance parity for Aalen/Cox/MR-Egger. |
