@@ -4,7 +4,7 @@ Version: WP0 freeze, 2026-05-09
 Repository target: `mrwin` R package
 Primary manuscript source: Paper 1 v5.2, with v5 and v5.1 review deltas reconciled
 Implementation policy: R is the user-facing package; Python remains a reference oracle until parity is proven.
-Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP4.
+Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP5.
 
 ## 1. Source Audit
 
@@ -218,11 +218,15 @@ Required output from bootstrap:
 - matrix `LT`: `B x (D-1)` perturbed log-theta values.
 - matrix `DX`: `B x (D-1)` perturbed phenotypic shifts.
 - valid iteration count.
+- joint covariance `Cov([LT | DX])`.
+- bivariate-Delta covariance `Sigma_ISG` evaluated at point estimates.
+- Fieller interval and bounded/unbounded flag.
 - moment diagnostics for `LT` and `DX`: kurtosis and skewness.
 
 Package API:
 
 - `mrwin_multiplier_bootstrap(...)`.
+- deterministic test hooks `beta_draws` and `multiplier_weights` are supported for oracle/unit testing; ordinary users should rely on `seed`.
 
 Acceptance tests:
 
@@ -614,7 +618,7 @@ Already present or partially present:
 | `mrwin_prs_strata()` | implemented | Needs deterministic tie tests. |
 | `mrwin_estimate()` | implemented | WP4 point estimator: adjacent CWR, log-CWR, Delta-X, ISG, validated inputs, Python oracle fixture. |
 | `mrwin_gls_pool()` | implemented | WP4 GLS DS-CWR and Q statistic; uses approximate shrinkage when requested, production LW review remains later. |
-| `mrwin_multiplier_bootstrap()` | implemented | No IPTW/bridging yet. |
+| `mrwin_multiplier_bootstrap()` | implemented | WP5 bootstrap inference: reproducible multiplier bootstrap, bivariate-Delta covariance, Fieller interval, moment diagnostics. No IPTW/bridging yet. |
 | `mrwin_aalen_per_snp()` | implemented | Needs validation against survival-package reference or Python. |
 | `mrwin_cox_per_snp()` | implemented | Approximate Cox; needs parity/reference tests. |
 | `mrwin_mr_egger()` | implemented | Needs robust input validation. |
