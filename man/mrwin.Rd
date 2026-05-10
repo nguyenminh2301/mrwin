@@ -27,6 +27,7 @@
 \alias{mrwin_pleiotropy_bounded_ci}
 \alias{mrwin_propensity_weights}
 \alias{mrwin_sdpd}
+\alias{mrwin_sparse_adjacent_win_loss}
 \title{Causal win statistics for hierarchical composite endpoints}
 \description{
 R implementation of causal win-statistic methods for hierarchical composite endpoints.

@@ -60,8 +60,8 @@ test_that("mrwin blocks unsupported WP1 options explicitly", {
       genotype = dat$G,
       exposure = dat$X,
       gwas = mrwin_gwas(dat$true_betas, rep(0.01, length(dat$true_betas))),
-      controls = mrwin_controls(n_strata = 4, bootstrap = 5, backend = "sparse", run_sdpd = FALSE)
+      controls = mrwin_controls(n_strata = 4, bootstrap = 5, backend = "rcpp", run_sdpd = FALSE)
     ),
-    "supports only `backend = \"dense\"`"
+    "rcpp"
   )
 })

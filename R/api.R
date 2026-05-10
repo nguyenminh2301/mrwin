@@ -149,8 +149,8 @@ mrwin <- function(
   .mrwin_validate_controls(controls)
 
   warning_log <- list()
-  if (controls$backend != "dense") {
-    stop("WP1 supports only `backend = \"dense\"`; sparse/Rcpp backends are planned.", call. = FALSE)
+  if (controls$backend == "rcpp") {
+    stop("`backend = \"rcpp\"` is planned for a later work package; use `dense` or `sparse`.", call. = FALSE)
   }
   if (controls$adjustment == "gps") {
     stop("`adjustment = \"gps\"` is planned for a later work package; use `ordinal_iptw` or `none`.", call. = FALSE)
@@ -192,22 +192,40 @@ mrwin <- function(
     )
   }
 
-  boot <- mrwin_multiplier_bootstrap(
-    time = endpoint_data$time,
-    status = endpoint_data$status,
-    G = G,
-    X = X,
-    beta_hat = gwas$beta,
-    sigma_beta = gwas$se,
-    n_strata = controls$n_strata,
-    B = controls$bootstrap,
-    seed = controls$seed,
-    block_size = controls$block_size,
-    covariates = validated$covariates,
-    adjustment = controls$adjustment,
-    iptw_truncation = controls$iptw_truncation,
-    ess_fraction = controls$ess_fraction
-  )
+  if (controls$backend == "sparse") {
+    boot <- mrwin_sparse_bootstrap(
+      time = endpoint_data$time,
+      status = endpoint_data$status,
+      G = G,
+      X = X,
+      beta_hat = gwas$beta,
+      sigma_beta = gwas$se,
+      n_strata = controls$n_strata,
+      B = controls$bootstrap,
+      seed = controls$seed,
+      covariates = validated$covariates,
+      adjustment = controls$adjustment,
+      iptw_truncation = controls$iptw_truncation,
+      ess_fraction = controls$ess_fraction
+    )
+  } else {
+    boot <- mrwin_multiplier_bootstrap(
+      time = endpoint_data$time,
+      status = endpoint_data$status,
+      G = G,
+      X = X,
+      beta_hat = gwas$beta,
+      sigma_beta = gwas$se,
+      n_strata = controls$n_strata,
+      B = controls$bootstrap,
+      seed = controls$seed,
+      block_size = controls$block_size,
+      covariates = validated$covariates,
+      adjustment = controls$adjustment,
+      iptw_truncation = controls$iptw_truncation,
+      ess_fraction = controls$ess_fraction
+    )
+  }
 
   if (any(abs(boot$point_delta_x) <= controls$delta_x_tol, na.rm = TRUE) ||
       any(!is.finite(boot$ci95_delta_fieller))) {

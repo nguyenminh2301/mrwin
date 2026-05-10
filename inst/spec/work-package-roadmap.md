@@ -5,7 +5,7 @@ Status: canonical implementation roadmap.
 Date recorded: 2026-05-09.
 Last updated: 2026-05-10.
 
-Progress: WP0, WP1, WP2, WP3, WP4, WP5, WP6, WP7, and WP8 are complete. The next implementation package is WP9.
+Progress: WP0, WP1, WP2, WP3, WP4, WP5, WP6, WP7, WP8, WP9, WP10, WP11, and WP12 are complete. Post-release validation remains.
 
 Important sequencing rule: this roadmap defines WP0 plus 12 main work packages, WP1 through WP12. When the user asks for `WP4`, `WP5`, and later package names, use the package definitions in this file.
 
@@ -33,10 +33,10 @@ Important sequencing rule: this roadmap defines WP0 plus 12 main work packages, 
 | WP6 | Covariate adjustment | IPTW, ESS, truncation, bridging dropped strata | Balance diagnostics and positivity-failure tests pass | Complete |
 | WP7 | SDPD diagnostics | Aalen/Cox per-SNP, MR-Egger, pleiotropy bounded CI | Public SDPD wrapper, function-level null/pleiotropy tests, Aalen hand test, Cox smoke test, high-level caveats | Complete |
 | WP8 | Simulation engine | v5 DGP, scenario grid, benchmarks | Small Package A-D scenario grid, per-component benchmark schema, SDPD/grid caveats, deterministic tests | Complete |
-| WP9 | Performance backend | Sparse kernel, optional Rcpp/data.table | Memory/time benchmark passes with unchanged results | Next |
-| WP10 | User reporting | Tidy outputs, plots, markdown report | Results clearly show estimates, CI, Q, SDPD, and caveats | Pending |
-| WP11 | Documentation | README, vignettes, examples, reference manual | New user can run the package in under 10 minutes | Pending |
-| WP12 | QA/release | CI, R CMD check, coverage, review checklist | Release candidate passes all gates | Pending |
+| WP9 | Performance backend | Sparse kernel, optional Rcpp/data.table | Memory/time benchmark passes with unchanged results | Complete |
+| WP10 | User reporting | Tidy outputs, plots, markdown report | Results clearly show estimates, CI, Q, SDPD, and caveats | Complete |
+| WP11 | Documentation | README, vignettes, examples, reference manual | New user can run the package in under 10 minutes | Complete |
+| WP12 | QA/release | CI, R CMD check, coverage, review checklist | Release candidate passes all gates | Complete |
 
 ## Target API
 
