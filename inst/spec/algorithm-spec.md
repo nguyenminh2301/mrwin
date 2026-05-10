@@ -1,6 +1,7 @@
 # mrwin WP0 Algorithm Specification
 
 Version: WP0 freeze, 2026-05-09
+Last updated: 2026-05-10
 Repository target: `mrwin` R package
 Primary manuscript source: Paper 1 v5.2, with v5 and v5.1 review deltas reconciled
 Implementation policy: R is the user-facing package; Python remains a reference oracle until parity is proven.
@@ -36,6 +37,12 @@ The package must support two workflows.
    - Outputs: simulation cohorts, benchmark summaries, Python parity fixtures, coverage/type-I/power checks.
 
 Summary-data-only estimation is out of scope for the first complete release except as a future extension hook.
+
+Current package checkpoint:
+
+- WP0-WP7 are implemented in R.
+- Python remains a validation harness, not a runtime dependency for normal R users.
+- WP8 is the next strategic step because it must convert the existing DGP into a scenario-grid validation engine with small-scale Package A-D reproduction.
 
 ## 3. Core Objects and Data Contracts
 
@@ -823,18 +830,18 @@ User-facing summaries must avoid overclaiming:
 
 | Gap | Priority | Blocking for full package? |
 |---|---:|---|
-| High-level `mrwin()` workflow | P0 | Yes |
+| High-level `mrwin()` workflow | P0 | Implemented; expand output/reporting in WP10 |
 | Data validation layer | P0 | Implemented in WP2; expand as new backends/adjustment modes are added |
 | Production ordinal-IPTW with bootstrap refit | P0 | Implemented in WP6; GPS fallback remains future work |
 | ESS and bridging | P0 | Implemented in WP6; needs broader simulation stress tests before release |
 | Sparse backend | P1 | Required for large data, not for first small release |
 | Rcpp backend | P1 | Required for performance release |
-| Exact/documented Ledoit-Wolf implementation | P0 | Yes |
+| Exact/documented Ledoit-Wolf implementation | P0 | Still required before release; current shrinkage is stabilized approximation |
 | AL-CWR secondary diagnostic | P1 | Needed for paper completeness |
 | v5 Table 3 bias interpolation | P1 | Needed for full pleiotropy-bounded workflow |
 | Per-component benchmark estimators | P1 | Needed for Package D parity |
-| Python oracle fixture generation | P0 | Yes |
-| R CMD check CI | P0 | Yes |
+| Python oracle fixture generation | P0 | Partially implemented; extend in WP8 for simulation/benchmark parity |
+| R CMD check CI | P0 | Still required before release; local checks pass at WP7 checkpoint |
 | Vignettes and report output | P1 | Needed for user adoption |
 
 ## 11. Review Checklist
@@ -877,4 +884,4 @@ Release review:
 3. The R package must implement individual-level estimation first; summary-data mode is deferred.
 4. Python remains the oracle for current reference behavior but must not be a runtime dependency for users.
 5. The first production blocker is not more simulation code; it is data validation plus a stable high-level API.
-6. Complete statistical correctness requires IPTW-with-bootstrap-refit and bridging; the current R implementation is intentionally incomplete until those are implemented and tested.
+6. IPTW-with-bootstrap-refit and bridging were completed in WP6; remaining statistical correctness work is simulation-scale validation, performance parity, and release QA.

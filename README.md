@@ -4,6 +4,17 @@
 
 The primary implementation is now under `R/`. The Python implementation is retained under `python/` as a prototype and validation harness while the R package matures.
 
+## Project status
+
+Current checkpoint: 2026-05-10.
+
+- Completed: WP0 through WP7.
+- Current work package: WP8, simulation engine and scenario-grid validation.
+- Main implemented path: dense R workflow with validation, DS-CWR estimator, multiplier-bootstrap inference, ordinal-IPTW adjustment, SDPD diagnostics, and structured warning outputs.
+- Not release-ready yet: simulation scenario grid, performance backend, user reporting/vignettes, CI/release gates, GPS adjustment, full-covariance GWAS bootstrap, and biobank-scale sparse/Rcpp backend.
+
+Progress details are tracked in [inst/spec/project-checkpoint.md](inst/spec/project-checkpoint.md). The strategic roadmap remains [inst/spec/work-package-roadmap.md](inst/spec/work-package-roadmap.md).
+
 ## Current layout
 
 ```text
@@ -15,6 +26,7 @@ mrwin/
 ├── tests/
 │   ├── python/          Python prototype tests
 │   └── testthat/        R package tests
+├── inst/spec/           Algorithm spec, roadmap, and project checkpoint
 ├── requirements.txt     Python prototype dependencies
 ├── pyproject.toml       Python prototype packaging/test config
 └── run_all.sh           Optional Python prototype runner
@@ -56,6 +68,26 @@ summary(fit)
 plot(fit)
 ```
 
+Adjustment and diagnostics are available through `mrwin_controls()`:
+
+```r
+fit_adj <- mrwin(
+  endpoint = mrwin_endpoint(dat$time, dat$status, c("death", "hf", "renal")),
+  genotype = dat$G,
+  exposure = dat$X,
+  gwas = mrwin_gwas(dat$true_betas, rep(0.01, length(dat$true_betas))),
+  covariates = cbind(u_proxy = scale(dat$U)),
+  controls = mrwin_controls(
+    n_strata = 5,
+    bootstrap = 100,
+    seed = 2,
+    adjustment = "ordinal_iptw",
+    sdpd_scale = "both",
+    pleiotropy_bias_radius = 0.05
+  )
+)
+```
+
 ## Python Prototype
 
 The Python code is not the intended long-term package interface. It is kept to preserve the current computational checks while the R implementation is written.
@@ -73,4 +105,4 @@ The repository intentionally excludes manuscript drafts, replication outputs, an
 
 The package implementation plan is frozen in [inst/spec/algorithm-spec.md](inst/spec/algorithm-spec.md). This document maps the paper v5.1/v5.2 methods to R package functions, test oracles, edge cases, and remaining implementation gaps.
 
-The canonical work-package sequence is tracked in [inst/spec/work-package-roadmap.md](inst/spec/work-package-roadmap.md). It records WP0 plus the 12 main work packages WP1-WP12, with progress complete through WP7.
+The canonical work-package sequence is tracked in [inst/spec/work-package-roadmap.md](inst/spec/work-package-roadmap.md). It records WP0 plus the 12 main work packages WP1-WP12, with progress complete through WP7 and WP8 next.
