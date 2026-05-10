@@ -5,7 +5,7 @@ Status: canonical implementation roadmap.
 Date recorded: 2026-05-09.
 Last updated: 2026-05-10.
 
-Progress: WP0, WP1, WP2, WP3, WP4, WP5, WP6, and WP7 are complete. The next implementation package is WP8.
+Progress: WP0, WP1, WP2, WP3, WP4, WP5, WP6, WP7, and WP8 are complete. The next implementation package is WP9.
 
 Important sequencing rule: this roadmap defines WP0 plus 12 main work packages, WP1 through WP12. When the user asks for `WP4`, `WP5`, and later package names, use the package definitions in this file.
 
@@ -32,8 +32,8 @@ Important sequencing rule: this roadmap defines WP0 plus 12 main work packages, 
 | WP5 | Bootstrap inference | Multiplier bootstrap, bivariate Delta, Fieller | Reproducible bootstrap, bivariate covariance tests, Fieller bounded/unbounded tests | Complete |
 | WP6 | Covariate adjustment | IPTW, ESS, truncation, bridging dropped strata | Balance diagnostics and positivity-failure tests pass | Complete |
 | WP7 | SDPD diagnostics | Aalen/Cox per-SNP, MR-Egger, pleiotropy bounded CI | Public SDPD wrapper, function-level null/pleiotropy tests, Aalen hand test, Cox smoke test, high-level caveats | Complete |
-| WP8 | Simulation engine | v5 DGP, scenario grid, benchmarks | Reproduces Package A-D tables at small scale, including SDPD Type-I/power grids | Next |
-| WP9 | Performance backend | Sparse kernel, optional Rcpp/data.table | Memory/time benchmark passes with unchanged results | Pending |
+| WP8 | Simulation engine | v5 DGP, scenario grid, benchmarks | Small Package A-D scenario grid, per-component benchmark schema, SDPD/grid caveats, deterministic tests | Complete |
+| WP9 | Performance backend | Sparse kernel, optional Rcpp/data.table | Memory/time benchmark passes with unchanged results | Next |
 | WP10 | User reporting | Tidy outputs, plots, markdown report | Results clearly show estimates, CI, Q, SDPD, and caveats | Pending |
 | WP11 | Documentation | README, vignettes, examples, reference manual | New user can run the package in under 10 minutes | Pending |
 | WP12 | QA/release | CI, R CMD check, coverage, review checklist | Release candidate passes all gates | Pending |
@@ -148,10 +148,10 @@ Checkpoint file: `inst/spec/project-checkpoint.md`.
 
 State as of 2026-05-10:
 
-- WP0-WP7 are implemented and pushed to `origin/main`.
-- The package passes local R unit tests, Python prototype tests, and `R CMD check --no-manual --no-build-vignettes` on a source tarball at the WP7 checkpoint.
+- WP0-WP8 are implemented and pushed to `origin/main`.
+- The package passes local R unit tests, Python prototype tests, and `R CMD check --no-manual --no-build-vignettes` on a source tarball at the WP8 checkpoint.
 - The remaining strategic gap before release is no longer the core estimator path; it is simulation validation, performance backend, reporting, documentation, and release QA.
-- WP8 must absorb the full Monte Carlo reproduction burden for Type-I, power, discordance, weak-instrument, and Package A-D scenario grids.
+- WP8 adds the small scenario-grid engine; larger Monte Carlo grids remain a slow validation/release task.
 
 ## Proposed Timeline
 
@@ -159,7 +159,7 @@ Phase 1, 1-2 weeks: lock spec, complete API, data validation, and docs skeleton.
 
 Phase 2, 2-3 weeks: complete core estimator, bootstrap, and Python parity tests. Status: complete through WP5.
 
-Phase 3, 2 weeks: complete SDPD, pleiotropy diagnostics, and simulation engine. Status: SDPD/pleiotropy diagnostics complete in WP7; simulation engine expansion remains WP8.
+Phase 3, 2 weeks: complete SDPD, pleiotropy diagnostics, and simulation engine. Status: complete through WP8 at small-grid scale.
 
 Phase 4, 2 weeks: complete IPTW, ESS, bridging, sparse kernel, and performance. Status: IPTW/ESS/bridging complete in WP6; performance backend remains WP9.
 

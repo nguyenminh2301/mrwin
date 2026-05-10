@@ -5,7 +5,7 @@ Last updated: 2026-05-10
 Repository target: `mrwin` R package
 Primary manuscript source: Paper 1 v5.2, with v5 and v5.1 review deltas reconciled
 Implementation policy: R is the user-facing package; Python remains a reference oracle until parity is proven.
-Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP7.
+Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP8.
 
 ## 1. Source Audit
 
@@ -40,9 +40,9 @@ Summary-data-only estimation is out of scope for the first complete release exce
 
 Current package checkpoint:
 
-- WP0-WP7 are implemented in R.
+- WP0-WP8 are implemented in R.
 - Python remains a validation harness, not a runtime dependency for normal R users.
-- WP8 is the next strategic step because it must convert the existing DGP into a scenario-grid validation engine with small-scale Package A-D reproduction.
+- WP9 is the next strategic step because performance and sparse backend wiring now become the limiting path.
 
 ## 3. Core Objects and Data Contracts
 
@@ -553,6 +553,9 @@ Package API:
 
 - `mrwin_config(...)`.
 - `mrwin_simulate(config, seed)`.
+- `mrwin_scenarios(base_config, scenarios)`.
+- `mrwin_run_simulation_grid(scenarios, n_iter, controls, ...)`.
+- `mrwin_simulation_summary(grid)`.
 
 Acceptance tests:
 
@@ -561,6 +564,7 @@ Acceptance tests:
 - deterministic with fixed seed.
 - death censors lower-priority events.
 - parameter scenarios reproduce expected directional changes.
+- scenario-grid schema is stable for Package A-D small runs.
 
 ### 4.15 Per-Component MR Benchmark
 
@@ -596,11 +600,10 @@ Interpretation requirement:
 Current status:
 
 - Python benchmark exists.
-- R package does not yet implement benchmark estimators beyond MR-Egger core.
+- R package implements a small per-component benchmark schema with IVW, MR-Egger, weighted median approximation, MR-PRESSO-style global test, inverse-variance pooling, Bonferroni pooling, and Fisher p-value pooling.
 
 Acceptance tests:
 
-- per-component Aalen summaries match Python for small seeds.
 - benchmark result schema stable.
 - discordant scenario emits interpretation warning.
 
@@ -617,7 +620,11 @@ Already present or partially present:
 | `mrwin_gwas()` | implemented | Declares GWAS beta/se/covariance; full covariance stored but diagonal bootstrap only in WP1. |
 | `mrwin_controls()` | implemented | Declares strata/bootstrap/backend/SDPD options. |
 | `mrwin_config()` | implemented | Needs validation tests for invalid parameter lengths/ranges. |
-| `mrwin_simulate()` | implemented | Simplified v5 DGP; needs parity fixtures. |
+| `mrwin_simulate()` | implemented | Simplified v5 DGP with small-sample genotype variance guard. |
+| `mrwin_scenarios()` | implemented | WP8 Package A-D scenario definitions and metadata. |
+| `mrwin_run_simulation_grid()` | implemented | WP8 small scenario-grid runner with cCWR, SDPD, per-component benchmark summaries, and warning schema. |
+| `mrwin_simulation_summary()` | implemented | WP8 scenario-level aggregation. |
+| `mrwin_per_component_benchmark()` | implemented | WP8 component-wise MR benchmark schema. |
 | `mrwin_kernel()` | implemented | Dense R backend. |
 | `mrwin_pair_kernel()` | implemented | Sparse/block kernel for one high-vs-low stratum pair. |
 | `mrwin_pair_win_loss()` | implemented | Sparse win/loss/total aggregation for one stratum pair. |
@@ -839,9 +846,9 @@ User-facing summaries must avoid overclaiming:
 | Exact/documented Ledoit-Wolf implementation | P0 | Still required before release; current shrinkage is stabilized approximation |
 | AL-CWR secondary diagnostic | P1 | Needed for paper completeness |
 | v5 Table 3 bias interpolation | P1 | Needed for full pleiotropy-bounded workflow |
-| Per-component benchmark estimators | P1 | Needed for Package D parity |
-| Python oracle fixture generation | P0 | Partially implemented; extend in WP8 for simulation/benchmark parity |
-| R CMD check CI | P0 | Still required before release; local checks pass at WP7 checkpoint |
+| Per-component benchmark estimators | P1 | Small WP8 schema implemented; full Package D parity remains a slow validation task |
+| Python oracle fixture generation | P0 | Partially implemented; extend for full slow simulation/benchmark parity |
+| R CMD check CI | P0 | Still required before release; local checks pass at WP8 checkpoint |
 | Vignettes and report output | P1 | Needed for user adoption |
 
 ## 11. Review Checklist

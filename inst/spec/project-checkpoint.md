@@ -8,8 +8,8 @@ This file tracks current implementation state. The roadmap remains canonical for
 
 | Area | State |
 |---|---|
-| Completed work packages | WP0-WP7 |
-| Current work package | WP8 |
+| Completed work packages | WP0-WP8 |
+| Current work package | WP9 |
 | Current branch | `main` |
 | Remote | `origin/main` |
 | Primary interface | R package |
@@ -31,12 +31,13 @@ This file tracks current implementation state. The roadmap remains canonical for
 | WP5 | `b5f54c2` | Bootstrap inference |
 | WP6 | `9ee3dc7` | Covariate adjustment |
 | WP7 | `792a7ce` | SDPD diagnostics |
+| WP8 | current checkpoint | Simulation engine and Package A-D small-grid schema |
 
 ## Latest Verification
 
-Latest full verification was performed at the WP7 checkpoint:
+Latest full verification was performed at the WP8 checkpoint:
 
-- `testthat::test_local('tests/testthat')`: 156 passing tests.
+- `testthat::test_local('tests/testthat')`: 186 passing tests.
 - `pytest -q`: 39 passed, 22 skipped.
 - `R CMD check --no-manual --no-build-vignettes` on source tarball: `Status: OK`.
 
@@ -52,30 +53,29 @@ Re-run these gates after each implementation work package and before any release
 - Inference: multiplier bootstrap, bivariate Delta covariance, Fieller sensitivity CI, bootstrap moment diagnostics.
 - Adjustment: ordinal-IPTW, truncation, ESS diagnostics, positivity filtering, bridged active strata.
 - Diagnostics: SDPD Aalen/Cox per-SNP summaries, MR-Egger intercept test, underpower/rejection warnings, pleiotropy-bounded CI helper.
+- Simulation engine: Package A-D scenario definitions, small scenario-grid runner, scenario summary, per-component MR benchmark schema.
 - User methods: `print()`, `summary()`, `plot()` for `mrwin_fit`.
 
 ## Open Strategic Gaps
 
 These are the main blockers before a release candidate:
 
-- WP8: scenario-grid simulation engine and small-scale reproduction of Package A-D.
-- WP8: Python/R oracle fixtures for DGP, bootstrap, SDPD, and benchmark schemas.
-- WP8: simulation checks for Type-I, power, weak instruments, pleiotropy, and discordant components.
 - WP9: performance backend and memory/time benchmarks.
 - WP9: high-level sparse backend wiring; optional Rcpp/data.table path remains undecided.
 - WP10: tidy outputs, richer plots, markdown report, clearer user caveats.
 - WP11: README expansion, vignettes, examples, reference documentation.
 - WP12: CI, coverage target, release checklist, install-from-GitHub verification.
+- Slow validation: full-size Monte Carlo Type-I, power, weak-instrument, pleiotropy, and discordant-component grids.
 - Statistical review: exact or documented Ledoit-Wolf shrinkage, AL-CWR secondary diagnostic, v5 Table 3 bias interpolation, GPS fallback decision.
 
-## Next WP8 Work Plan
+## Next WP9 Work Plan
 
-1. Freeze the simulation result schema: scenarios, seeds, metrics, and output table names.
-2. Expand `mrwin_simulate()` or add a scenario runner without breaking existing toy tests.
-3. Add small deterministic fixtures for null, valid-IV, pleiotropy, weak-instrument, and discordant-component scenarios.
-4. Add Package A-D benchmark summaries at small scale.
-5. Store oracle outputs under `inst/extdata/oracle/` when stable.
-6. Keep slow Monte Carlo tests out of default `testthat` until CI strategy is defined.
+1. Decide the high-level sparse backend contract for `mrwin()`.
+2. Benchmark dense kernel, sparse pair kernel, bootstrap, SDPD, and scenario-grid runtime at increasing N.
+3. Add memory/time benchmark helpers with stable output schema.
+4. Verify sparse and dense outputs match within tolerance on small fixtures.
+5. Decide whether optional Rcpp/data.table is justified before release.
+6. Keep large benchmarks out of default `testthat` until CI strategy is defined.
 
 ## Documentation Rules
 

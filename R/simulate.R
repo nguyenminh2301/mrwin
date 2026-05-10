@@ -8,9 +8,7 @@ mrwin_simulate <- function(config = mrwin_config(), seed = config$seed) {
   k <- 3L
 
   mafs <- stats::runif(m, config$maf_low, config$maf_high)
-  g_raw <- vapply(mafs, function(p) stats::rbinom(n, 2L, p), numeric(n))
-  g <- scale(g_raw)
-  storage.mode(g) <- "double"
+  g <- .mrwin_simulate_genotypes(n, mafs)
 
   true_betas <- stats::rnorm(m, 0, config$sigma_beta)
   s_true <- drop(g %*% true_betas)
@@ -69,9 +67,31 @@ mrwin_simulate <- function(config = mrwin_config(), seed = config$seed) {
     X = x,
     time = time,
     status = status,
+    event_time = event_time,
     censor_time = censor_time,
     config = config
   )
+}
+
+.mrwin_simulate_genotypes <- function(n, mafs, max_attempts = 100L) {
+  m <- length(mafs)
+  g_raw <- matrix(NA_real_, nrow = n, ncol = m)
+  for (j in seq_len(m)) {
+    for (attempt in seq_len(max_attempts)) {
+      candidate <- stats::rbinom(n, 2L, mafs[j])
+      if (stats::var(candidate) > 0) {
+        g_raw[, j] <- candidate
+        break
+      }
+    }
+    if (anyNA(g_raw[, j])) {
+      g_raw[, j] <- rep(c(0, 1, 2), length.out = n)
+    }
+  }
+  g <- scale(g_raw)
+  storage.mode(g) <- "double"
+  colnames(g) <- paste0("snp_", seq_len(m))
+  g
 }
 
 .mrwin_weibull_inv <- function(rate, shape, lp) {

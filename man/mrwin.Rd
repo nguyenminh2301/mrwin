@@ -6,6 +6,10 @@
 \alias{mrwin_validate_data}
 \alias{mrwin_config}
 \alias{mrwin_simulate}
+\alias{mrwin_scenarios}
+\alias{mrwin_run_simulation_grid}
+\alias{mrwin_simulation_summary}
+\alias{mrwin_per_component_benchmark}
 \alias{mrwin_kernel}
 \alias{mrwin_pair_kernel}
 \alias{mrwin_pair_win_loss}
