@@ -4,7 +4,7 @@ Version: WP0 freeze, 2026-05-09
 Repository target: `mrwin` R package
 Primary manuscript source: Paper 1 v5.2, with v5 and v5.1 review deltas reconciled
 Implementation policy: R is the user-facing package; Python remains a reference oracle until parity is proven.
-Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP5.
+Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP6.
 
 ## 1. Source Audit
 
@@ -404,8 +404,9 @@ Failure rule:
 
 Current status:
 
-- current R implementation does not yet implement production IPTW/GPS.
-- next work package must implement `mrwin_propensity_weights()`, ESS diagnostics, and bootstrap refitting.
+- ordinal-IPTW is implemented in R through `mrwin_propensity_weights()`.
+- stabilized weights, truncation, ESS filtering, balance summaries, bootstrap refitting, and bridged surviving strata are wired into `mrwin_multiplier_bootstrap()` and the high-level `mrwin()` workflow.
+- GPS remains deferred; `adjustment = "gps"` is explicitly blocked until a later work package.
 
 Acceptance tests:
 
@@ -602,7 +603,7 @@ Already present or partially present:
 
 | Function | Status | Notes |
 |---|---|---|
-| `mrwin()` | implemented | WP1 high-level dense/no-adjustment workflow. Sparse and IPTW/GPS are blocked until later work packages. |
+| `mrwin()` | implemented | High-level dense workflow with no-adjustment and ordinal-IPTW modes. Sparse/Rcpp and GPS are blocked until later work packages. |
 | `mrwin_endpoint()` | implemented | Declares endpoint columns/matrices and priority order. |
 | `mrwin_gwas()` | implemented | Declares GWAS beta/se/covariance; full covariance stored but diagonal bootstrap only in WP1. |
 | `mrwin_controls()` | implemented | Declares strata/bootstrap/backend/SDPD options. |
@@ -616,9 +617,10 @@ Already present or partially present:
 | `mrwin_stratum_win_loss()` | implemented | Needs more weighted edge-case tests. |
 | `mrwin_stratum_log_cwr()` | implemented | Needs floor warning metadata. |
 | `mrwin_prs_strata()` | implemented | Needs deterministic tie tests. |
-| `mrwin_estimate()` | implemented | WP4 point estimator: adjacent CWR, log-CWR, Delta-X, ISG, validated inputs, Python oracle fixture. |
+| `mrwin_estimate()` | implemented | WP4 point estimator plus WP6 active-strata bridging: adjacent/bridged CWR, log-CWR, Delta-X, ISG, validated inputs, Python oracle fixture. |
 | `mrwin_gls_pool()` | implemented | WP4 GLS DS-CWR and Q statistic; uses approximate shrinkage when requested, production LW review remains later. |
-| `mrwin_multiplier_bootstrap()` | implemented | WP5 bootstrap inference: reproducible multiplier bootstrap, bivariate-Delta covariance, Fieller interval, moment diagnostics. No IPTW/bridging yet. |
+| `mrwin_multiplier_bootstrap()` | implemented | WP5 bootstrap inference plus WP6 ordinal-IPTW refitting, ESS diagnostics, positivity filtering, and bridged contrast covariance. |
+| `mrwin_propensity_weights()` | implemented | WP6 ordinal-IPTW stabilized weights, truncation, ESS, balance diagnostics, and active/dropped strata. |
 | `mrwin_aalen_per_snp()` | implemented | Needs validation against survival-package reference or Python. |
 | `mrwin_cox_per_snp()` | implemented | Approximate Cox; needs parity/reference tests. |
 | `mrwin_mr_egger()` | implemented | Needs robust input validation. |
@@ -820,8 +822,8 @@ User-facing summaries must avoid overclaiming:
 |---|---:|---|
 | High-level `mrwin()` workflow | P0 | Yes |
 | Data validation layer | P0 | Implemented in WP2; expand as new backends/adjustment modes are added |
-| Production IPTW with bootstrap refit | P0 | Yes |
-| ESS and bridging | P0 | Yes |
+| Production ordinal-IPTW with bootstrap refit | P0 | Implemented in WP6; GPS fallback remains future work |
+| ESS and bridging | P0 | Implemented in WP6; needs broader simulation stress tests before release |
 | Sparse backend | P1 | Required for large data, not for first small release |
 | Rcpp backend | P1 | Required for performance release |
 | Exact/documented Ledoit-Wolf implementation | P0 | Yes |

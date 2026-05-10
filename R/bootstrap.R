@@ -12,8 +12,13 @@ mrwin_multiplier_bootstrap <- function(
     block_size = 4000L,
     beta_draws = NULL,
     multiplier_weights = NULL,
-    floor = 1e-12
+    floor = 1e-12,
+    covariates = NULL,
+    adjustment = c("none", "ordinal_iptw"),
+    iptw_truncation = c(0.01, 0.99),
+    ess_fraction = 0.5
 ) {
+  adjustment <- match.arg(adjustment)
   checked <- .mrwin_validate_bootstrap_inputs(
     time = time,
     status = status,
@@ -27,7 +32,11 @@ mrwin_multiplier_bootstrap <- function(
     block_size = block_size,
     beta_draws = beta_draws,
     multiplier_weights = multiplier_weights,
-    floor = floor
+    floor = floor,
+    covariates = covariates,
+    adjustment = adjustment,
+    iptw_truncation = iptw_truncation,
+    ess_fraction = ess_fraction
   )
   time <- checked$time
   status <- checked$status
@@ -42,6 +51,10 @@ mrwin_multiplier_bootstrap <- function(
   beta_draws <- checked$beta_draws
   multiplier_weights <- checked$multiplier_weights
   floor <- checked$floor
+  covariates <- checked$covariates
+  adjustment <- checked$adjustment
+  iptw_truncation <- checked$iptw_truncation
+  ess_fraction <- checked$ess_fraction
 
   if (!is.null(seed)) {
     set.seed(seed)
@@ -51,6 +64,16 @@ mrwin_multiplier_bootstrap <- function(
     kernel <- mrwin_kernel(time, status, block_size = block_size)
   }
 
+  point_strata <- mrwin_prs_strata(G, beta_hat, n_strata = n_strata)$strata
+  point_adjustment <- .mrwin_point_adjustment(
+    strata = point_strata,
+    covariates = covariates,
+    adjustment = adjustment,
+    iptw_truncation = iptw_truncation,
+    ess_fraction = ess_fraction,
+    n_strata = n_strata
+  )
+
   point <- mrwin_estimate(
     time = time,
     status = status,
@@ -59,13 +82,20 @@ mrwin_multiplier_bootstrap <- function(
     beta_hat = beta_hat,
     n_strata = n_strata,
     kernel = kernel,
-    floor = floor
+    weights = point_adjustment$weights,
+    floor = floor,
+    active_strata = point_adjustment$active_strata
   )
 
-  dm1 <- n_strata - 1L
-  lt <- matrix(NA_real_, nrow = B, ncol = dm1)
-  dx <- matrix(NA_real_, nrow = B, ncol = dm1)
+  contrast_plan <- point$contrast_plan
+  n_contrasts <- nrow(contrast_plan)
+  lt <- matrix(NA_real_, nrow = B, ncol = n_contrasts)
+  dx <- matrix(NA_real_, nrow = B, ncol = n_contrasts)
   colnames(lt) <- colnames(dx) <- names(point$log_theta)
+  bootstrap_ess <- matrix(NA_real_, nrow = B, ncol = n_strata)
+  colnames(bootstrap_ess) <- paste0("s", seq_len(n_strata))
+  bootstrap_dropped <- matrix(FALSE, nrow = B, ncol = n_strata)
+  colnames(bootstrap_dropped) <- paste0("s", seq_len(n_strata))
 
   for (b in seq_len(B)) {
     beta_star <- if (is.null(beta_draws)) {
@@ -79,10 +109,27 @@ mrwin_multiplier_bootstrap <- function(
     } else {
       multiplier_weights[b, ]
     }
+    iter_adjustment <- .mrwin_iteration_adjustment(
+      strata = strata,
+      covariates = covariates,
+      adjustment = adjustment,
+      xi = xi,
+      iptw_truncation = iptw_truncation,
+      ess_fraction = ess_fraction,
+      n_strata = n_strata
+    )
+    if (!is.null(iter_adjustment)) {
+      bootstrap_ess[b, ] <- iter_adjustment$ess
+      bootstrap_dropped[b, iter_adjustment$dropped_strata] <- TRUE
+      if (any(point_adjustment$active_strata %in% iter_adjustment$dropped_strata)) {
+        next
+      }
+      xi <- xi * iter_adjustment$weights
+    }
 
-    for (d in 2:n_strata) {
-      idx_high <- which(strata == d)
-      idx_low <- which(strata == d - 1L)
+    for (row in seq_len(n_contrasts)) {
+      idx_high <- which(strata == contrast_plan$high[row])
+      idx_low <- which(strata == contrast_plan$low[row])
       if (length(idx_high) == 0L || length(idx_low) == 0L) {
         next
       }
@@ -92,9 +139,9 @@ mrwin_multiplier_bootstrap <- function(
         next
       }
       sums <- mrwin_stratum_win_loss(kernel, idx_high, idx_low, weights = xi)
-      lt[b, d - 1L] <- log(max(sums[["wins"]], floor) / max(sums[["losses"]], floor))
+      lt[b, row] <- log(max(sums[["wins"]], floor) / max(sums[["losses"]], floor))
 
-      dx[b, d - 1L] <- .mrwin_weighted_mean(X[idx_high], wh, "bootstrap high stratum") -
+      dx[b, row] <- .mrwin_weighted_mean(X[idx_high], wh, "bootstrap high stratum") -
         .mrwin_weighted_mean(X[idx_low], wl, "bootstrap low stratum")
     }
   }
@@ -127,6 +174,9 @@ mrwin_multiplier_bootstrap <- function(
     n_valid = as.integer(sum(valid)),
     n_invalid = as.integer(sum(!valid)),
     n_strata = as.integer(n_strata),
+    active_strata = point_adjustment$active_strata,
+    dropped_strata = point_adjustment$dropped_strata,
+    contrast_plan = contrast_plan,
     point_log_theta = point$log_theta,
     point_cwr = point$cwr,
     point_delta_x = point$delta_x,
@@ -156,8 +206,11 @@ mrwin_multiplier_bootstrap <- function(
     skew_delta_x = apply(dx, 2, .mrwin_skewness),
     bootstrap_log_theta = lt,
     bootstrap_delta_x = dx,
+    bootstrap_ess = bootstrap_ess,
+    bootstrap_dropped_strata = bootstrap_dropped,
     valid_bootstrap = valid,
     covariance_method = "bivariate_delta_point_gradient",
+    adjustment = point_adjustment,
     kernel = kernel,
     strata = point$strata
   ), class = c("mrwin_bootstrap", "list"))
@@ -176,7 +229,11 @@ mrwin_multiplier_bootstrap <- function(
     block_size,
     beta_draws,
     multiplier_weights,
-    floor
+    floor,
+    covariates,
+    adjustment,
+    iptw_truncation,
+    ess_fraction
 ) {
   checked <- .mrwin_validate_estimate_inputs(
     time = time,
@@ -189,6 +246,24 @@ mrwin_multiplier_bootstrap <- function(
     weights = NULL,
     floor = floor
   )
+  if (adjustment != "none") {
+    if (is.null(covariates)) {
+      stop("`covariates` are required when adjustment is not 'none'.", call. = FALSE)
+    }
+    covariates <- as.matrix(covariates)
+    if (nrow(covariates) != nrow(checked$G)) {
+      stop("`covariates` must have one row per analysis row.", call. = FALSE)
+    }
+    if (any(!is.finite(covariates))) {
+      stop("`covariates` must contain finite numeric values.", call. = FALSE)
+    }
+    iptw_truncation <- .mrwin_validate_truncation(iptw_truncation)
+    ess_fraction <- .mrwin_validate_ess_fraction(ess_fraction)
+  } else {
+    covariates <- NULL
+    iptw_truncation <- .mrwin_validate_truncation(iptw_truncation)
+    ess_fraction <- .mrwin_validate_ess_fraction(ess_fraction)
+  }
   B_raw <- suppressWarnings(as.numeric(B))
   if (length(B_raw) != 1L || is.na(B_raw) || B_raw < 2L || B_raw != base::floor(B_raw)) {
     stop("`B` must be a single integer at least 2.", call. = FALSE)
@@ -240,8 +315,62 @@ mrwin_multiplier_bootstrap <- function(
       B = B,
       block_size = block_size,
       beta_draws = beta_draws,
-      multiplier_weights = multiplier_weights
+      multiplier_weights = multiplier_weights,
+      covariates = covariates,
+      adjustment = adjustment,
+      iptw_truncation = iptw_truncation,
+      ess_fraction = ess_fraction
     )
+  )
+}
+
+.mrwin_point_adjustment <- function(strata, covariates, adjustment, iptw_truncation, ess_fraction, n_strata = max(strata)) {
+  if (adjustment == "none") {
+    return(list(
+      method = "none",
+      weights = NULL,
+      raw_weights = NULL,
+      ess = rep(NA_real_, n_strata),
+      ess_threshold = rep(NA_real_, n_strata),
+      dropped_strata = integer(),
+      active_strata = seq_len(n_strata),
+      truncation = NULL,
+      balance = NULL,
+      has_positivity_failure = FALSE,
+      has_bridging = FALSE
+    ))
+  }
+  prop <- mrwin_propensity_weights(
+    strata = strata,
+    covariates = covariates,
+    method = "ordinal_iptw",
+    truncate = iptw_truncation,
+    ess_fraction = ess_fraction,
+    n_strata = n_strata
+  )
+  active <- prop$active_strata
+  if (length(active) < 2L) {
+    stop("Too few ESS-valid strata remain after IPTW positivity filtering.", call. = FALSE)
+  }
+  plan <- .mrwin_make_contrast_plan(active, n_strata = n_strata)
+  prop$has_positivity_failure <- length(prop$dropped_strata) > 0L
+  prop$has_bridging <- any(plan$bridged)
+  prop
+}
+
+.mrwin_iteration_adjustment <- function(strata, covariates, adjustment, xi, iptw_truncation, ess_fraction, n_strata) {
+  if (adjustment == "none") {
+    return(NULL)
+  }
+  mrwin_propensity_weights(
+    strata = strata,
+    covariates = covariates,
+    method = "ordinal_iptw",
+    base_weights = xi,
+    truncate = iptw_truncation,
+    ess_fraction = ess_fraction,
+    fail_on_empty = FALSE,
+    n_strata = n_strata
   )
 }
 

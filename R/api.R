@@ -86,7 +86,9 @@ mrwin_controls <- function(
     sdpd_alpha = 0.05,
     adjustment = c("none", "ordinal_iptw", "gps"),
     backend = c("dense", "sparse", "rcpp"),
-    delta_x_tol = 1e-8
+    delta_x_tol = 1e-8,
+    iptw_truncation = c(0.01, 0.99),
+    ess_fraction = 0.5
 ) {
   sdpd_scale <- match.arg(sdpd_scale)
   adjustment <- match.arg(adjustment)
@@ -102,7 +104,9 @@ mrwin_controls <- function(
     sdpd_alpha = sdpd_alpha,
     adjustment = adjustment,
     backend = backend,
-    delta_x_tol = delta_x_tol
+    delta_x_tol = delta_x_tol,
+    iptw_truncation = iptw_truncation,
+    ess_fraction = ess_fraction
   )
   .mrwin_validate_controls(out)
   structure(out, class = "mrwin_controls")
@@ -141,10 +145,13 @@ mrwin <- function(
   if (controls$backend != "dense") {
     stop("WP1 supports only `backend = \"dense\"`; sparse/Rcpp backends are planned.", call. = FALSE)
   }
-  if (controls$adjustment != "none") {
-    stop("WP1 supports only `adjustment = \"none\"`; IPTW/GPS is planned for a later work package.", call. = FALSE)
+  if (controls$adjustment == "gps") {
+    stop("`adjustment = \"gps\"` is planned for a later work package; use `ordinal_iptw` or `none`.", call. = FALSE)
   }
-  if (!is.null(covariates)) {
+  if (controls$adjustment != "none" && is.null(covariates)) {
+    stop("`covariates` are required when adjustment is not 'none'.", call. = FALSE)
+  }
+  if (controls$adjustment == "none" && !is.null(covariates)) {
     warning_log <- .mrwin_add_warning(
       warning_log,
       "covariates_ignored",
@@ -188,7 +195,11 @@ mrwin <- function(
     n_strata = controls$n_strata,
     B = controls$bootstrap,
     seed = controls$seed,
-    block_size = controls$block_size
+    block_size = controls$block_size,
+    covariates = validated$covariates,
+    adjustment = controls$adjustment,
+    iptw_truncation = controls$iptw_truncation,
+    ess_fraction = controls$ess_fraction
   )
 
   if (any(abs(boot$point_delta_x) <= controls$delta_x_tol, na.rm = TRUE) ||
@@ -197,6 +208,20 @@ mrwin <- function(
       warning_log,
       "weak_instrument",
       "At least one adjacent phenotypic shift is near zero or the Fieller interval is unbounded."
+    )
+  }
+  if (isTRUE(boot$adjustment$has_positivity_failure)) {
+    warning_log <- .mrwin_add_warning(
+      warning_log,
+      "positivity_failure",
+      "At least one PRS stratum failed the IPTW effective-sample-size threshold."
+    )
+  }
+  if (isTRUE(boot$adjustment$has_bridging)) {
+    warning_log <- .mrwin_add_warning(
+      warning_log,
+      "bridged_strata",
+      "Adjacent contrasts were bridged across one or more positivity-filtered strata."
     )
   }
 
@@ -263,7 +288,12 @@ mrwin <- function(
       kurtosis_delta_x = boot$kurtosis_delta_x,
       skew_log_theta = boot$skew_log_theta,
       skew_delta_x = boot$skew_delta_x,
-      n_valid_bootstrap = boot$n_valid
+      n_valid_bootstrap = boot$n_valid,
+      ess = boot$adjustment$ess,
+      weights = boot$adjustment$weights,
+      dropped_strata = boot$dropped_strata,
+      active_strata = boot$active_strata,
+      balance = boot$adjustment$balance
     ),
     sdpd = sdpd,
     warnings = warning_log,
@@ -301,6 +331,8 @@ mrwin <- function(
   if (!is.numeric(controls$delta_x_tol) || controls$delta_x_tol < 0) {
     stop("`delta_x_tol` must be non-negative.", call. = FALSE)
   }
+  .mrwin_validate_truncation(controls$iptw_truncation)
+  .mrwin_validate_ess_fraction(controls$ess_fraction)
   invisible(TRUE)
 }
 

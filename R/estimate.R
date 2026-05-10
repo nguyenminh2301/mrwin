@@ -8,7 +8,8 @@ mrwin_estimate <- function(
     kernel = NULL,
     weights = NULL,
     block_size = 4000L,
-    floor = 1e-12
+    floor = 1e-12,
+    active_strata = NULL
 ) {
   checked <- .mrwin_validate_estimate_inputs(
     time = time,
@@ -19,7 +20,8 @@ mrwin_estimate <- function(
     n_strata = n_strata,
     kernel = kernel,
     weights = weights,
-    floor = floor
+    floor = floor,
+    active_strata = active_strata
   )
   time <- checked$time
   status <- checked$status
@@ -29,6 +31,7 @@ mrwin_estimate <- function(
   n_strata <- checked$n_strata
   weights <- checked$weights
   floor <- checked$floor
+  active_strata <- checked$active_strata
 
   if (is.null(kernel)) {
     kernel <- mrwin_kernel(time, status, block_size = block_size)
@@ -40,26 +43,28 @@ mrwin_estimate <- function(
   strata <- strata_obj$strata
   x <- as.numeric(X)
 
-  log_theta <- cwr <- delta_x <- rep(NA_real_, n_strata - 1L)
-  wins <- losses <- total <- rep(NA_real_, n_strata - 1L)
-  contrast_names <- .mrwin_contrast_names(n_strata)
+  contrast_plan <- .mrwin_make_contrast_plan(active_strata, n_strata = n_strata)
+  n_contrasts <- nrow(contrast_plan)
+  log_theta <- cwr <- delta_x <- rep(NA_real_, n_contrasts)
+  wins <- losses <- total <- rep(NA_real_, n_contrasts)
+  contrast_names <- contrast_plan$label
 
-  for (d in 2:n_strata) {
-    idx_high <- which(strata == d)
-    idx_low <- which(strata == d - 1L)
+  for (row in seq_len(n_contrasts)) {
+    idx_high <- which(strata == contrast_plan$high[row])
+    idx_low <- which(strata == contrast_plan$low[row])
     sums <- mrwin_stratum_win_loss(kernel, idx_high, idx_low, weights = weights)
-    wins[d - 1L] <- sums[["wins"]]
-    losses[d - 1L] <- sums[["losses"]]
-    total[d - 1L] <- sums[["total"]]
-    log_theta[d - 1L] <- log(max(wins[d - 1L], floor) / max(losses[d - 1L], floor))
-    cwr[d - 1L] <- exp(log_theta[d - 1L])
+    wins[row] <- sums[["wins"]]
+    losses[row] <- sums[["losses"]]
+    total[row] <- sums[["total"]]
+    log_theta[row] <- log(max(wins[row], floor) / max(losses[row], floor))
+    cwr[row] <- exp(log_theta[row])
 
     if (is.null(weights)) {
-      delta_x[d - 1L] <- mean(x[idx_high]) - mean(x[idx_low])
+      delta_x[row] <- mean(x[idx_high]) - mean(x[idx_low])
     } else {
       wh <- weights[idx_high]
       wl <- weights[idx_low]
-      delta_x[d - 1L] <- .mrwin_weighted_mean(x[idx_high], wh, "high stratum") -
+      delta_x[row] <- .mrwin_weighted_mean(x[idx_high], wh, "high stratum") -
         .mrwin_weighted_mean(x[idx_low], wl, "low stratum")
     }
   }
@@ -79,6 +84,8 @@ mrwin_estimate <- function(
     log_theta = log_theta,
     delta_x = delta_x,
     delta_isg = delta_isg,
+    active_strata = active_strata,
+    contrast_plan = contrast_plan,
     weak_delta_x = !is.finite(delta_x) | abs(delta_x) <= floor
   ), class = c("mrwin_estimate", "list"))
 }
@@ -154,7 +161,8 @@ mrwin_gls_pool <- function(delta_isg, sigma, shrink = TRUE) {
     n_strata,
     kernel,
     weights,
-    floor
+    floor,
+    active_strata = NULL
 ) {
   time <- as.matrix(time)
   status <- as.matrix(status)
@@ -213,6 +221,16 @@ mrwin_gls_pool <- function(delta_isg, sigma, shrink = TRUE) {
       stop("`weights` must be finite and non-negative.", call. = FALSE)
     }
   }
+  if (is.null(active_strata)) {
+    active_strata <- seq_len(n_strata)
+  } else {
+    active_strata <- suppressWarnings(as.integer(active_strata))
+    if (length(active_strata) < 2L || any(is.na(active_strata)) ||
+        any(active_strata < 1L | active_strata > n_strata)) {
+      stop("`active_strata` must contain at least two valid stratum labels.", call. = FALSE)
+    }
+    active_strata <- sort(unique(active_strata))
+  }
 
   list(
     time = time,
@@ -223,7 +241,8 @@ mrwin_gls_pool <- function(delta_isg, sigma, shrink = TRUE) {
     n_strata = n_strata,
     kernel = kernel,
     weights = weights,
-    floor = floor
+    floor = floor,
+    active_strata = active_strata
   )
 }
 

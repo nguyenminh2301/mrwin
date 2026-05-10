@@ -4,7 +4,7 @@ Status: canonical implementation roadmap.
 
 Date recorded: 2026-05-09.
 
-Progress: WP0, WP1, WP2, WP3, WP4, and WP5 are complete. The next implementation package is WP6.
+Progress: WP0, WP1, WP2, WP3, WP4, WP5, and WP6 are complete. The next implementation package is WP7.
 
 Important sequencing rule: this roadmap defines WP0 plus 12 main work packages, WP1 through WP12. When the user asks for `WP4`, `WP5`, and later package names, use the package definitions in this file.
 
@@ -29,8 +29,8 @@ Important sequencing rule: this roadmap defines WP0 plus 12 main work packages, 
 | WP3 | Core kernel | Dense kernel plus sparse pair kernel | Toy tests, antisymmetry, zero diagonal, Python parity | Complete |
 | WP4 | DS-CWR estimator | Adjacent CWR, ISG, GLS, Q statistic | Matches Python on fixed seeds | Complete |
 | WP5 | Bootstrap inference | Multiplier bootstrap, bivariate Delta, Fieller | Reproducible bootstrap, bivariate covariance tests, Fieller bounded/unbounded tests | Complete |
-| WP6 | Covariate adjustment | IPTW, ESS, truncation, bridging dropped strata | Balance diagnostics and positivity-failure tests pass | Next |
-| WP7 | SDPD diagnostics | Aalen/Cox per-SNP, MR-Egger, pleiotropy bounded CI | Type-I and power simulations reproduce the paper | Pending |
+| WP6 | Covariate adjustment | IPTW, ESS, truncation, bridging dropped strata | Balance diagnostics and positivity-failure tests pass | Complete |
+| WP7 | SDPD diagnostics | Aalen/Cox per-SNP, MR-Egger, pleiotropy bounded CI | Type-I and power simulations reproduce the paper | Next |
 | WP8 | Simulation engine | v5 DGP, scenario grid, benchmarks | Reproduces Package A-D tables at small scale | Pending |
 | WP9 | Performance backend | Sparse kernel, optional Rcpp/data.table | Memory/time benchmark passes with unchanged results | Pending |
 | WP10 | User reporting | Tidy outputs, plots, markdown report | Results clearly show estimates, CI, Q, SDPD, and caveats | Pending |
