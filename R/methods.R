@@ -26,6 +26,8 @@ summary.mrwin_fit <- function(object, ...) {
     dscwr = object$point$dscwr,
     ci_low = object$inference$ci95_dscwr[1L],
     ci_high = object$inference$ci95_dscwr[2L],
+    pleiotropy_ci_low = .mrwin_bound_or_na(object$inference$pleiotropy_bounded, "ci_dscwr_pleiotropy_bounded", 1L),
+    pleiotropy_ci_high = .mrwin_bound_or_na(object$inference$pleiotropy_bounded, "ci_dscwr_pleiotropy_bounded", 2L),
     stringsAsFactors = FALSE
   )
   heterogeneity <- data.frame(
@@ -50,6 +52,13 @@ summary.mrwin_fit <- function(object, ...) {
   )
   class(out) <- c("summary.mrwin_fit", "list")
   out
+}
+
+.mrwin_bound_or_na <- function(x, field, index) {
+  if (is.null(x) || is.null(x[[field]])) {
+    return(NA_real_)
+  }
+  x[[field]][index]
 }
 
 print.summary.mrwin_fit <- function(x, ...) {

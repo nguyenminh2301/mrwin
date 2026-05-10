@@ -34,7 +34,8 @@ Core exported functions:
 - `mrwin_gls_pool()` pools adjacent ISG contrasts into DS-CWR and reports Q heterogeneity diagnostics.
 - `mrwin_multiplier_bootstrap()` estimates DS-CWR, GLS standard error, bivariate-Delta CI, Fieller CI, Q heterogeneity diagnostics, and bootstrap moment diagnostics.
 - `mrwin_propensity_weights()` computes ordinal-IPTW stabilized weights, ESS diagnostics, balance summaries, and positivity-filtered active strata.
-- `mrwin_aalen_per_snp()`, `mrwin_cox_per_snp()`, and `mrwin_mr_egger()` implement SDPD components.
+- `mrwin_sdpd()` runs the Step-Down Pleiotropy Diagnostic on Aalen, Cox, or both scales.
+- `mrwin_aalen_per_snp()`, `mrwin_cox_per_snp()`, and `mrwin_mr_egger()` expose the SDPD components.
 - `mrwin_pleiotropy_bounded_ci()` widens the DS-CWR CI by an SDPD-implied bias band.
 
 Minimal example:
@@ -72,4 +73,4 @@ The repository intentionally excludes manuscript drafts, replication outputs, an
 
 The package implementation plan is frozen in [inst/spec/algorithm-spec.md](inst/spec/algorithm-spec.md). This document maps the paper v5.1/v5.2 methods to R package functions, test oracles, edge cases, and remaining implementation gaps.
 
-The canonical work-package sequence is tracked in [inst/spec/work-package-roadmap.md](inst/spec/work-package-roadmap.md). It records WP0 plus the 12 main work packages WP1-WP12, with progress complete through WP6.
+The canonical work-package sequence is tracked in [inst/spec/work-package-roadmap.md](inst/spec/work-package-roadmap.md). It records WP0 plus the 12 main work packages WP1-WP12, with progress complete through WP7.

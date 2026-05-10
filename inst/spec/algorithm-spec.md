@@ -4,7 +4,7 @@ Version: WP0 freeze, 2026-05-09
 Repository target: `mrwin` R package
 Primary manuscript source: Paper 1 v5.2, with v5 and v5.1 review deltas reconciled
 Implementation policy: R is the user-facing package; Python remains a reference oracle until parity is proven.
-Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP6.
+Work-package sequencing: `inst/spec/work-package-roadmap.md` is the canonical meaning of WP0-WP12 shorthand, with progress complete through WP7.
 
 ## 1. Source Audit
 
@@ -479,14 +479,16 @@ Package API:
 - `mrwin_aalen_per_snp(G, time, status)`.
 - `mrwin_cox_per_snp(G, time, status)`.
 - `mrwin_mr_egger(beta_x, beta_y, se_y)`.
-- future high-level: `mrwin_sdpd(...)`.
+- `mrwin_sdpd(G, X, time, status, scale, alpha, min_snps)`.
 
 Acceptance tests:
 
 - MR-Egger exact synthetic intercept.
-- Type-I simulation under `gamma_1 = 0`.
-- power simulation under `gamma_1 > 0`.
-- ascertained vs unascertained scenario reproduces v5.2 S8 direction.
+- deterministic summary-level null and pleiotropy scenarios for MR-Egger intercept behavior.
+- Aalen sandwich calculation against a hand calculation.
+- Cox smoke test with finite log-HR estimates and clear input failure modes.
+- high-level `mrwin()` warning when SDPD is underpowered.
+- full MC Type-I/power grids are deferred to WP8 simulation engine expansion.
 
 ### 4.13 Pleiotropy-Bounded CI
 
@@ -621,10 +623,11 @@ Already present or partially present:
 | `mrwin_gls_pool()` | implemented | WP4 GLS DS-CWR and Q statistic; uses approximate shrinkage when requested, production LW review remains later. |
 | `mrwin_multiplier_bootstrap()` | implemented | WP5 bootstrap inference plus WP6 ordinal-IPTW refitting, ESS diagnostics, positivity filtering, and bridged contrast covariance. |
 | `mrwin_propensity_weights()` | implemented | WP6 ordinal-IPTW stabilized weights, truncation, ESS, balance diagnostics, and active/dropped strata. |
-| `mrwin_aalen_per_snp()` | implemented | Needs validation against survival-package reference or Python. |
-| `mrwin_cox_per_snp()` | implemented | Approximate Cox; needs parity/reference tests. |
-| `mrwin_mr_egger()` | implemented | Needs robust input validation. |
-| `mrwin_pleiotropy_bounded_ci()` | implemented | Needs v5 Table 3 interpolation helper. |
+| `mrwin_sdpd()` | implemented | WP7 public wrapper for Aalen/Cox SDPD, MR-Egger intercept testing, rejection and underpower flags. |
+| `mrwin_aalen_per_snp()` | implemented | WP7 validation and hand-sandwich tests. |
+| `mrwin_cox_per_snp()` | implemented | Approximate Cox with validation and finite-estimate smoke tests; full survival-reference parity remains later. |
+| `mrwin_mr_egger()` | implemented | WP7 robust validation and deterministic null/power tests. |
+| `mrwin_pleiotropy_bounded_ci()` | implemented | WP7 validation and high-level optional output; v5 Table 3 interpolation helper remains future work. |
 
 ### 5.2 Required High-Level API
 

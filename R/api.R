@@ -84,6 +84,8 @@ mrwin_controls <- function(
     run_sdpd = TRUE,
     sdpd_scale = c("aalen", "cox", "both", "none"),
     sdpd_alpha = 0.05,
+    sdpd_min_snps = 10L,
+    pleiotropy_bias_radius = NULL,
     adjustment = c("none", "ordinal_iptw", "gps"),
     backend = c("dense", "sparse", "rcpp"),
     delta_x_tol = 1e-8,
@@ -93,6 +95,9 @@ mrwin_controls <- function(
   sdpd_scale <- match.arg(sdpd_scale)
   adjustment <- match.arg(adjustment)
   backend <- match.arg(backend)
+  if (!is.null(pleiotropy_bias_radius)) {
+    pleiotropy_bias_radius <- as.numeric(pleiotropy_bias_radius)
+  }
 
   out <- list(
     n_strata = as.integer(n_strata),
@@ -102,6 +107,8 @@ mrwin_controls <- function(
     run_sdpd = isTRUE(run_sdpd),
     sdpd_scale = sdpd_scale,
     sdpd_alpha = sdpd_alpha,
+    sdpd_min_snps = as.integer(sdpd_min_snps),
+    pleiotropy_bias_radius = pleiotropy_bias_radius,
     adjustment = adjustment,
     backend = backend,
     delta_x_tol = delta_x_tol,
@@ -225,22 +232,38 @@ mrwin <- function(
     )
   }
 
+  pleiotropy_bounded <- NULL
+  if (!is.null(controls$pleiotropy_bias_radius)) {
+    pleiotropy_bounded <- mrwin_pleiotropy_bounded_ci(
+      delta_hat = boot$delta_gls,
+      se_delta = boot$se_delta_gls,
+      bias_radius = controls$pleiotropy_bias_radius
+    )
+  }
+
   sdpd <- NULL
   if (controls$run_sdpd && controls$sdpd_scale != "none") {
-    sdpd <- .mrwin_run_sdpd(
+    sdpd <- mrwin_sdpd(
       G = G,
       X = X,
       time = endpoint_data$time[, 1L],
       status = endpoint_data$status[, 1L],
       scale = controls$sdpd_scale,
-      alpha = controls$sdpd_alpha
+      alpha = controls$sdpd_alpha,
+      min_snps = controls$sdpd_min_snps
     )
-    rejected <- vapply(sdpd$results, function(x) isTRUE(x$rejected), logical(1))
-    if (any(rejected)) {
+    if (isTRUE(sdpd$rejected)) {
       warning_log <- .mrwin_add_warning(
         warning_log,
         "sdpd_rejected",
         "SDPD MR-Egger intercept rejected on at least one scale; cCWR validity is questionable."
+      )
+    }
+    if (isTRUE(sdpd$underpowered)) {
+      warning_log <- .mrwin_add_warning(
+        warning_log,
+        "sdpd_underpowered",
+        "SDPD used fewer SNPs than the configured minimum; non-rejection may have low power."
       )
     }
   }
@@ -274,7 +297,8 @@ mrwin <- function(
       ci95_delta = boot$ci95_delta,
       ci95_dscwr = boot$ci95_dscwr,
       ci95_delta_fieller = boot$ci95_delta_fieller,
-      ci95_dscwr_fieller = boot$ci95_dscwr_fieller
+      ci95_dscwr_fieller = boot$ci95_dscwr_fieller,
+      pleiotropy_bounded = pleiotropy_bounded
     ),
     heterogeneity = list(
       q = boot$q,
@@ -327,6 +351,15 @@ mrwin <- function(
   }
   if (!is.numeric(controls$sdpd_alpha) || controls$sdpd_alpha <= 0 || controls$sdpd_alpha >= 1) {
     stop("`sdpd_alpha` must be between 0 and 1.", call. = FALSE)
+  }
+  if (!is.numeric(controls$sdpd_min_snps) || controls$sdpd_min_snps < 3L) {
+    stop("`sdpd_min_snps` must be at least 3.", call. = FALSE)
+  }
+  if (!is.null(controls$pleiotropy_bias_radius)) {
+    radius <- as.numeric(controls$pleiotropy_bias_radius)
+    if (length(radius) != 1L || !is.finite(radius) || radius < 0) {
+      stop("`pleiotropy_bias_radius` must be NULL or a single non-negative finite number.", call. = FALSE)
+    }
   }
   if (!is.numeric(controls$delta_x_tol) || controls$delta_x_tol < 0) {
     stop("`delta_x_tol` must be non-negative.", call. = FALSE)
@@ -413,30 +446,7 @@ mrwin <- function(
 }
 
 .mrwin_run_sdpd <- function(G, X, time, status, scale, alpha) {
-  beta_x <- .mrwin_lm_per_snp(G, X)
-  scales <- if (scale == "both") c("aalen", "cox") else scale
-  results <- lapply(scales, function(one_scale) {
-    outcome <- if (one_scale == "aalen") {
-      mrwin_aalen_per_snp(G, time, status)
-    } else {
-      mrwin_cox_per_snp(G, time, status)
-    }
-    egger <- tryCatch(
-      mrwin_mr_egger(beta_x$beta, outcome$beta, outcome$se),
-      error = function(e) list(error = conditionMessage(e))
-    )
-    if (is.null(egger$error)) {
-      egger$rejected <- isTRUE(egger$intercept_p_value < alpha)
-    }
-    egger$scale <- one_scale
-    egger
-  })
-  names(results) <- scales
-  list(
-    alpha = alpha,
-    exposure_summary = beta_x,
-    results = results
-  )
+  mrwin_sdpd(G = G, X = X, time = time, status = status, scale = scale, alpha = alpha)
 }
 
 .mrwin_add_warning <- function(warnings, code, message) {
