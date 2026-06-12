@@ -194,9 +194,11 @@ N ~ 3,000-4,000 *even in interpreted Python*; a compiled implementation (Rust
 via extendr) would push the crossover far lower and compound the asymptotic win
 with a large constant-factor win.
 
-Prototype location during development: `/tmp/mrwin_proto/` (`fastwin.py`,
-`run.py`, `bench.py`). These should be promoted into the repository as a
-reference oracle and test fixture (a follow-up work item; see Section 10).
+Reference implementation (in repository): `python/p1_engine_v5/fast_kernel.py`,
+with exactness tests in `tests/python/test_fast_kernel.py` (pinned against the
+existing dense pair kernel for K = 1..4, unweighted bit-exact and weighted to
+`1e-9`). The reference exposes `fast_pair_win_loss`, `fast_pair_logcwr`, and
+`fast_adjacent_win_loss`, and is wired into CI.
 
 ## 9. Numerical and statistical notes
 
@@ -217,9 +219,9 @@ reference oracle and test fixture (a follow-up work item; see Section 10).
 
 ## 10. Integration plan
 
-1. Promote the prototype to a documented Python reference oracle with a test
-   suite, including the integer-exact unweighted path and general K (work item
-   "B").
+1. [DONE] Promote the prototype to a documented Python reference oracle with a
+   test suite, including the integer-exact unweighted path and general K
+   (`python/p1_engine_v5/fast_kernel.py`, `tests/python/test_fast_kernel.py`).
 2. Re-implement the dominance engine (Fenwick + value-pivot CDQ) and the
    decomposition in Rust via `extendr`, exposing `backend = "fast"` in
    `mrwin_controls()` (work item "C").

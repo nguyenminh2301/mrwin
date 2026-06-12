@@ -87,5 +87,8 @@ jobs:
       - name: Run kernel tests
         run: python -m pytest tests/python/test_kernel.py -v --timeout=120
 
+      - name: Run fast-kernel tests
+        run: python -m pytest tests/python/test_fast_kernel.py -v --timeout=120
+
       - name: Verify replication outputs
         run: python -m pytest tests/python/test_replication.py -v --timeout=30
