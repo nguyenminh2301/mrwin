@@ -11,3 +11,4 @@
 ^requirements\.txt$
 ^run_all\.sh$
 ^rust$
+^preprint$
