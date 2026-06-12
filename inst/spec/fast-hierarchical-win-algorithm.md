@@ -176,23 +176,28 @@ multiplier weights):
 - Generality: **K = 1, 2, 3, 4** all exact (K = 4 exercises the general CDQ).
 
 Empirical scaling of the fast path, K = 3, per group size N (single-thread,
-interpreted Python prototype — constants are pessimistic):
+interpreted Python reference — constants are pessimistic). Reproduce with
+`python -m p1_engine_v5.fast_kernel_benchmark`; raw data in
+`inst/spec/fast-kernel-scaling.csv`:
 
 ```
-   N      brute O(N^2)   fast       log-log slope (fast)
-  2000      0.27 s       0.57 s      --
-  4000      2.11 s       1.22 s      1.04
-  8000      8.68 s       2.47 s      1.08
- 16000      (skip)       5.2  s      1.03
- 32000      (skip)      10.7  s      1.08
- 64000      (skip)      22.7  s      1.09
+   N/group   brute O(N^2)   fast        log-log slope (fast)
+     1024       0.13 s       0.29 s       --
+     2048       0.46 s       0.61 s       1.06
+     4096       1.79 s       1.18 s       0.95
+     8192       8.21 s       2.40 s       1.02
+    16384       (skip)       5.10 s       1.09
+    32768       (skip)      10.70 s       1.07
+    65536       (skip)      22.55 s       1.08
+   131072       (skip)      47.57 s       1.08
 ```
 
-The brute path scales as `N^2` (4x per doubling); the fast path scales near
-linearly (slope ~1.0-1.1, consistent with `N log^2 N`). The crossover is
-N ~ 3,000-4,000 *even in interpreted Python*; a compiled implementation (Rust
-via extendr) would push the crossover far lower and compound the asymptotic win
-with a large constant-factor win.
+Fitted fast-path exponent (log-log least squares over all sizes): **1.049**
+(2.0 = quadratic, 1.0 = linear), consistent with `N log^2 N`. The brute path
+scales as `N^2` (~4x per doubling) and is exact-matched by the fast path at
+every size where it is run. The crossover is N ~ 4,000 *even in interpreted
+Python*; a compiled implementation (Rust via extendr) would push the crossover
+far lower and compound the asymptotic win with a large constant-factor win.
 
 Reference implementation (in repository): `python/p1_engine_v5/fast_kernel.py`,
 with exactness tests in `tests/python/test_fast_kernel.py` (pinned against the
