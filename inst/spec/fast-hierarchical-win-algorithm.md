@@ -227,13 +227,21 @@ existing dense pair kernel for K = 1..4, unweighted bit-exact and weighted to
 1. [DONE] Promote the prototype to a documented Python reference oracle with a
    test suite, including the integer-exact unweighted path and general K
    (`python/p1_engine_v5/fast_kernel.py`, `tests/python/test_fast_kernel.py`).
-2. Re-implement the dominance engine (Fenwick + value-pivot CDQ) and the
-   decomposition in Rust via `extendr`, exposing `backend = "fast"` in
-   `mrwin_controls()` (work item "C").
-3. Parity-gate against the dense/sparse R backends with
-   `mrwin_verify_sparse_dense_parity()` at tolerance `1e-10`.
-4. Re-run the WP9 benchmark grid extended to N = 50k, 100k, 337k.
-5. Only after parity + benchmarks pass, make `fast` the default backend for
+2. [DONE] Re-implement the dominance engine (Fenwick + value-pivot CDQ) and the
+   decomposition in Rust. Pure-Rust core `rust/mrwinkernel/` is implemented and
+   tested with no R/network: fast-vs-brute for K=1..4 and cross-language parity
+   against the Python reference (`rust/mrwinkernel/tests/parity.rs`, bit-exact
+   unweighted / 1e-9 weighted). The extendr binding `rust/mrwinrust/` and the R
+   wiring (`backend = "rust"` enum + `R/backend_rust.R`, which injects the Rust
+   kernel into the shared sparse pipeline via the new `pair_fun` argument) are
+   in place. Building the R<->Rust linkage requires an R toolchain; see
+   `rust/README.md` and the `rust/packaging/` templates.
+3. [PENDING-R-ENV] Parity-gate `backend = "rust"` against the dense/sparse R
+   backends in an R+Rust environment (`tests/testthat/test-backend-rust.R`,
+   skipped when the compiled library is absent) at tolerance `1e-10`.
+4. Re-run the WP9 benchmark grid extended to N = 50k, 100k, 337k with the
+   compiled backend.
+5. Only after parity + benchmarks pass, make `rust` the default backend for
    large N and document the asymptotics in the README performance section.
 
 ## 11. Publishability

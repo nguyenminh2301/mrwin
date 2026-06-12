@@ -10,3 +10,4 @@
 ^pyproject\.toml$
 ^requirements\.txt$
 ^run_all\.sh$
+^rust$

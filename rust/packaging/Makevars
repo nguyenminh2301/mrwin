@@ -1,0 +1,23 @@
+# Template Makevars to link the extendr `mrwinrust` static library into the
+# mrwin package shared object. Copy into `src/Makevars` when wiring the Rust
+# backend in an R environment (see ../README.md). Assumes the `mrwinrust` crate
+# (which path-depends on `mrwinkernel`) is placed at `src/rust`.
+
+TARGET_DIR = ./rust/target
+LIBDIR = $(TARGET_DIR)/release
+STATLIB = $(LIBDIR)/libmrwinrust.a
+PKG_LIBS = -L$(LIBDIR) -lmrwinrust
+
+CARGO_BUILD = cargo build --release \
+	--manifest-path=./rust/mrwinrust/Cargo.toml \
+	--target-dir $(TARGET_DIR)
+
+$(SHLIB): $(STATLIB)
+
+$(STATLIB):
+	$(CARGO_BUILD)
+
+clean:
+	rm -Rf $(SHLIB) $(OBJECTS) $(STATLIB) $(TARGET_DIR)
+
+.PHONY: clean

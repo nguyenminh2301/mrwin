@@ -46,6 +46,10 @@ htmlcov/
 # mypy
 .mypy_cache/
 
+# Rust
+target/
+**/target/
+
 # R
 *.Rcheck/
 *.tar.gz
