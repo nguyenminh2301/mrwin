@@ -293,6 +293,15 @@ the asymptotics to $N=337{,}000$: the dense kernel needs $\sim 1.1\times10^{11}$
 comparisons and $\sim 100$ GB, whereas the fast path needs $\sim 10^{8}$
 weighted operations and $O(N)$ memory.
 
+![Figure 1. Wall-clock time vs. sample size per group on log–log axes for the
+dense $O(N^2)$ kernel and the fast algorithm ($K=3$, weighted, right-censored).
+The dense baseline tracks the slope-2 (quadratic) guide; the fast path tracks
+the slope-1 (linear) guide, with a fitted exponent of
+1.08.](fig_scaling.png)
+
+*Figure 1.* Dense vs. fast scaling (data: `preprint/scaling_k3.csv`; regenerate
+the figure with `python preprint/make_figure.py`).
+
 ## 9. Discussion
 
 **Generality.** The result is about the pairwise tallies, so it applies verbatim
@@ -337,23 +346,27 @@ specification: `inst/spec/fast-hierarchical-win-algorithm.md`.
 
 ## References
 
-*(to be completed in citation style for the target venue)*
+*(bibliographic details verified; final formatting to match the target venue)*
 
 1. Pocock SJ, Ariti CA, Collier TJ, Wang D. The win ratio: a new approach to the
    analysis of composite endpoints in clinical trials based on clinical
    priorities. *Eur Heart J*. 2012;33(2):176–182.
+   doi:10.1093/eurheartj/ehr352
 2. Buyse M. Generalized pairwise comparisons of prioritized outcomes in the
-   two-sample problem. *Stat Med*. 2010;29(30):3245–3257.
+   two-sample problem. *Stat Med*. 2010;29(30):3245–3257. doi:10.1002/sim.3923
 3. Finkelstein DM, Schoenfeld DA. Combining mortality and longitudinal measures
    in clinical trials. *Stat Med*. 1999;18(11):1341–1354.
+   doi:10.1002/(SICI)1097-0258(19990615)18:11<1341::AID-SIM129>3.0.CO;2-7
 4. Luo X, Tian H, Mohanty S, Tsai WY. An alternative approach to confidence
-   interval estimation for the win ratio statistic. *Biometrics*. 2015.
+   interval estimation for the win ratio statistic. *Biometrics*.
+   2015;71(1):139–145. doi:10.1111/biom.12225
 5. Dong G, Li D, Ballerstedt S, Vandemeulebroecke M. A generalized analytic
    solution to the win ratio to analyze a composite endpoint considering the
-   clinical importance order among components. *Pharm Stat*. 2016.
-6. Bentley JL. Multidimensional divide-and-conquer. *Commun ACM*.
-   1980;23(4):214–229.
-7. Fenwick PM. A new data structure for cumulative frequency tables. *Softw
-   Pract Exper*. 1994;24(3):327–336.
-8. Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a
-   composite endpoint based on prioritized components. *Biostatistics*. 2016.
+   clinical importance order among components. *Pharm Stat*. 2016;15(5):430–437.
+6. Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a
+   composite outcome based on prioritized components. *Biostatistics*.
+   2016;17(1):178–187. doi:10.1093/biostatistics/kxv032
+7. Bentley JL. Multidimensional divide-and-conquer. *Commun ACM*.
+   1980;23(4):214–229. doi:10.1145/358841.358850
+8. Fenwick PM. A new data structure for cumulative frequency tables. *Softw
+   Pract Exper*. 1994;24(3):327–336. doi:10.1002/spe.4380240306
