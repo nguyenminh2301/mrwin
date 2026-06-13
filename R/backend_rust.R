@@ -8,7 +8,7 @@
 #' replaces the per-stratum-pair win/loss kernel.
 #'
 #' The compiled library is optional. It is built only when the package is
-#' installed with a Rust toolchain present (see `rust/README.md`). When it
+#' installed with a Rust toolchain present (see `src/rust/README.md`). When it
 #' is unavailable, `mrwin(backend = "rust")` fails with an actionable message
 #' and the `dense`/`sparse` backends remain fully functional.
 
@@ -58,7 +58,7 @@
 #' Identical contract to [mrwin_sparse_bootstrap()]; it delegates to that
 #' function with the compiled Rust kernel injected as `pair_fun`, so all
 #' downstream estimation is shared and tested. Requires the compiled extendr
-#' library (see `rust/README.md`).
+#' library (see `src/rust/README.md`).
 #'
 #' @param ... Arguments forwarded to [mrwin_sparse_bootstrap()].
 #' @return An object of class `mrwin_bootstrap`, as from
@@ -69,7 +69,7 @@ mrwin_rust_bootstrap <- function(...) {
     stop(
       "backend = 'rust' requires the compiled extendr library, which was not ",
       "found in this installation. Install the package with a Rust toolchain ",
-      "available (see rust/README.md), or use backend = 'dense' / 'sparse'.",
+      "available (see src/rust/README.md), or use backend = 'dense' / 'sparse'.",
       call. = FALSE
     )
   }

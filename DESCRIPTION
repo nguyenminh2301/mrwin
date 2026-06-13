@@ -16,6 +16,10 @@ Depends:
 Imports:
     graphics,
     stats
+SystemRequirements: Cargo (Rust's package manager) and rustc are OPTIONAL and
+    only required to build the high-performance "rust" backend. The package
+    builds, checks, and runs with the default dense and sparse backends when no
+    Rust toolchain is present.
 Suggests:
     covr,
     knitr,

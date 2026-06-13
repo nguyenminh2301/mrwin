@@ -10,5 +10,10 @@
 ^pyproject\.toml$
 ^requirements\.txt$
 ^run_all\.sh$
-^rust$
 ^preprint$
+# Rust build artifacts and generated Makevars (keep src/rust source in the tarball)
+^src/rust/.*/target$
+^src/rust/target$
+^src/Makevars$
+^src/Makevars\.win$
+^.*\.Rhistory$

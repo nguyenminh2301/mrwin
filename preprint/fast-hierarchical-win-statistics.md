@@ -338,7 +338,7 @@ win statistics at biobank scale and inside resampling inference.
 
 ## Reproducibility
 
-Rust core and tests: `rust/mrwinkernel/` (`cargo test`). Python reference and
+Rust core and tests: `src/rust/mrwinkernel/` (`cargo test`). Python reference and
 tests: `python/p1_engine_v5/fast_kernel.py`,
 `tests/python/test_fast_kernel.py`. Benchmark: `python -m
 p1_engine_v5.fast_kernel_benchmark`; data in `preprint/scaling_k3.csv`. Algorithm
