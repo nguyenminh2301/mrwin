@@ -87,7 +87,7 @@ mrwin_controls <- function(
     sdpd_min_snps = 10L,
     pleiotropy_bias_radius = NULL,
     adjustment = c("none", "ordinal_iptw", "gps"),
-    backend = c("dense", "sparse", "rcpp"),
+    backend = c("dense", "sparse", "rcpp", "rust"),
     delta_x_tol = 1e-8,
     iptw_truncation = c(0.01, 0.99),
     ess_fraction = 0.5
@@ -192,8 +192,13 @@ mrwin <- function(
     )
   }
 
-  if (controls$backend == "sparse") {
-    boot <- mrwin_sparse_bootstrap(
+  if (controls$backend %in% c("sparse", "rust")) {
+    boot_fun <- if (controls$backend == "rust") {
+      mrwin_rust_bootstrap
+    } else {
+      mrwin_sparse_bootstrap
+    }
+    boot <- boot_fun(
       time = endpoint_data$time,
       status = endpoint_data$status,
       G = G,

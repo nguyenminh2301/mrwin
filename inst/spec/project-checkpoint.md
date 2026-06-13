@@ -70,6 +70,7 @@ These are the remaining items after WP12 (deferred to post-release):
 - Full-size Monte Carlo Type-I, power, weak-instrument, pleiotropy, and discordant-component validation grids.
 - Statistical review: exact or documented Ledoit-Wolf shrinkage, AL-CWR secondary diagnostic, v5 Table 3 bias interpolation, GPS fallback decision.
 - Rcpp decision: benchmarks show dense R backend is faster than pure R sparse up to N=2000 due to vectorization; Rcpp justified only for biobank-scale (N>10000) where memory becomes limiting.
+- Sub-quadratic kernel algorithm (NEW, 2026-06-12): an exact `O(N log^{K-1} N)` algorithm for the right-censored hierarchical win/loss totals has been designed and prototype-validated (exact match to the dense kernel for K=1..4; near-linear scaling to N=64k). This supersedes the constant-factor-only Rcpp/Rust plan as the asymptotic fix for biobank scale. Specification: `inst/spec/fast-hierarchical-win-algorithm.md`. Status: design + prototype; not yet implemented in the package. Candidate standalone preprint (see spec Section 11).
 - Coverage measurement: needs CI to run covr; target >= 80%.
 
 ## WP9 Completion Summary

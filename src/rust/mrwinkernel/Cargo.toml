@@ -1,0 +1,16 @@
+[package]
+name = "mrwinkernel"
+version = "0.1.0"
+edition = "2021"
+description = "Sub-quadratic right-censored hierarchical win/loss kernel (pure-Rust core)"
+license = "MIT"
+
+# Pure-std core: no external dependencies, builds and tests with no network.
+# The R-facing glue (extendr) lives in a separate crate (see ../README.md).
+[lib]
+name = "mrwinkernel"
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+lto = true

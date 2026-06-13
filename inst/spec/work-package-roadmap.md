@@ -17,7 +17,7 @@ Important sequencing rule: this roadmap defines WP0 plus 12 main work packages, 
    - `core`: kernel, CWR, ISG, GLS, bootstrap.
    - `diagnostics`: SDPD, MR-Egger, pleiotropy-bound, Q statistic, weak instrument checks.
    - `workflow`: end-user helper functions, plotting, summaries, and reporting.
-4. Do not optimize prematurely with C++ before the algorithm is locked, but keep the design ready for a biobank-scale backend.
+4. Do not optimize prematurely with C++ before the algorithm is locked, but keep the design ready for a biobank-scale backend. NOTE (2026-06-12): the biobank-scale path is now an *algorithmic* one — see `inst/spec/fast-hierarchical-win-algorithm.md` for an exact `O(N log^{K-1} N)` win/loss algorithm (prototype-validated) that replaces the constant-factor-only Rcpp/Rust plan.
 5. Every algorithm must have a test oracle: toy hand-calculated examples, Python parity, and simulation recovery.
 
 ## Work Packages

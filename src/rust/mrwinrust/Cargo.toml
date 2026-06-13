@@ -1,0 +1,18 @@
+[package]
+name = "mrwinrust"
+version = "0.1.0"
+edition = "2021"
+description = "extendr R bindings for the mrwin sub-quadratic win/loss kernel"
+license = "MIT"
+
+# This crate links the verified pure-Rust core (../mrwinkernel) to R via
+# extendr. It REQUIRES an R toolchain (libR) plus the extendr crates at build
+# time and is therefore NOT compiled in environments without R. The core crate
+# it depends on is fully testable on its own (`cargo test` in ../mrwinkernel).
+[lib]
+crate-type = ["staticlib", "lib"]
+name = "mrwinrust"
+
+[dependencies]
+mrwinkernel = { path = "../mrwinkernel" }
+extendr-api = "0.7"

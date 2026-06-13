@@ -161,9 +161,13 @@ mrwin_sparse_bootstrap <- function(
     covariates = NULL,
     adjustment = c("none", "ordinal_iptw"),
     iptw_truncation = c(0.01, 0.99),
-    ess_fraction = 0.5
+    ess_fraction = 0.5,
+    pair_fun = mrwin_pair_win_loss
 ) {
   adjustment <- match.arg(adjustment)
+  if (!is.function(pair_fun)) {
+    stop("`pair_fun` must be a function with the mrwin_pair_win_loss signature.", call. = FALSE)
+  }
   checked <- .mrwin_validate_bootstrap_inputs(
     time = time,
     status = status,
@@ -282,7 +286,7 @@ mrwin_sparse_bootstrap <- function(
         next
       }
 
-      sums <- mrwin_pair_win_loss(
+      sums <- pair_fun(
         time[idx_high, , drop = FALSE],
         status[idx_high, , drop = FALSE],
         time[idx_low, , drop = FALSE],
