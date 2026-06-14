@@ -17,18 +17,22 @@ Progress note (2026-06-14), R-verified under R 4.3.3:
 - `backend = "fast"` wired opt-in for K∈{1,2} via `.mrwin_pair_win_loss_backend`;
   K≥3 transparently falls back to the dense pair kernel (identical results).
 
-### Complexity reality for K≥3 (honest note, supersedes the optimistic §3.1 claim)
+### Complexity for K≥3 (accurate note)
 
-The clean subquadratic fast paths are K=1 and K=2, both `Θ(N log N)`. For the
-**generic** kernel at K≥3 the first-separation decomposition does not reduce to a
-subproblem on a subset of *individuals* (the "tied at level 1" set is a relation
-over *pairs*), and a direct orthogonal-range-counting formulation needs
-dimension `2K`, so the log-power grows and the constant becomes unattractive by
-K=3. A genuinely fast K≥3 path therefore needs to **exploit the nested
-time-to-event structure** of the v5 endpoints (death terminal, censoring lower
-priorities) rather than the generic per-priority `(t, status)` contract — this is
-the open algorithmic problem and the next research checkpoint. Until then, K≥3
-(the v5 flagship) uses the dense fallback and is correct but quadratic.
+The clean fast paths shipped are K=1 and K=2, both `Θ(N log N)`. The tie-split
+decomposition **does generalise** to any K: the contribution at level k is a
+weighted multidimensional dominance count over the conjunction of the (k-1)
+tie conditions plus the level-k separation, summed over the `4^{k-1}` regime
+combinations of the earlier levels' `(status_high, status_low)` pairs. For K=3
+the level-3 term is a 3-D weighted dominance count (`O(N log² N)` via CDQ /
+nested Fenwick) over `4² = 16` regimes. So K≥3 is `Θ(N log^{K-1} N)` with a
+constant `~4^{K-1}` — **laborious but not a fundamental barrier**; the engineering
+risk is getting all regime comparison directions right (the differential-testing
+harness against `dense_pair_win_loss_kd` is the safety net). It was deferred, not
+because it is impossible, but to land K=1/K=2 cleanly first and because exploiting
+the v5 **nested time-to-event structure** (death terminal) may yield a lower
+constant than the generic `4^{K-1}` split. Until K≥3 lands, the v5 flagship uses
+the dense fallback (correct, quadratic).
 Depends on: WP3 (`mrwin_pair_win_loss`) and WP4 (`mrwin_estimate`) as the
 correctness reference.
 Blocks: WP14, WP15, WP19.

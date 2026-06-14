@@ -1,7 +1,18 @@
 # WP16 — Doubly-Ranked Stratification (M2)
 
-Status block: `T1 [todo] T2 [todo] T3 [todo]`
-Branch: `C-wp16` (from `C`; independent of WP13/WP14).
+Status block: `T1 [done] T2 [todo: pipeline wiring] T3 [partial: unit + balance tests done]`
+Branch: developed on `C-wp13` alongside S1/S2 (independent of the kernel work).
+
+Progress (2026-06-14, R-verified): `mrwin_doubly_ranked_strata(prs, exposure,
+n_strata)` implemented in `R/strata.R`, exported, matching the
+`mrwin_prs_strata` return contract. Tests `tests/testthat/test-doubly-ranked.R`:
+hand-computed toy example, strictly-increasing mean exposure across strata with
+balanced instrument means, exact balanced counts for full blocks, deterministic
+remainder handling, input validation. Full suite 79 groups, 0 failures.
+Remaining: **T2** — thread `stratification = c("prs_rank", "doubly_ranked")`
+through `mrwin_controls()` / `mrwin_estimate` / `mrwin_sparse_bootstrap` /
+`mrwin()` (note the interaction with the fast backend and bootstrap
+re-stratification: doubly-ranked needs the exposure at every re-stratification).
 Depends on: WP4 stratification (`mrwin_prs_strata`).
 Blocks: nothing hard; strengthens WP15 and WP19.
 

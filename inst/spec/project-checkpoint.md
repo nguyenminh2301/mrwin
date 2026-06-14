@@ -42,9 +42,14 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   (correct, quadratic). The generic-kernel range-counting approach is impractical
   at K≥3; the next research step is to exploit the nested time-to-event structure
   (see honesty note in `wp13-fast-kernel.md`).
-- Next: either the K≥3 structural algorithm, or WP14 (build-once/reuse +
-  incremental re-stratification) to accelerate the bootstrap for the K∈{1,2}
-  fast paths, or Track B (M2 doubly-ranked / M3 analytic variance).
+- **M2 (doubly-ranked stratification) core — landed + R-verified 2026-06-14.**
+  `mrwin_doubly_ranked_strata()` in `R/strata.R`, exported, tested
+  (`test-doubly-ranked.R`). Pipeline wiring (WP16 T2) still to do.
+- Next options: K≥3 structural fast kernel; WP14 (build-once/reuse +
+  incremental re-stratification); M2 T2 (wire doubly-ranked through the
+  pipeline); or M3 (analytic variance).
+- Verification environment: R 4.3.3 installed in the dev container; full
+  testthat suite (79 groups, 0 failures) + Python differential tests green.
 
 ## Completed Commits
 

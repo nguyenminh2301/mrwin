@@ -20,6 +20,7 @@
 \alias{mrwin_stratum_win_loss}
 \alias{mrwin_stratum_log_cwr}
 \alias{mrwin_prs_strata}
+\alias{mrwin_doubly_ranked_strata}
 \alias{mrwin_estimate}
 \alias{mrwin_gls_pool}
 \alias{mrwin_multiplier_bootstrap}
