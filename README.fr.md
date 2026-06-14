@@ -393,6 +393,7 @@ L'ajustement IPTW améliore la précision en équilibrant les covariables entre 
 - **Covariance GWAS diagonale** : Le bootstrap actuel utilise les erreurs standard SNP par SNP, pas la matrice de covariance LD complète. Cela peut sous-estimer l'incertitude lorsque les SNPs sont en déséquilibre de liaison.
 - **Vulnérabilité à la pléiotropie** : Le cCWR est sensible à la pléiotropie contaminant la hiérarchie. Une pléiotropie au niveau de la mortalité aussi faible que gamma = 0,05 peut réduire la couverture à 12 %.
 - **Exigences de taille d'échantillon** : Des échantillons de taille biobanque (N > 100 000) sont un prérequis statistique strict pour une inférence fiable.
+- **Évolutivité computationnelle (en cours)** : Le balayage par paires win/loss actuel est quadratique en N à chaque itération du bootstrap, de sorte que l'échelle biobanque est un prérequis statistique mais pas encore une valeur par défaut computationnelle. Un backend sous-quadratique (proche de N log N), un estimateur de gradient continu qui supprime le nombre arbitraire de strates, et une variance analytique sont spécifiés dans la feuille de route de la Phase II (`inst/spec/acceleration-roadmap.md`) ; tous sont ajoutés comme backends optionnels, sans modifier les résultats existants.
 
 ---
 

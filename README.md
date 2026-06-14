@@ -481,6 +481,13 @@ strata. The SDPD tests for direct pleiotropy.
   small as gamma = 0.05 can collapse coverage to 12%.
 - **Sample size requirements**: Biobank-scale samples (N > 100,000) are
   a strict statistical prerequisite for reliable inference.
+- **Computational scalability (in progress)**: the current win/loss pair
+  sweep is quadratic in N per bootstrap iteration, so biobank-scale runs are a
+  statistical prerequisite but not yet a computational default. A subquadratic
+  (near `N log N`) backend, a continuous gradient estimator that removes the
+  arbitrary stratum count, and an analytic variance are specified in the
+  Phase II roadmap (`inst/spec/acceleration-roadmap.md`) and land behind opt-in
+  backends without changing existing results.
 
 ---
 

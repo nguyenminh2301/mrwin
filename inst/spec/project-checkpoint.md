@@ -8,13 +8,23 @@ This file tracks current implementation state. The roadmap remains canonical for
 
 | Area | State |
 |---|---|
-| Completed work packages | WP0-WP12 |
-| Current work package | Post-release validation |
-| Current branch | `main` |
-| Remote | `origin/main` |
+| Completed work packages | WP0-WP12 (Phase I) |
+| Current work package | Phase II (WP13-WP19): scalability, continuous estimator, theory |
+| Current branch | `C` |
+| Integration branch | `C` (Phase II); `main` holds Phase I |
 | Primary interface | R package |
 | Python role | Reference/oracle harness only |
-| Release readiness | Not release-ready; core path works, validation/reporting/performance/CI still pending |
+| Release readiness | Phase I core path works; Phase II makes it biobank-scale and adds the continuous estimator + analytic variance before external release |
+
+## Phase II Pointer
+
+The second program of work is canonically defined in
+`inst/spec/acceleration-roadmap.md`, with per-work-package specs in
+`inst/spec/wp13-fast-kernel.md` … `inst/spec/wp19-scalability-validation.md`.
+Phase II addresses the one structural gap Phase I left open: the win/loss pair
+sweep is `Θ(N²/D)` per bootstrap iteration, which is infeasible at biobank
+scale. Phase II replaces it with a subquadratic algorithm, removes the arbitrary
+stratum-count `D` via a continuous estimator, and derives an analytic variance.
 
 ## Completed Commits
 

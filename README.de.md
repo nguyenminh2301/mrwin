@@ -499,6 +499,14 @@ PRS-Strata balanciert werden. Die SDPD testet auf direkte Pleiotropie.
 - **Stichprobengrößenanforderungen**: Biobank-große Stichproben
   (N > 100.000) sind eine strenge statistische Voraussetzung für
   zuverlässige Inferenz.
+- **Rechnerische Skalierbarkeit (in Arbeit)**: Der aktuelle paarweise
+  Win/Loss-Durchlauf ist pro Bootstrap-Iteration quadratisch in N, sodass
+  Biobank-Größe eine statistische Voraussetzung, aber noch keine rechnerische
+  Standardeinstellung ist. Ein subquadratisches (nahezu N log N) Backend, ein
+  kontinuierlicher Gradientenschätzer, der die willkürliche Stratenzahl
+  entfernt, und eine analytische Varianz sind in der Phase-II-Roadmap
+  (`inst/spec/acceleration-roadmap.md`) spezifiziert; alle werden als optionale
+  Backends hinzugefügt, ohne bestehende Ergebnisse zu ändern.
 
 ---
 

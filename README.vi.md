@@ -493,6 +493,13 @@ suốt các tầng PRS. SDPD kiểm tra pleiotropy trực tiếp.
   thể làm sụp đổ độ phủ xuống còn 12%.
 - **Yêu cầu về cỡ mẫu**: Mẫu quy mô biobank (N > 100.000) là điều kiện tiên
   quyết thống kê nghiêm ngặt cho suy luận đáng tin cậy.
+- **Khả năng mở rộng tính toán (đang phát triển)**: phép quét win/loss theo cặp
+  hiện có độ phức tạp bậc hai theo N cho mỗi vòng bootstrap, nên quy mô biobank
+  là điều kiện tiên quyết về thống kê nhưng chưa phải mặc định về tính toán. Một
+  backend dưới-bậc-hai (gần `N log N`), một ước lượng gradient liên tục loại bỏ
+  việc chọn số tầng tuỳ ý, và một phương sai giải tích được đặc tả trong lộ trình
+  Giai đoạn II (`inst/spec/acceleration-roadmap.md`); tất cả được bổ sung dưới
+  dạng backend tuỳ chọn, không thay đổi kết quả hiện có.
 
 ---
 
