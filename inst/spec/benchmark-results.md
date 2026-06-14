@@ -39,4 +39,22 @@ unweighted, `<1e-10` weighted). R parity verified under **R 4.3.3**:
 `tests/testthat/test-kernel-fast.R` and `tests/testthat/test-backend-fast.R`
 (end-to-end `mrwin(backend="fast")`) pass; full suite 71 groups, 0 failures.
 
-_Last updated: 2026-06-14 (S1 landed)._
+## S2 — hierarchical K=2 win/loss fast path
+
+`fast_pair_win_loss_2d` (level-1 sweep + four-regime tie-split with a Fenwick 2D
+dominance counter), one balanced pair, half high / half low:
+
+| N (per side ×2) | fast_2d (s) |
+|---:|---:|
+| 2,000 | 0.011 |
+| 8,000 | 0.055 |
+| 32,000 | 0.263 |
+| 128,000 | 1.51 |
+
+Empirical exponent `p = 1.18` (gate `< 1.3` ✅). Parity: 20k random K=2 cohorts
++ 8k max-tie (support=2) cohorts vs the brute-force oracle, **0 mismatches**;
+R `test-kernel-fast.R` (K=2) and `test-backend-fast.R` (K=2 end-to-end) green.
+
+K≥3: no fast path yet (dense fallback). See `wp13-fast-kernel.md` honesty note.
+
+_Last updated: 2026-06-14 (S1 + S2/K=2 landed, R-verified)._

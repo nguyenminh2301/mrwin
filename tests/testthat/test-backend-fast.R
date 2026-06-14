@@ -31,6 +31,21 @@ test_that("backend='fast' equals 'sparse' on a single-endpoint (K=1) cohort", {
   expect_equal(fit_fast$heterogeneity$q, fit_sparse$heterogeneity$q, tolerance = 1e-8)
 })
 
+test_that("backend='fast' equals 'sparse' on a two-endpoint (K=2) cohort", {
+  cfg <- mrwin_config(n_outcome = 300, m_snps = 12, seed = 43)
+  dat <- mrwin_simulate(cfg, seed = 43)
+  ep <- mrwin_endpoint(
+    dat$time[, 1:2, drop = FALSE], dat$status[, 1:2, drop = FALSE],
+    colnames(dat$time)[1:2]
+  )
+  fit_sparse <- .fit_with_backend(ep, dat, "sparse", 13)
+  fit_fast <- .fit_with_backend(ep, dat, "fast", 13)
+  expect_equal(fit_fast$point$delta_gls, fit_sparse$point$delta_gls, tolerance = 1e-8)
+  expect_equal(fit_fast$point$log_theta, fit_sparse$point$log_theta, tolerance = 1e-8)
+  expect_equal(fit_fast$inference$se_delta_gls, fit_sparse$inference$se_delta_gls,
+               tolerance = 1e-8)
+})
+
 test_that("backend='fast' falls back and equals 'sparse' on K=3 endpoints", {
   cfg <- mrwin_config(n_outcome = 300, m_snps = 12, seed = 42)
   dat <- mrwin_simulate(cfg, seed = 42)

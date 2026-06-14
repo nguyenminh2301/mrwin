@@ -178,7 +178,17 @@ Effort estimate: 2–3 focused sessions.
 
 ## S2 — C2: hierarchical `K`-endpoint, build-once / reuse-across-`B`
 
-Status: `[todo]`. Branch: `C-wp13` → `C-wp14`. Implements WP13 T3–T6, WP14 T1–T3.
+Status: `[K=2 done — 2026-06-14; K≥3 open]`. Branch: `C-wp13` → `C-wp14`.
+Implements WP13 T3–T6, WP14 T1–T3.
+
+**Landed (K=2):** Fenwick-based 2D dominance counter + four-regime tie-split
+decomposition (`fast_pair_win_loss_2d` / `.mrwin_fast_pair_2d`); R-verified under
+R 4.3.3 (full suite 74 groups, 0 failures) + Python differential tests (28k
+random cohorts incl. max-tie, 0 mismatches); scaling exponent 1.18.
+`backend = "fast"` now covers K∈{1,2}. **K≥3 remains open** — see the honesty
+note in `wp13-fast-kernel.md`: the generic kernel needs the nested
+time-to-event structure exploited, not naive range trees. The WP14 build-once /
+reuse refactor and incremental re-stratification are still to do.
 
 ### S2.1 Plan
 

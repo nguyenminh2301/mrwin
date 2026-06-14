@@ -1,16 +1,34 @@
 # WP13 — Fast Hierarchical Win/Loss Kernel (C1 + C2)
 
-Status block: `T1 [done] T2 [done] T3 [todo] T4 [todo] T5 [todo] T6 [partial: K=1 fast backend wired opt-in]`
+Status block: `T1 [done] T2 [done] T3 [done: K=2] T4 [done: K=2] T5 [done: K<=2] T6 [done: K<=2 backend wired]  | K>=3 [open]`
 Branch: `C-wp13` (from `C`).
 
-Progress note (2026-06-14): S1 (C1, single-endpoint) landed. Python reference
-`python/p1_engine_v5/kernel_fast.py` + R `R/kernel_fast.R`
-(`mrwin_fast_pair_win_loss`, `mrwin_fast_adjacent_win_loss`), parity tests
-(Python bit-for-bit green; R `tests/testthat/test-kernel-fast.R` for CI), and the
-scaling benchmark (`benchmark_fast_kernel.py`, results in `benchmark-results.md`:
-fast tail exponent 1.21 vs dense 2.30). `backend = "fast"` wired opt-in for K=1
-via `.mrwin_pair_win_loss_backend`. Remaining: T3–T5 (K≥2 hierarchical), T6 full
-K≥2 backend routing.
+Progress note (2026-06-14), R-verified under R 4.3.3:
+- **S1 (K=1)** and **S2 (K=2)** landed. `python/p1_engine_v5/kernel_fast.py` +
+  R `R/kernel_fast.R` (`mrwin_fast_pair_win_loss`, `mrwin_fast_adjacent_win_loss`,
+  Fenwick-based 2D dominance counter for K=2).
+- Parity: Python differential tests vs the brute-force oracle — 20k random K=2
+  cohorts + 8k max-tie (support=2) cohorts, 0 mismatches; R testthat
+  `test-kernel-fast.R` (K=1 and K=2) and `test-backend-fast.R` (end-to-end
+  `mrwin(backend="fast")` for K=1/K=2 fast paths and K=3 fallback). Full suite 74
+  groups, 0 failures.
+- Scaling: K=1 fast tail exponent 1.21, K=2 exponent 1.18 (vs dense 2.30); see
+  `benchmark-results.md`.
+- `backend = "fast"` wired opt-in for K∈{1,2} via `.mrwin_pair_win_loss_backend`;
+  K≥3 transparently falls back to the dense pair kernel (identical results).
+
+### Complexity reality for K≥3 (honest note, supersedes the optimistic §3.1 claim)
+
+The clean subquadratic fast paths are K=1 and K=2, both `Θ(N log N)`. For the
+**generic** kernel at K≥3 the first-separation decomposition does not reduce to a
+subproblem on a subset of *individuals* (the "tied at level 1" set is a relation
+over *pairs*), and a direct orthogonal-range-counting formulation needs
+dimension `2K`, so the log-power grows and the constant becomes unattractive by
+K=3. A genuinely fast K≥3 path therefore needs to **exploit the nested
+time-to-event structure** of the v5 endpoints (death terminal, censoring lower
+priorities) rather than the generic per-priority `(t, status)` contract — this is
+the open algorithmic problem and the next research checkpoint. Until then, K≥3
+(the v5 flagship) uses the dense fallback and is correct but quadratic.
 Depends on: WP3 (`mrwin_pair_win_loss`) and WP4 (`mrwin_estimate`) as the
 correctness reference.
 Blocks: WP14, WP15, WP19.

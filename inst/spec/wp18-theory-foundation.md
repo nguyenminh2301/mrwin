@@ -46,7 +46,7 @@ Each row is discharged only when its test is green. Keep the status current.
 | # | Claim | Source WP | Status |
 |---|---|---|---|
 | L-C1 | Single-endpoint win/loss = weighted dominance count; `Θ(N log N)` | WP13 | discharged (test: `tests/python/test_kernel_fast.py`, `tests/testthat/test-kernel-fast.R`; benchmark: `benchmark-results.md`) |
-| T-C2 | Hierarchical win/loss = bounded-dimension orthogonal range counting; `Θ(N log^{K-1} N)`; exact vs dense kernel | WP13 | pending |
+| T-C2 | Hierarchical win/loss via tie-split + Fenwick 2D dominance counting; `Θ(N log N)` for K=2, exact vs dense kernel | WP13 | discharged for K=2 (tests: `test_kernel_fast.py::test_pair_2d_parity_random`, `test-kernel-fast.R`); K≥3 open (see wp13 honesty note) |
 | P-C3 | Incremental re-stratification cost `O(I log N)`, `I` = inversions; exact vs full re-query | WP14 | pending |
 | D-M1 | Continuous ISG: definition, identification, consistency; boxcar limit = decile estimator; U-process CLT | WP15 | pending |
 | S-M2 | Doubly-ranked strata validity under rank-preservation; weaker than linearity/homogeneity | WP16 | pending |

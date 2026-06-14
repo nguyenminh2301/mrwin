@@ -161,6 +161,201 @@ def sweep_all_adjacent_1d(
     return out
 
 
+# ===========================================================================
+# C2: hierarchical K>=2 fast win/loss.
+# ===========================================================================
+def dense_pair_win_loss_kd(t_high, s_high, t_low, s_low, w_high=None, w_low=None):
+    """Brute-force K-priority win/loss oracle (mirrors the dense kernel)."""
+    nh = len(t_high)
+    nl = len(t_low)
+    wh = [1.0] * nh if w_high is None else list(w_high)
+    wl = [1.0] * nl if w_low is None else list(w_low)
+    K = len(t_high[0]) if nh else 0
+    W = 0.0
+    Lo = 0.0
+    for i in range(nh):
+        for j in range(nl):
+            res = 0
+            for k in range(K):
+                ti = t_high[i][k]; tj = t_low[j][k]
+                di = s_high[i][k]; dj = s_low[j][k]
+                if dj == 1 and ti > tj:
+                    res = 1
+                    break
+                if di == 1 and tj > ti:
+                    res = -1
+                    break
+            if res == 1:
+                W += wh[i] * wl[j]
+            elif res == -1:
+                Lo += wh[i] * wl[j]
+    return W, Lo, sum(wh) * sum(wl)
+
+
+class _BIT:
+    """Fenwick tree for weighted prefix sums over 1..n."""
+    __slots__ = ("n", "t")
+
+    def __init__(self, n):
+        self.n = n
+        self.t = [0.0] * (n + 1)
+
+    def add(self, i, v):
+        while i <= self.n:
+            self.t[i] += v
+            i += i & -i
+
+    def prefix(self, i):
+        s = 0.0
+        while i > 0:
+            s += self.t[i]
+            i -= i & -i
+        return s
+
+
+def _dom2d_count(ax, ay, aw, bx, by, bw, x_le, y_a_gt_b):
+    """
+    Sum_{i,j} aw_i * bw_j over A x B with:
+      x:  ax_i <= bx_j   (x_le=True)   or   ax_i >= bx_j   (x_le=False)
+      y:  ay_i >  by_j   (y_a_gt_b=True) or  ay_i <  by_j   (y_a_gt_b=False)
+    Strict y, inclusive x. O((|A|+|B|) log(|A|+|B|)).
+    """
+    na = len(ax)
+    nb = len(bx)
+    if na == 0 or nb == 0:
+        return 0.0
+    # compress y over the union of ay and by
+    ys = sorted(set(ay) | set(by))
+    rank = {v: i + 1 for i, v in enumerate(ys)}  # 1-based
+    bit = _BIT(len(ys))
+
+    # event order over x: process A-inserts and B-queries by x. For x_le we sweep
+    # ascending and insert A with ax<=bx before querying (A before B at equal x);
+    # for x>= we sweep descending and insert A with ax>=bx before querying.
+    a_items = [(ax[i], ay[i], aw[i]) for i in range(na)]
+    b_items = [(bx[j], by[j], bw[j]) for j in range(nb)]
+    if x_le:
+        a_items.sort(key=lambda e: e[0])
+        b_items.sort(key=lambda e: e[0])
+    else:
+        a_items.sort(key=lambda e: e[0], reverse=True)
+        b_items.sort(key=lambda e: e[0], reverse=True)
+
+    total_inserted = 0.0
+    res = 0.0
+    ai = 0
+    na_ = len(a_items)
+    for bx_j, by_j, bw_j in b_items:
+        if x_le:
+            # insert all A with ax <= bx_j
+            while ai < na_ and a_items[ai][0] <= bx_j:
+                _, ay_i, aw_i = a_items[ai]
+                bit.add(rank[ay_i], aw_i)
+                total_inserted += aw_i
+                ai += 1
+        else:
+            # insert all A with ax >= bx_j (descending sweep)
+            while ai < na_ and a_items[ai][0] >= bx_j:
+                _, ay_i, aw_i = a_items[ai]
+                bit.add(rank[ay_i], aw_i)
+                total_inserted += aw_i
+                ai += 1
+        r = rank[by_j]
+        if y_a_gt_b:
+            # ay > by_j : total - (sum of ay <= by_j)
+            s = total_inserted - bit.prefix(r)
+        else:
+            # ay < by_j : sum of ay <= (by_j - 1 rank)
+            s = bit.prefix(r - 1)
+        res += bw_j * s
+    return res
+
+
+def _col(rows, k):
+    return [r[k] for r in rows]
+
+
+def _sub(seq, idx):
+    return [seq[i] for i in idx]
+
+
+def fast_pair_win_loss_2d(t_high, s_high, t_low, s_low, w_high=None, w_low=None):
+    """
+    O(N log N) win/loss for K=2 priorities. t_*/s_* are sequences of length-2
+    rows. Decomposes into level-1 separations (1D sweep) plus, for pairs tied at
+    level 1, level-2 separations split over the four (status1_high, status1_low)
+    regimes; the two mixed regimes use a 2D dominance count.
+    """
+    nh = len(t_high)
+    nl = len(t_low)
+    wh = [1.0] * nh if w_high is None else list(w_high)
+    wl = [1.0] * nl if w_low is None else list(w_low)
+
+    th1 = _col(t_high, 0); th2 = _col(t_high, 1)
+    sh1 = _col(s_high, 0); sh2 = _col(s_high, 1)
+    tl1 = _col(t_low, 0); tl2 = _col(t_low, 1)
+    sl1 = _col(s_low, 0); sl2 = _col(s_low, 1)
+
+    # Level-1 separations (the K=1 problem on column 1).
+    W, Lo, tot = fast_pair_win_loss_1d(th1, sh1, tl1, sl1, wh, wl)
+
+    # --- regime (high d1=0, low d1=0): always tie at 1 -> level-2 1D on subsets
+    Hi = [i for i in range(nh) if sh1[i] == 0]
+    Lj = [j for j in range(nl) if sl1[j] == 0]
+    if Hi and Lj:
+        w2, l2, _ = fast_pair_win_loss_1d(
+            _sub(th2, Hi), _sub(sh2, Hi), _sub(tl2, Lj), _sub(sl2, Lj),
+            _sub(wh, Hi), _sub(wl, Lj))
+        W += w2; Lo += l2
+
+    # --- regime (high d1=1, low d1=1): tie at 1 iff t1 equal -> group by t1
+    Hi = [i for i in range(nh) if sh1[i] == 1]
+    Lj = [j for j in range(nl) if sl1[j] == 1]
+    if Hi and Lj:
+        from collections import defaultdict
+        gh = defaultdict(list); gl = defaultdict(list)
+        for i in Hi:
+            gh[th1[i]].append(i)
+        for j in Lj:
+            gl[tl1[j]].append(j)
+        for v, his in gh.items():
+            ljs = gl.get(v)
+            if not ljs:
+                continue
+            w2, l2, _ = fast_pair_win_loss_1d(
+                _sub(th2, his), _sub(sh2, his), _sub(tl2, ljs), _sub(sl2, ljs),
+                _sub(wh, his), _sub(wl, ljs))
+            W += w2; Lo += l2
+
+    # --- regime (high d1=0, low d1=1): tie at 1 iff th1 <= tl1
+    H = [i for i in range(nh) if sh1[i] == 0]
+    # W: low needs d2=1, win at 2 (th2 > tl2)
+    Bw = [j for j in range(nl) if sl1[j] == 1 and sl2[j] == 1]
+    W += _dom2d_count(_sub(th1, H), _sub(th2, H), _sub(wh, H),
+                      _sub(tl1, Bw), _sub(tl2, Bw), _sub(wl, Bw),
+                      x_le=True, y_a_gt_b=True)
+    # Lo: high needs d2=1, loss at 2 (tl2 > th2)
+    Hl = [i for i in range(nh) if sh1[i] == 0 and sh2[i] == 1]
+    Bl = [j for j in range(nl) if sl1[j] == 1]
+    Lo += _dom2d_count(_sub(th1, Hl), _sub(th2, Hl), _sub(wh, Hl),
+                       _sub(tl1, Bl), _sub(tl2, Bl), _sub(wl, Bl),
+                       x_le=True, y_a_gt_b=False)
+
+    # --- regime (high d1=1, low d1=0): tie at 1 iff th1 >= tl1
+    H = [i for i in range(nh) if sh1[i] == 1]
+    Bw = [j for j in range(nl) if sl1[j] == 0 and sl2[j] == 1]
+    W += _dom2d_count(_sub(th1, H), _sub(th2, H), _sub(wh, H),
+                      _sub(tl1, Bw), _sub(tl2, Bw), _sub(wl, Bw),
+                      x_le=False, y_a_gt_b=True)
+    Hl = [i for i in range(nh) if sh1[i] == 1 and sh2[i] == 1]
+    Bl = [j for j in range(nl) if sl1[j] == 0]
+    Lo += _dom2d_count(_sub(th1, Hl), _sub(th2, Hl), _sub(wh, Hl),
+                       _sub(tl1, Bl), _sub(tl2, Bl), _sub(wl, Bl),
+                       x_le=False, y_a_gt_b=False)
+
+    return W, Lo, tot
+
+
 def dense_adjacent_win_loss(
     time: Sequence[float], status: Sequence[int], stratum: Sequence[int],
     weight: Optional[Sequence[float]] = None, n_strata: Optional[int] = None,

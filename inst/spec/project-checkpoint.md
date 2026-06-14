@@ -34,7 +34,17 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   groups, 0 failures) including `test-backend-fast.R` end-to-end; benchmark shows
   fast tail exponent 1.21 vs dense 2.30 (`inst/spec/benchmark-results.md`);
   `backend = "fast"` opt-in for K=1.
-- Next: S2 (C2, hierarchical K≥2 + build-once/reuse bootstrap).
+- **S2 (C2, hierarchical K=2 fast kernel) — landed + R-verified 2026-06-14** on
+  `C-wp13`. Fenwick 2D dominance counter + four-regime tie-split; parity vs dense
+  oracle (Python 28k random cohorts, 0 mismatches; R full suite 74 groups, 0
+  failures); scaling exponent 1.18; `backend = "fast"` covers K∈{1,2}.
+- **K≥3 fast path: OPEN.** The v5 flagship (K=3) still uses the dense fallback
+  (correct, quadratic). The generic-kernel range-counting approach is impractical
+  at K≥3; the next research step is to exploit the nested time-to-event structure
+  (see honesty note in `wp13-fast-kernel.md`).
+- Next: either the K≥3 structural algorithm, or WP14 (build-once/reuse +
+  incremental re-stratification) to accelerate the bootstrap for the K∈{1,2}
+  fast paths, or Track B (M2 doubly-ranked / M3 analytic variance).
 
 ## Completed Commits
 

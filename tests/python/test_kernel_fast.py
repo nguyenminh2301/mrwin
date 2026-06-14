@@ -16,6 +16,8 @@ from p1_engine_v5.kernel_fast import (  # noqa: E402
     fast_pair_win_loss_1d,
     sweep_all_adjacent_1d,
     dense_adjacent_win_loss,
+    fast_pair_win_loss_2d,
+    dense_pair_win_loss_kd,
 )
 
 TOL = 1e-10
@@ -90,9 +92,28 @@ def test_adjacent_sweep_parity():
             assert all(abs(a - b) < TOL for a, b in zip(d[k], f[k])), (k, d[k], f[k])
 
 
+def test_pair_2d_parity_random():
+    rng = random.Random(20260614)
+    for _ in range(2000):
+        n_high = rng.randint(0, 14)
+        n_low = rng.randint(0, 14)
+        sup = rng.choice([2, 3, 5, 30])
+        weighted = rng.random() < 0.5
+        th = [(float(rng.randint(1, sup)), float(rng.randint(1, sup))) for _ in range(n_high)]
+        sh = [(rng.randint(0, 1), rng.randint(0, 1)) for _ in range(n_high)]
+        tl = [(float(rng.randint(1, sup)), float(rng.randint(1, sup))) for _ in range(n_low)]
+        sl = [(rng.randint(0, 1), rng.randint(0, 1)) for _ in range(n_low)]
+        wh = [rng.expovariate(1.0) for _ in range(n_high)] if weighted else None
+        wl = [rng.expovariate(1.0) for _ in range(n_low)] if weighted else None
+        d = dense_pair_win_loss_kd(th, sh, tl, sl, wh, wl)
+        f = fast_pair_win_loss_2d(th, sh, tl, sl, wh, wl)
+        assert all(abs(a - b) < TOL * (1 + abs(a)) for a, b in zip(d, f)), (d, f)
+
+
 if __name__ == "__main__":
     test_pair_parity_random()
     test_edge_columns()
     test_antisymmetry()
     test_adjacent_sweep_parity()
+    test_pair_2d_parity_random()
     print("ALL PARITY TESTS PASSED")

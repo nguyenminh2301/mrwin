@@ -92,12 +92,62 @@ test_that("fast adjacent summaries match the sparse dense summaries", {
   }
 })
 
-test_that("fast pair path rejects K>1 input", {
+test_that("fast pair win/loss matches dense over random K=2 cohorts (heavy ties)", {
+  set.seed(20260614)
+  for (rep in seq_len(80)) {
+    n_high <- sample(1:25, 1)
+    n_low <- sample(1:25, 1)
+    sup <- sample(c(2L, 3L, 5L, 30L), 1)
+    weighted <- runif(1) < 0.5
+
+    t_high <- matrix(sample(seq_len(sup), 2 * n_high, replace = TRUE), ncol = 2)
+    t_low <- matrix(sample(seq_len(sup), 2 * n_low, replace = TRUE), ncol = 2)
+    s_high <- matrix(rbinom(2 * n_high, 1, 0.5), ncol = 2)
+    s_low <- matrix(rbinom(2 * n_low, 1, 0.5), ncol = 2)
+    w_high <- if (weighted) rexp(n_high) else NULL
+    w_low <- if (weighted) rexp(n_low) else NULL
+
+    dense <- mrwin_pair_win_loss(t_high, s_high, t_low, s_low,
+                                 weights_high = w_high, weights_low = w_low)
+    fast <- mrwin_fast_pair_win_loss(t_high, s_high, t_low, s_low,
+                                     weights_high = w_high, weights_low = w_low)
+    expect_equal(fast, dense, tolerance = 1e-9)
+  }
+})
+
+test_that("fast K=2 adjacent summaries match dense across strata", {
+  set.seed(606)
+  for (rep in seq_len(25)) {
+    n <- sample(6:120, 1)
+    n_strata <- sample(c(2L, 4L), 1)
+    sup <- sample(c(3L, 8L), 1)
+    weighted <- runif(1) < 0.5
+    time <- matrix(sample(seq_len(sup), 2 * n, replace = TRUE), ncol = 2)
+    status <- matrix(rbinom(2 * n, 1, 0.5), ncol = 2)
+    strata <- sample(seq_len(n_strata), n, replace = TRUE)
+    weights <- if (weighted) rexp(n) else NULL
+
+    dense <- mrwin_sparse_adjacent_win_loss(time, status, strata, weights)
+    fast <- mrwin_fast_adjacent_win_loss(time, status, strata, weights)
+    expect_equal(nrow(fast), nrow(dense))
+    if (nrow(dense) > 0L) {
+      key_d <- paste(dense$high, dense$low, sep = "-")
+      key_f <- paste(fast$high, fast$low, sep = "-")
+      ord <- match(key_d, key_f)
+      expect_false(any(is.na(ord)))
+      expect_equal(fast[ord, c("wins", "losses", "total")],
+                   dense[, c("wins", "losses", "total")],
+                   tolerance = 1e-9, ignore_attr = TRUE)
+    }
+  }
+})
+
+test_that("fast pair path rejects K>2 input", {
   expect_error(
     mrwin_fast_pair_win_loss(
-      matrix(1, nrow = 2, ncol = 2), matrix(0, nrow = 2, ncol = 2),
-      matrix(1, nrow = 2, ncol = 2), matrix(0, nrow = 2, ncol = 2)
+      matrix(1, nrow = 2, ncol = 3), matrix(0, nrow = 2, ncol = 3),
+      matrix(1, nrow = 2, ncol = 3), matrix(0, nrow = 2, ncol = 3)
     ),
-    "single-endpoint"
+    "K in \\{1, 2\\}"
   )
 })
