@@ -35,7 +35,8 @@ the constant factor.
 
 Parity: `tests/python/test_kernel_fast.py` (400 random pairs + edge columns +
 antisymmetry + 120 multi-stratum sweeps) passes bit-for-bit (integer-exact
-unweighted, `<1e-10` weighted). R parity: `tests/testthat/test-kernel-fast.R`
-(runs in CI / an R environment).
+unweighted, `<1e-10` weighted). R parity verified under **R 4.3.3**:
+`tests/testthat/test-kernel-fast.R` and `tests/testthat/test-backend-fast.R`
+(end-to-end `mrwin(backend="fast")`) pass; full suite 71 groups, 0 failures.
 
 _Last updated: 2026-06-14 (S1 landed)._

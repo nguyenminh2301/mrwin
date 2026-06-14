@@ -28,12 +28,12 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
 
 ### Phase II progress
 
-- **S1 (C1, single-endpoint fast kernel) — landed 2026-06-14** on branch
-  `C-wp13`. `R/kernel_fast.R` + `python/p1_engine_v5/kernel_fast.py`; parity
-  bit-for-bit (Python green here; R test for CI); benchmark shows fast tail
-  exponent 1.21 vs dense 2.30 (`inst/spec/benchmark-results.md`); `backend =
-  "fast"` opt-in for K=1. R execution to be confirmed in CI (no R in the dev
-  container used).
+- **S1 (C1, single-endpoint fast kernel) — landed + R-verified 2026-06-14** on
+  branch `C-wp13`. `R/kernel_fast.R` + `python/p1_engine_v5/kernel_fast.py`;
+  parity bit-for-bit (Python) and full testthat suite under **R 4.3.3** (71
+  groups, 0 failures) including `test-backend-fast.R` end-to-end; benchmark shows
+  fast tail exponent 1.21 vs dense 2.30 (`inst/spec/benchmark-results.md`);
+  `backend = "fast"` opt-in for K=1.
 - Next: S2 (C2, hierarchical K≥2 + build-once/reuse bootstrap).
 
 ## Completed Commits
