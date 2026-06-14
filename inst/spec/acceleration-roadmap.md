@@ -248,8 +248,13 @@ test. WP18 maintains the manuscript; the table below is the contract.
 
 ## 8. Where to start (for a fresh agent)
 
-1. Read this file.
-2. Read `wp13-fast-kernel.md`. Claim task `T1`.
+The **ordered, sprint-by-sprint execution plan** with exact function signatures,
+algorithm pseudocode, parity tests, and the benchmark protocol is
+`inst/spec/implementation-plan.md`. It sequences the work as
+S1=C1 → S2=C2 → S3=M2 → S4=(M3+M1). Start there.
+
+1. Read this file, then `implementation-plan.md`.
+2. Read `wp13-fast-kernel.md`. Claim sprint S1 / task `T1`.
 3. Branch `C-wp13` from `C`.
 4. Implement on the dense reference first to prove correctness, then optimise.
 5. Land with parity test green and a scaling benchmark recorded.
