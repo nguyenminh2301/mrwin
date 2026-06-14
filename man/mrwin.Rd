@@ -13,6 +13,8 @@
 \alias{mrwin_kernel}
 \alias{mrwin_pair_kernel}
 \alias{mrwin_pair_win_loss}
+\alias{mrwin_fast_pair_win_loss}
+\alias{mrwin_fast_adjacent_win_loss}
 \alias{mrwin_pair_log_cwr}
 \alias{mrwin_sparse_adjacent_win_loss}
 \alias{mrwin_stratum_win_loss}

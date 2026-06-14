@@ -1,7 +1,16 @@
 # WP13 — Fast Hierarchical Win/Loss Kernel (C1 + C2)
 
-Status block: `T1 [todo] T2 [todo] T3 [todo] T4 [todo] T5 [todo] T6 [todo]`
+Status block: `T1 [done] T2 [done] T3 [todo] T4 [todo] T5 [todo] T6 [partial: K=1 fast backend wired opt-in]`
 Branch: `C-wp13` (from `C`).
+
+Progress note (2026-06-14): S1 (C1, single-endpoint) landed. Python reference
+`python/p1_engine_v5/kernel_fast.py` + R `R/kernel_fast.R`
+(`mrwin_fast_pair_win_loss`, `mrwin_fast_adjacent_win_loss`), parity tests
+(Python bit-for-bit green; R `tests/testthat/test-kernel-fast.R` for CI), and the
+scaling benchmark (`benchmark_fast_kernel.py`, results in `benchmark-results.md`:
+fast tail exponent 1.21 vs dense 2.30). `backend = "fast"` wired opt-in for K=1
+via `.mrwin_pair_win_loss_backend`. Remaining: T3–T5 (K≥2 hierarchical), T6 full
+K≥2 backend routing.
 Depends on: WP3 (`mrwin_pair_win_loss`) and WP4 (`mrwin_estimate`) as the
 correctness reference.
 Blocks: WP14, WP15, WP19.

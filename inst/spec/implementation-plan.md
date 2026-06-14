@@ -45,8 +45,16 @@ change yet).
 
 ## S1 — C1: single-endpoint `O(N log N)` win/loss + parity + benchmark
 
-Status: `[todo]`. Branch: `C-wp13`. Implements WP13 T1–T2, and WP14 T2 for `K=1`.
-This is the flagship deliverable.
+Status: `[done — 2026-06-14]`. Branch: `C-wp13`. Implements WP13 T1–T2, and WP14
+T2 for `K=1`. This is the flagship deliverable.
+
+**Landed:** `kernel_fast.py` + `R/kernel_fast.R` (`mrwin_fast_pair_win_loss`,
+`mrwin_fast_adjacent_win_loss`); parity tests Python bit-for-bit green
+(`tests/python/test_kernel_fast.py`) and R (`tests/testthat/test-kernel-fast.R`,
+CI); benchmark `benchmark_fast_kernel.py` → **fast tail exponent 1.21 vs dense
+2.30**, ~24× at N=16k and ~270× projected at N=200k (see `benchmark-results.md`);
+`backend = "fast"` wired opt-in for K=1. Gate S1 met for K=1 (R execution to be
+re-confirmed in CI, as this environment has no R).
 
 ### S1.1 The exact reduction (correctness contract)
 

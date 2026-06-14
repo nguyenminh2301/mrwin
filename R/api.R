@@ -87,7 +87,7 @@ mrwin_controls <- function(
     sdpd_min_snps = 10L,
     pleiotropy_bias_radius = NULL,
     adjustment = c("none", "ordinal_iptw", "gps"),
-    backend = c("dense", "sparse", "rcpp"),
+    backend = c("dense", "sparse", "fast", "rcpp"),
     delta_x_tol = 1e-8,
     iptw_truncation = c(0.01, 0.99),
     ess_fraction = 0.5
@@ -192,7 +192,7 @@ mrwin <- function(
     )
   }
 
-  if (controls$backend == "sparse") {
+  if (controls$backend %in% c("sparse", "fast")) {
     boot <- mrwin_sparse_bootstrap(
       time = endpoint_data$time,
       status = endpoint_data$status,
@@ -206,7 +206,8 @@ mrwin <- function(
       covariates = validated$covariates,
       adjustment = controls$adjustment,
       iptw_truncation = controls$iptw_truncation,
-      ess_fraction = controls$ess_fraction
+      ess_fraction = controls$ess_fraction,
+      fast = identical(controls$backend, "fast")
     )
   } else {
     boot <- mrwin_multiplier_bootstrap(

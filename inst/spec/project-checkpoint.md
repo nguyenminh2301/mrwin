@@ -26,6 +26,16 @@ sweep is `Θ(N²/D)` per bootstrap iteration, which is infeasible at biobank
 scale. Phase II replaces it with a subquadratic algorithm, removes the arbitrary
 stratum-count `D` via a continuous estimator, and derives an analytic variance.
 
+### Phase II progress
+
+- **S1 (C1, single-endpoint fast kernel) — landed 2026-06-14** on branch
+  `C-wp13`. `R/kernel_fast.R` + `python/p1_engine_v5/kernel_fast.py`; parity
+  bit-for-bit (Python green here; R test for CI); benchmark shows fast tail
+  exponent 1.21 vs dense 2.30 (`inst/spec/benchmark-results.md`); `backend =
+  "fast"` opt-in for K=1. R execution to be confirmed in CI (no R in the dev
+  container used).
+- Next: S2 (C2, hierarchical K≥2 + build-once/reuse bootstrap).
+
 ## Completed Commits
 
 | WP | Commit | Scope |
