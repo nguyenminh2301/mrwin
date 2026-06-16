@@ -1,38 +1,45 @@
 # WP13 — Fast Hierarchical Win/Loss Kernel (C1 + C2)
 
-Status block: `T1 [done] T2 [done] T3 [done: K=2] T4 [done: K=2] T5 [done: K<=2] T6 [done: K<=2 backend wired]  | K>=3 [open]`
+Status block: `T1 [done] T2 [done] T3 [done: K=2,3] T4 [done: K=2,3] T5 [done: K<=3] T6 [done: K<=3 backend wired]  | K>=4 [open]`
 Branch: `C-wp13` (from `C`).
 
 Progress note (2026-06-14), R-verified under R 4.3.3:
-- **S1 (K=1)** and **S2 (K=2)** landed. `python/p1_engine_v5/kernel_fast.py` +
-  R `R/kernel_fast.R` (`mrwin_fast_pair_win_loss`, `mrwin_fast_adjacent_win_loss`,
-  Fenwick-based 2D dominance counter for K=2).
-- Parity: Python differential tests vs the brute-force oracle — 20k random K=2
-  cohorts + 8k max-tie (support=2) cohorts, 0 mismatches; R testthat
-  `test-kernel-fast.R` (K=1 and K=2) and `test-backend-fast.R` (end-to-end
-  `mrwin(backend="fast")` for K=1/K=2 fast paths and K=3 fallback). Full suite 74
-  groups, 0 failures.
-- Scaling: K=1 fast tail exponent 1.21, K=2 exponent 1.18 (vs dense 2.30); see
-  `benchmark-results.md`.
-- `backend = "fast"` wired opt-in for K∈{1,2} via `.mrwin_pair_win_loss_backend`;
-  K≥3 transparently falls back to the dense pair kernel (identical results).
+- **S1 (K=1)**, **S2 (K=2)**, and **K=3 (the v5 flagship)** all landed.
+  `python/p1_engine_v5/kernel_fast.py` + R `R/kernel_fast.R`
+  (`mrwin_fast_pair_win_loss`, `mrwin_fast_adjacent_win_loss`). Building blocks:
+  the K=1 sweep, a Fenwick-based 2D dominance counter (`_dom2d_count`), and a
+  **CDQ divide-and-conquer 3D counter** (`_dom3d_count`, O(N) memory, reducing
+  each merge to the validated 2D counter). K=3 = K=2 fast on cols 1:2 (levels
+  1–2) + a level-3 term summed over the 16 `(status1,status2)` regimes, each
+  reduced (`any`/`eq`) and dispatched to the 1D/2D/3D counter.
+- Parity: Python differential tests vs the brute-force oracle
+  `dense_pair_win_loss_kd` — K=2 (28k cohorts), K=3 (35k+ cohorts incl. max-tie
+  support=2), and the 3D counter vs a dense-2D-BIT oracle (160k comparisons over
+  all comparison-direction combos): **0 mismatches**. R testthat
+  `test-kernel-fast.R` (K=1,2,3) and `test-backend-fast.R` (end-to-end
+  `mrwin(backend="fast")` for K=1/2/3). Full suite 81 groups, 0 failures.
+- Scaling: K=1 exponent 1.21, K=2 1.18, K=3 1.18 (CDQ; was 1.58 with a dense 2D
+  BIT before the CDQ rewrite). See `benchmark-results.md`.
+- `backend = "fast"` wired opt-in for K∈{1,2,3} via
+  `.mrwin_pair_win_loss_backend`; K≥4 transparently falls back to the dense pair
+  kernel (identical results).
 
-### Complexity for K≥3 (accurate note)
+### Complexity (note)
 
-The clean fast paths shipped are K=1 and K=2, both `Θ(N log N)`. The tie-split
-decomposition **does generalise** to any K: the contribution at level k is a
-weighted multidimensional dominance count over the conjunction of the (k-1)
+The tie-split decomposition generalises to any K: the contribution at level k is
+a weighted multidimensional dominance count over the conjunction of the (k-1)
 tie conditions plus the level-k separation, summed over the `4^{k-1}` regime
-combinations of the earlier levels' `(status_high, status_low)` pairs. For K=3
-the level-3 term is a 3-D weighted dominance count (`O(N log² N)` via CDQ /
-nested Fenwick) over `4² = 16` regimes. So K≥3 is `Θ(N log^{K-1} N)` with a
-constant `~4^{K-1}` — **laborious but not a fundamental barrier**; the engineering
-risk is getting all regime comparison directions right (the differential-testing
-harness against `dense_pair_win_loss_kd` is the safety net). It was deferred, not
-because it is impossible, but to land K=1/K=2 cleanly first and because exploiting
-the v5 **nested time-to-event structure** (death terminal) may yield a lower
-constant than the generic `4^{K-1}` split. Until K≥3 lands, the v5 flagship uses
-the dense fallback (correct, quadratic).
+combinations of earlier levels' `(status_high, status_low)`. `eq` regimes
+collapse a dimension (group-by) and `any` regimes drop one, so the residual
+counter dimension is ≤ k. Shipped: K=1,2,3 (`Θ(N log^{K-1} N)`, constant
+`~4^{K-1}`). K≥4 is the same construction with a general `d`-dim CDQ counter
+(more regimes, higher log-power) — engineering, not a barrier; deferred because
+K≤3 covers the v5 cardiorenal endpoint. The differential-testing harness against
+`dense_pair_win_loss_kd` is the safety net for extending further.
+
+Performance note: the R CDQ recursion is interpreted (correct + subquadratic but
+with a large constant); an Rcpp port is the natural optimisation for biobank-N
+once correctness is locked.
 Depends on: WP3 (`mrwin_pair_win_loss`) and WP4 (`mrwin_estimate`) as the
 correctness reference.
 Blocks: WP14, WP15, WP19.

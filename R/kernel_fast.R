@@ -162,6 +162,172 @@
   c(wins = as.numeric(W), losses = as.numeric(Lo), total = as.numeric(sum(wh) * sum(wl)))
 }
 
+# ---- K=3 fast path -------------------------------------------------------
+# 1D strict weighted dominance: sum_{i,j} aw_i bw_j with a.x > b.x (gt) or < (lt).
+.mrwin_dom1d_strict <- function(ax, aw, bx, bw, gt) {
+  if (length(ax) == 0L || length(bx) == 0L) {
+    return(0)
+  }
+  o <- order(ax)
+  xs <- ax[o]
+  cumw <- c(0, cumsum(aw[o]))
+  total <- cumw[length(cumw)]
+  if (gt) {
+    k <- findInterval(bx, xs)                      # count xs <= bx
+    s <- total - cumw[k + 1L]
+  } else {
+    k <- findInterval(bx, xs, left.open = TRUE)    # count xs < bx
+    s <- cumw[k + 1L]
+  }
+  sum(bw * s)
+}
+
+# 3D weighted count via CDQ on dim1, reducing each merge to the 2D counter.
+#   dim1: a1 <= b1 (r1='le') or a1 >= b1 (r1='ge')
+#   dim2: a2 <= b2 (r2='le') or a2 >= b2 (r2='ge')
+#   dim3: a3 >  b3 (s3='gt') or a3 <  b3 (s3='lt')  [strict]
+.mrwin_dom3d_count <- function(a1, a2, a3, aw, b1, b2, b3, bw, r1, r2, s3) {
+  na <- length(a1)
+  nb <- length(b1)
+  if (na == 0L || nb == 0L) {
+    return(0)
+  }
+  key1 <- c(a1, b1)
+  is_b <- c(rep(0L, na), rep(1L, nb))
+  x2 <- c(a2, b2)
+  x3 <- c(a3, b3)
+  w <- c(aw, bw)
+  ord <- if (r1 == "le") order(key1, is_b) else order(-key1, is_b)
+  is_b <- is_b[ord]; x2 <- x2[ord]; x3 <- x3[ord]; w <- w[ord]
+
+  x_le <- (r2 == "le")
+  y_gt <- (s3 == "gt")
+  res <- 0
+  cdq <- function(lo, hi) {
+    if (lo >= hi) {
+      return(invisible())
+    }
+    mid <- (lo + hi) %/% 2L
+    cdq(lo, mid)
+    cdq(mid + 1L, hi)
+    left <- lo:mid
+    la <- left[is_b[left] == 0L]
+    if (length(la) == 0L) {
+      return(invisible())
+    }
+    right <- (mid + 1L):hi
+    rb <- right[is_b[right] == 1L]
+    if (length(rb) == 0L) {
+      return(invisible())
+    }
+    res <<- res + .mrwin_dom2d_count(x2[la], x3[la], w[la], x2[rb], x3[rb], w[rb],
+                                     x_le = x_le, y_a_gt_b = y_gt)
+  }
+  cdq(1L, na + nb)
+  res
+}
+
+.mrwin_tie_kind <- function(di, dj) {
+  if (di == 0L && dj == 0L) {
+    "any"
+  } else if (di == 0L && dj == 1L) {
+    "le"
+  } else if (di == 1L && dj == 0L) {
+    "ge"
+  } else {
+    "eq"
+  }
+}
+
+# Count over A x B with tie-constraints c1,c2 in {any,le,ge,eq} on dims 1,2 and
+# strict s3 in {gt,lt} on dim 3. Reduces 'any'/'eq', then dispatches 1D/2D/3D.
+.mrwin_level3_count <- function(ax1, ax2, ax3, aw, bx1, bx2, bx3, bw, c1, c2, s3) {
+  if (length(ax1) == 0L || length(bx1) == 0L) {
+    return(0)
+  }
+  if (c1 == "eq") {
+    va <- split(seq_along(ax1), ax1)
+    vb <- split(seq_along(bx1), bx1)
+    tot <- 0
+    for (nm in intersect(names(va), names(vb))) {
+      ia <- va[[nm]]; jb <- vb[[nm]]
+      tot <- tot + .mrwin_level3_count(
+        ax1[ia], ax2[ia], ax3[ia], aw[ia], bx1[jb], bx2[jb], bx3[jb], bw[jb],
+        "any", c2, s3)
+    }
+    return(tot)
+  }
+  if (c2 == "eq") {
+    va <- split(seq_along(ax2), ax2)
+    vb <- split(seq_along(bx2), bx2)
+    tot <- 0
+    for (nm in intersect(names(va), names(vb))) {
+      ia <- va[[nm]]; jb <- vb[[nm]]
+      tot <- tot + .mrwin_level3_count(
+        ax1[ia], ax2[ia], ax3[ia], aw[ia], bx1[jb], bx2[jb], bx3[jb], bw[jb],
+        c1, "any", s3)
+    }
+    return(tot)
+  }
+  dims <- list()
+  if (c1 %in% c("le", "ge")) dims[[length(dims) + 1L]] <- list(d = 1L, c = c1)
+  if (c2 %in% c("le", "ge")) dims[[length(dims) + 1L]] <- list(d = 2L, c = c2)
+  if (length(dims) == 0L) {
+    return(.mrwin_dom1d_strict(ax3, aw, bx3, bw, gt = (s3 == "gt")))
+  }
+  if (length(dims) == 1L) {
+    d <- dims[[1L]]$d
+    cc <- dims[[1L]]$c
+    ax <- if (d == 1L) ax1 else ax2
+    bx <- if (d == 1L) bx1 else bx2
+    return(.mrwin_dom2d_count(ax, ax3, aw, bx, bx3, bw,
+                              x_le = (cc == "le"), y_a_gt_b = (s3 == "gt")))
+  }
+  .mrwin_dom3d_count(ax1, ax2, ax3, aw, bx1, bx2, bx3, bw, c1, c2, s3)
+}
+
+# K=3 assembly. th/tl are N x 3 matrices; sh/sl are N x 3 status matrices.
+.mrwin_fast_pair_3d <- function(th, sh, tl, sl, wh, wl) {
+  base <- .mrwin_fast_pair_2d(th[, 1:2, drop = FALSE], sh[, 1:2, drop = FALSE],
+                              tl[, 1:2, drop = FALSE], sl[, 1:2, drop = FALSE], wh, wl)
+  W <- base[["wins"]]
+  Lo <- base[["losses"]]
+  tot <- base[["total"]]
+
+  th1 <- th[, 1L]; th2 <- th[, 2L]; th3 <- th[, 3L]
+  sh1 <- as.integer(sh[, 1L]); sh2 <- as.integer(sh[, 2L]); sh3 <- as.integer(sh[, 3L])
+  tl1 <- tl[, 1L]; tl2 <- tl[, 2L]; tl3 <- tl[, 3L]
+  sl1 <- as.integer(sl[, 1L]); sl2 <- as.integer(sl[, 2L]); sl3 <- as.integer(sl[, 3L])
+
+  for (di1 in c(0L, 1L)) {
+    for (di2 in c(0L, 1L)) {
+      Hbase <- which(sh1 == di1 & sh2 == di2)
+      if (length(Hbase) == 0L) next
+      for (dj1 in c(0L, 1L)) {
+        for (dj2 in c(0L, 1L)) {
+          c1 <- .mrwin_tie_kind(di1, dj1)
+          c2 <- .mrwin_tie_kind(di2, dj2)
+          Lbase <- which(sl1 == dj1 & sl2 == dj2)
+          if (length(Lbase) == 0L) next
+          Lw <- Lbase[sl3[Lbase] == 1L]
+          if (length(Lw)) {
+            W <- W + .mrwin_level3_count(
+              th1[Hbase], th2[Hbase], th3[Hbase], wh[Hbase],
+              tl1[Lw], tl2[Lw], tl3[Lw], wl[Lw], c1, c2, "gt")
+          }
+          Hl <- Hbase[sh3[Hbase] == 1L]
+          if (length(Hl)) {
+            Lo <- Lo + .mrwin_level3_count(
+              th1[Hl], th2[Hl], th3[Hl], wh[Hl],
+              tl1[Lbase], tl2[Lbase], tl3[Lbase], wl[Lbase], c1, c2, "lt")
+          }
+        }
+      }
+    }
+  }
+  c(wins = as.numeric(W), losses = as.numeric(Lo), total = as.numeric(tot))
+}
+
 mrwin_fast_pair_win_loss <- function(
     time_high,
     status_high,
@@ -175,10 +341,10 @@ mrwin_fast_pair_win_loss <- function(
   time_low <- as.matrix(time_low)
   status_low <- as.matrix(status_low)
   k <- ncol(time_high)
-  if (k > 2L || ncol(time_low) > 2L) {
+  if (k > 3L || ncol(time_low) > 3L) {
     stop(
-      "`mrwin_fast_pair_win_loss` supports K in {1, 2}; use backend = \"sparse\" ",
-      "for K>2 until the WP13 S2+ hierarchical fast path is extended.",
+      "`mrwin_fast_pair_win_loss` supports K in {1, 2, 3}; use backend = \"sparse\" ",
+      "for K>3 until the hierarchical fast path is extended further.",
       call. = FALSE
     )
   }
@@ -214,16 +380,19 @@ mrwin_fast_pair_win_loss <- function(
       total = as.numeric(sum(wh) * sum(wl))
     ))
   }
-  .mrwin_fast_pair_2d(time_high, status_high, time_low, status_low, wh, wl)
+  if (k == 2L) {
+    return(.mrwin_fast_pair_2d(time_high, status_high, time_low, status_low, wh, wl))
+  }
+  .mrwin_fast_pair_3d(time_high, status_high, time_low, status_low, wh, wl)
 }
 
 mrwin_fast_adjacent_win_loss <- function(time, status, strata, weights = NULL) {
   time <- as.matrix(time)
   status <- as.matrix(status)
-  if (ncol(time) > 2L) {
+  if (ncol(time) > 3L) {
     stop(
-      "`mrwin_fast_adjacent_win_loss` supports K in {1, 2}; use ",
-      "`mrwin_sparse_adjacent_win_loss` for K>2.",
+      "`mrwin_fast_adjacent_win_loss` supports K in {1, 2, 3}; use ",
+      "`mrwin_sparse_adjacent_win_loss` for K>3.",
       call. = FALSE
     )
   }
@@ -302,7 +471,7 @@ mrwin_fast_adjacent_win_loss <- function(time, status, strata, weights = NULL) {
     time_high, status_high, time_low, status_low,
     weights_high = NULL, weights_low = NULL, fast = FALSE
 ) {
-  use_fast <- isTRUE(fast) && ncol(as.matrix(time_high)) <= 2L
+  use_fast <- isTRUE(fast) && ncol(as.matrix(time_high)) <= 3L
   if (use_fast) {
     mrwin_fast_pair_win_loss(
       time_high, status_high, time_low, status_low,

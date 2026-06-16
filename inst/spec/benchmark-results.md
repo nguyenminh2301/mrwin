@@ -55,6 +55,27 @@ Empirical exponent `p = 1.18` (gate `< 1.3` ✅). Parity: 20k random K=2 cohorts
 + 8k max-tie (support=2) cohorts vs the brute-force oracle, **0 mismatches**;
 R `test-kernel-fast.R` (K=2) and `test-backend-fast.R` (K=2 end-to-end) green.
 
-K≥3: no fast path yet (dense fallback). See `wp13-fast-kernel.md` honesty note.
+## K=3 hierarchical win/loss fast path (the v5 flagship)
 
-_Last updated: 2026-06-14 (S1 + S2/K=2 landed, R-verified)._
+`fast_pair_win_loss_3d` = K=2 fast on levels 1–2 + a level-3 term over 16
+regimes using a **CDQ divide-and-conquer 3D dominance counter** (O(N) memory):
+
+| N (per side ×2) | fast_3d (s) |
+|---:|---:|
+| 2,000 | 0.068 |
+| 8,000 | 0.334 |
+| 32,000 | 1.71 |
+| 128,000 | 9.17 |
+
+Empirical exponent `p = 1.18` (≈ N log² N). An earlier dense-2D-BIT version was
+O(N²) memory (exponent 1.58, 18 s at N=64k); the CDQ rewrite fixed it.
+
+Parity: K=3 fast vs dense oracle — 35k+ random cohorts incl. max-tie
+(support=2), 0 mismatches; the 3D counter vs a dense-2D-BIT oracle — 160k
+comparisons over all comparison-direction combos, 0 mismatches. R
+`test-kernel-fast.R` (K=3) + `test-backend-fast.R` (K=3 end-to-end) green.
+
+K≥4: dense fallback (correct). The R CDQ recursion is interpreted; an Rcpp port
+is the constant-factor optimisation for biobank-N.
+
+_Last updated: 2026-06-14 (S1 + K=2 + K=3 landed, R-verified)._

@@ -38,10 +38,12 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   `C-wp13`. Fenwick 2D dominance counter + four-regime tie-split; parity vs dense
   oracle (Python 28k random cohorts, 0 mismatches; R full suite 74 groups, 0
   failures); scaling exponent 1.18; `backend = "fast"` covers K∈{1,2}.
-- **K≥3 fast path: OPEN.** The v5 flagship (K=3) still uses the dense fallback
-  (correct, quadratic). The generic-kernel range-counting approach is impractical
-  at K≥3; the next research step is to exploit the nested time-to-event structure
-  (see honesty note in `wp13-fast-kernel.md`).
+- **K=3 fast path (the v5 flagship) — landed + R-verified 2026-06-14** on
+  `C-wp13`. CDQ 3D dominance counter + 16-regime level-3 tie-split; parity vs
+  dense oracle (Python 35k+ cohorts + 160k 3D-counter combos, 0 mismatches; R
+  full suite 81 groups, 0 failures); scaling exponent 1.18; `backend = "fast"`
+  now covers K∈{1,2,3}. K≥4 falls back to dense (correct). An Rcpp port of the
+  CDQ recursion is the natural constant-factor optimisation for biobank-N.
 - **M2 (doubly-ranked stratification) core — landed + R-verified 2026-06-14.**
   `mrwin_doubly_ranked_strata()` in `R/strata.R`, exported, tested
   (`test-doubly-ranked.R`). Pipeline wiring (WP16 T2) still to do.

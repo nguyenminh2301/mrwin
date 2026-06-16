@@ -46,16 +46,17 @@ test_that("backend='fast' equals 'sparse' on a two-endpoint (K=2) cohort", {
                tolerance = 1e-8)
 })
 
-test_that("backend='fast' falls back and equals 'sparse' on K=3 endpoints", {
+test_that("backend='fast' equals 'sparse' on K=3 endpoints (K=3 fast path)", {
   cfg <- mrwin_config(n_outcome = 300, m_snps = 12, seed = 42)
   dat <- mrwin_simulate(cfg, seed = 42)
   ep <- mrwin_endpoint(dat$time, dat$status, colnames(dat$time))
   fit_sparse <- .fit_with_backend(ep, dat, "sparse", 9)
   fit_fast <- .fit_with_backend(ep, dat, "fast", 9)
 
-  expect_equal(fit_fast$point$delta_gls, fit_sparse$point$delta_gls, tolerance = 1e-10)
+  expect_equal(fit_fast$point$delta_gls, fit_sparse$point$delta_gls, tolerance = 1e-8)
+  expect_equal(fit_fast$point$log_theta, fit_sparse$point$log_theta, tolerance = 1e-8)
   expect_equal(fit_fast$inference$se_delta_gls, fit_sparse$inference$se_delta_gls,
-               tolerance = 1e-10)
+               tolerance = 1e-8)
 })
 
 test_that("mrwin_controls accepts backend='fast'", {

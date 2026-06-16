@@ -178,17 +178,17 @@ Effort estimate: 2–3 focused sessions.
 
 ## S2 — C2: hierarchical `K`-endpoint, build-once / reuse-across-`B`
 
-Status: `[K=2 done — 2026-06-14; K≥3 open]`. Branch: `C-wp13` → `C-wp14`.
-Implements WP13 T3–T6, WP14 T1–T3.
+Status: `[K=2 and K=3 done — 2026-06-14; K≥4 open]`. Branch: `C-wp13`.
+Implements WP13 T3–T6.
 
-**Landed (K=2):** Fenwick-based 2D dominance counter + four-regime tie-split
-decomposition (`fast_pair_win_loss_2d` / `.mrwin_fast_pair_2d`); R-verified under
-R 4.3.3 (full suite 74 groups, 0 failures) + Python differential tests (28k
-random cohorts incl. max-tie, 0 mismatches); scaling exponent 1.18.
-`backend = "fast"` now covers K∈{1,2}. **K≥3 remains open** — see the honesty
-note in `wp13-fast-kernel.md`: the generic kernel needs the nested
-time-to-event structure exploited, not naive range trees. The WP14 build-once /
-reuse refactor and incremental re-stratification are still to do.
+**Landed (K=2, K=3):** Fenwick 2D dominance counter + CDQ 3D counter + tie-split
+decomposition (`fast_pair_win_loss_2d/_3d`, `.mrwin_fast_pair_2d/_3d`); R-verified
+under R 4.3.3 (full suite 81 groups, 0 failures) + Python differential tests
+(K=2 28k, K=3 35k+ cohorts incl. max-tie; 3D counter 160k combos; 0 mismatches);
+scaling exponent 1.18 for both. `backend = "fast"` now covers K∈{1,2,3} — the v5
+flagship K=3 included. K≥4 falls back to dense (correct). WP14 build-once/reuse
+refactor and incremental re-stratification remain (and an Rcpp port of the CDQ
+recursion for biobank-N constant factors).
 
 ### S2.1 Plan
 
