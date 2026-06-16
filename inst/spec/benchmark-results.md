@@ -78,4 +78,20 @@ comparisons over all comparison-direction combos, 0 mismatches. R
 K≥4: dense fallback (correct). The R CDQ recursion is interpreted; an Rcpp port
 is the constant-factor optimisation for biobank-N.
 
+### R wall-clock reality (honest crossover, `mrwin_fast_pair_win_loss` vs
+`mrwin_pair_win_loss`, one balanced pair)
+
+| case | n=1000 | n=3000 |
+|---|---|---|
+| K=1 | fast 6.2× faster | fast 204× faster |
+| K=3 | fast 0.5× (slower) | fast 2.9× faster |
+
+The K=1 vectorised R sweep wins immediately. The K=3 fast path is correct and
+subquadratic but the **interpreted CDQ recursion has a large constant**, so it
+only overtakes the dense `O(N²)` kernel around n≈1500–2000 and widens beyond
+that. For biobank-N the order advantage is real but the wall-clock needs the
+**Rcpp port** to realise it fully — that is the designated next performance step
+(`algorithm-spec.md` §8.1 `dense_cpp`/`sparse_cpp`). All cases match dense
+exactly (`all.equal == TRUE`).
+
 _Last updated: 2026-06-14 (S1 + K=2 + K=3 landed, R-verified)._
