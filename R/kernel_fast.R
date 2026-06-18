@@ -369,6 +369,15 @@ mrwin_fast_pair_win_loss <- function(
     }
   }
 
+  # Prefer the compiled C++ kernel; fall back to the pure-R reference if the
+  # package was built without compilation.
+  if (exists("mrwin_fast_pair_cpp", mode = "function")) {
+    sh_i <- status_high; storage.mode(sh_i) <- "integer"
+    sl_i <- status_low; storage.mode(sl_i) <- "integer"
+    storage.mode(time_high) <- "double"
+    storage.mode(time_low) <- "double"
+    return(mrwin_fast_pair_cpp(time_high, sh_i, time_low, sl_i, wh, wl))
+  }
   if (k == 1L) {
     s <- .mrwin_fast_1d(
       as.numeric(time_high[, 1L]), as.integer(status_high[, 1L]), wh,

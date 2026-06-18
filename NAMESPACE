@@ -1,3 +1,5 @@
+useDynLib(mrwin, .registration = TRUE)
+importFrom(Rcpp, sourceCpp)
 S3method(plot,mrwin_fit)
 S3method(print,mrwin_fit)
 S3method(print,mrwin_benchmark)

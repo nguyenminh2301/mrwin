@@ -191,6 +191,24 @@ test_that("fast K=3 adjacent summaries match dense across strata", {
   }
 })
 
+test_that("compiled C++ and pure-R K=3 fast paths agree and match dense", {
+  set.seed(4242)
+  for (rep in seq_len(40)) {
+    nh <- sample(2:18, 1); nl <- sample(2:18, 1)
+    sup <- sample(c(2L, 4L, 30L), 1)
+    th <- matrix(sample(seq_len(sup), 3 * nh, replace = TRUE), ncol = 3)
+    tl <- matrix(sample(seq_len(sup), 3 * nl, replace = TRUE), ncol = 3)
+    sh <- matrix(rbinom(3 * nh, 1, 0.5), ncol = 3)
+    sl <- matrix(rbinom(3 * nl, 1, 0.5), ncol = 3)
+    wh <- rexp(nh); wl <- rexp(nl)
+    cpp <- mrwin_fast_pair_win_loss(th, sh, tl, sl, weights_high = wh, weights_low = wl)
+    r <- .mrwin_fast_pair_3d(th, sh, tl, sl, wh, wl)
+    dense <- mrwin_pair_win_loss(th, sh, tl, sl, weights_high = wh, weights_low = wl)
+    expect_equal(unname(cpp), unname(r), tolerance = 1e-9)
+    expect_equal(unname(cpp), unname(dense), tolerance = 1e-9)
+  }
+})
+
 test_that("fast pair path rejects K>3 input", {
   expect_error(
     mrwin_fast_pair_win_loss(

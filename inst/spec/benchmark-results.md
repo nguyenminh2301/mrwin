@@ -75,23 +75,36 @@ Parity: K=3 fast vs dense oracle — 35k+ random cohorts incl. max-tie
 comparisons over all comparison-direction combos, 0 mismatches. R
 `test-kernel-fast.R` (K=3) + `test-backend-fast.R` (K=3 end-to-end) green.
 
-K≥4: dense fallback (correct). The R CDQ recursion is interpreted; an Rcpp port
-is the constant-factor optimisation for biobank-N.
+K≥4: dense fallback (correct).
 
-### R wall-clock reality (honest crossover, `mrwin_fast_pair_win_loss` vs
-`mrwin_pair_win_loss`, one balanced pair)
+### Rcpp port — the kernel now realises the order advantage in wall-clock
 
-| case | n=1000 | n=3000 |
+`mrwin_fast_pair_win_loss` dispatches to the compiled `mrwin_fast_pair_cpp`
+(`src/fast_kernel.cpp`), an exact port of the validated R/Python kernel. The
+earlier pure-R CDQ recursion was correct but had a large interpreted constant
+(K=3 only overtook dense around n≈2000). With the C++ kernel the order advantage
+is fully realised:
+
+| case | fast(C++) vs dense | match |
 |---|---|---|
-| K=1 | fast 6.2× faster | fast 204× faster |
-| K=3 | fast 0.5× (slower) | fast 2.9× faster |
+| K=3, n=2000 | **72× faster** | exact |
+| K=3, n=5000 | **300× faster** (dense ≈ 10 s) | exact |
 
-The K=1 vectorised R sweep wins immediately. The K=3 fast path is correct and
-subquadratic but the **interpreted CDQ recursion has a large constant**, so it
-only overtakes the dense `O(N²)` kernel around n≈1500–2000 and widens beyond
-that. For biobank-N the order advantage is real but the wall-clock needs the
-**Rcpp port** to realise it fully — that is the designated next performance step
-(`algorithm-spec.md` §8.1 `dense_cpp`/`sparse_cpp`). All cases match dense
-exactly (`all.equal == TRUE`).
+C++ fast-path scaling (one balanced pair, fast-only; dense is infeasible here):
 
-_Last updated: 2026-06-14 (S1 + K=2 + K=3 landed, R-verified)._
+| N (per side ×2) | K=3 (s) | K=1 (s) |
+|---:|---:|---:|
+| 5,000 | 0.034 | — |
+| 20,000 | 0.163 | 0.006 |
+| 80,000 | 0.78 | — |
+| 200,000 | — | 0.083 |
+
+K=3 at N=80,000 in 0.78 s vs a dense `O(N²)` extrapolation of ~40 min (and OOM)
+— biobank-scale feasibility. Empirical exponent ≈ 1.1 (K=1) / ≈ 1.13 (K=3).
+Validation: the C++ kernel matches the dense oracle over 16k random K=1/2/3
+cohorts (0 mismatches) and equals the pure-R fast path (triangle test
+`test-kernel-fast.R`). A differential test caught one C++ bug (double-`eq` regime
+collapsing the level-2 equality), now fixed. Full R 4.3.3 suite: 82 groups, 0
+failures.
+
+_Last updated: 2026-06-18 (Rcpp port landed, R-verified)._

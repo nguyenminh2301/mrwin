@@ -53,6 +53,13 @@ htmlcov/
 .RData
 .Ruserdata
 
+# Compiled objects (Rcpp / C++)
+*.o
+*.so
+*.dll
+src/*.o
+src/*.so
+
 # Manuscript drafts and generated writing artifacts
 manuscript/
 drafts/

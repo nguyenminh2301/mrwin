@@ -37,9 +37,15 @@ counter dimension is ≤ k. Shipped: K=1,2,3 (`Θ(N log^{K-1} N)`, constant
 K≤3 covers the v5 cardiorenal endpoint. The differential-testing harness against
 `dense_pair_win_loss_kd` is the safety net for extending further.
 
-Performance note: the R CDQ recursion is interpreted (correct + subquadratic but
-with a large constant); an Rcpp port is the natural optimisation for biobank-N
-once correctness is locked.
+Performance (Rcpp port — landed 2026-06-18): `mrwin_fast_pair_win_loss`
+dispatches to a compiled kernel `mrwin_fast_pair_cpp` (`src/fast_kernel.cpp`,
+exact port; pure-R fallback retained). This removes the interpreted-R constant:
+K=3 is 72× (n=2000) / 300× (n=5000) faster than dense, K=3 N=80k runs in 0.78 s,
+K=1 N=200k in 0.083 s — biobank-scale. The package now compiles
+(`LinkingTo: Rcpp`, `useDynLib`). A differential test against the dense oracle
+caught one C++-only bug (a double-`eq` regime collapsing the level-2 equality),
+now fixed; 16k-cohort differential test passes with 0 mismatches. See
+`benchmark-results.md`.
 Depends on: WP3 (`mrwin_pair_win_loss`) and WP4 (`mrwin_estimate`) as the
 correctness reference.
 Blocks: WP14, WP15, WP19.

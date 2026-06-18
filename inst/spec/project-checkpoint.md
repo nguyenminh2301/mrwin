@@ -40,10 +40,14 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   failures); scaling exponent 1.18; `backend = "fast"` covers K∈{1,2}.
 - **K=3 fast path (the v5 flagship) — landed + R-verified 2026-06-14** on
   `C-wp13`. CDQ 3D dominance counter + 16-regime level-3 tie-split; parity vs
-  dense oracle (Python 35k+ cohorts + 160k 3D-counter combos, 0 mismatches; R
-  full suite 81 groups, 0 failures); scaling exponent 1.18; `backend = "fast"`
-  now covers K∈{1,2,3}. K≥4 falls back to dense (correct). An Rcpp port of the
-  CDQ recursion is the natural constant-factor optimisation for biobank-N.
+  dense oracle; `backend = "fast"` covers K∈{1,2,3}; K≥4 falls back to dense.
+- **Rcpp port — landed + R-verified 2026-06-18.** `src/fast_kernel.cpp`
+  (`mrwin_fast_pair_cpp`), exact port of the validated kernel;
+  `mrwin_fast_pair_win_loss` dispatches to it (pure-R fallback retained). The
+  package now has compiled code (`LinkingTo: Rcpp`). Wall-clock: K=3 is 72×
+  (n=2000) / 300× (n=5000) faster than dense, K=3 N=80k in 0.78 s, K=1 N=200k in
+  0.083 s — biobank-scale. Differential testing (16k cohorts, 0 mismatches)
+  caught and fixed a double-`eq` regime bug. Full suite 82 groups, 0 failures.
 - **M2 (doubly-ranked stratification) core — landed + R-verified 2026-06-14.**
   `mrwin_doubly_ranked_strata()` in `R/strata.R`, exported, tested
   (`test-doubly-ranked.R`). Pipeline wiring (WP16 T2) still to do.
