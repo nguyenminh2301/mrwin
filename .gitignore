@@ -59,6 +59,8 @@ htmlcov/
 *.dll
 src/*.o
 src/*.so
+src/symbols.rds
+*.Rcheck/
 
 # Manuscript drafts and generated writing artifacts
 manuscript/
