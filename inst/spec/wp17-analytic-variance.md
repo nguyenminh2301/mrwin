@@ -1,7 +1,25 @@
 # WP17 — Analytic Influence-Function Variance + GWAS Delta-Method (M3)
 
-Status block: `T1 [partial: sampling IF derived] T2 [done: sampling part] T3 [todo: mrwin wiring] T4 [done: sampling part validated]`
+Status block: `T1 [done: sampling IF + variance decomposition] T2 [done: sampling analytic + GWAS exact resample] T3 [todo: mrwin wiring] T4 [done: validated vs full bootstrap incl. sigma_beta>0]`
 Branch: developed on `C-wp13`.
+
+### Why Sigma_gwas is an exact resample, not pure-analytic (decision, 2026-06-18)
+
+By the law of total covariance, `cov_u = Sigma_sampling + Sigma_gwas` where
+`Sigma_gwas = Cov_{beta*}(point estimate over re-stratification)`. The point
+estimate `(LT^0, DX^0)` is **piecewise-constant in beta** (strata jump
+discretely as `beta*` moves), so it has **no pointwise gradient** — a
+"pure-analytic" `Sigma_gwas` would have to differentiate a step function, which
+requires a smoothed / boundary-density (differentiable-ranking) approximation
+that introduces a bandwidth and its own bias. The principled choice is therefore
+to compute `Sigma_gwas` **exactly** by a GWAS-only resample (draw `beta*`,
+re-stratify, recompute the UNWEIGHTED point estimate on the FIXED precomputed
+kernel — no multiplier `xi`), while the (usually dominant, ~50% here) sampling
+part stays closed-form. This removes the entire `xi` resampling and reuses the
+fixed kernel, and it matches the full bootstrap exactly (not approximately). A
+genuinely pure-analytic `Sigma_gwas` via differentiable ranking remains an
+optional research refinement, but it would be an *approximation* of a term we can
+compute *exactly*.
 
 Progress (2026-06-18, R-verified). **Sampling part landed** (adjustment="none",
 fixed GWAS weights):
@@ -18,15 +36,22 @@ fixed GWAS weights):
   (Monte-Carlo limited), no systematic bias. Tests `test-analytic-variance.R`;
   full suite 86 groups, 0 failures.
 
+**Done (2026-06-18):** `Σ_gwas` via the exact GWAS-only resample
+(`mrwin_gwas_resample_covariance`), combined in `mrwin_analytic_inference(...,
+G, beta_hat, sigma_beta, ...)`. Validated vs the full multiplier bootstrap with
+`sigma_beta ∈ {0.05,0.15,0.30}` (GWAS variance share ~50%): `se` ratio
+0.997–1.009 — exact agreement. Tests in `test-analytic-variance.R`; full suite
+88 groups, 0 failures.
+
 **Remaining (next steps):**
-- **Step B — `Σ_gwas`:** GWAS-uncertainty term via the Jacobian of `(logθ,Δx)`
-  through the stratum cutpoints (boundary movers); add `Σ = Σ_sampling + Σ_gwas`.
 - **IPTW:** extend the influence function for `adjustment="ordinal_iptw"`
-  (propensity refit contributes additional IF terms).
-- **T3 wiring:** `inference = c("bootstrap","analytic","analytic+bootstrap")` in
-  `mrwin_controls()` / `mrwin()`, guarded so the analytic path is only the
-  default once `Σ_gwas` + IPTW are in (until then it covers the sampling part
-  with fixed GWAS weights and `adjustment="none"`).
+  (propensity refit contributes additional IF terms); until then the analytic
+  path covers `adjustment="none"`.
+- **T3 wiring:** `inference = c("bootstrap","analytic")` in `mrwin_controls()` /
+  `mrwin()` (route to `mrwin_analytic_inference`), keeping bootstrap the default
+  until coverage simulations (WP19) confirm the analytic CI.
+- **Optional:** a pure-analytic `Σ_gwas` via differentiable ranking (would be an
+  approximation of the exactly-resampled term — low priority).
 Depends on: WP4 (estimator), WP5 (bootstrap), existing
 `python/p1_engine_v5/q_statistic_asymptotics.py` (the analytic-distribution
 groundwork already started).

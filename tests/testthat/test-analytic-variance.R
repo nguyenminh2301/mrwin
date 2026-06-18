@@ -35,6 +35,39 @@ test_that("analytic inference matches the fixed-strata multiplier bootstrap", {
   )
 })
 
+test_that("analytic sampling + GWAS resample matches the full bootstrap (sigma_beta>0)", {
+  cfg <- mrwin_config(n_outcome = 700, m_snps = 14, seed = 303)
+  dat <- mrwin_simulate(cfg, seed = 303)
+  est <- mrwin_estimate(dat$time, dat$status, dat$G, dat$X, dat$true_betas, n_strata = 5)
+  ana <- mrwin_analytic_inference(
+    est, dat$X, G = dat$G, beta_hat = dat$true_betas,
+    sigma_beta = 0.2, n_strata = 5, B_gwas = 3000, seed = 303
+  )
+  expect_true(ana$gwas_included)
+  # GWAS term should be a real, non-trivial share of the variance here
+  expect_gt(sum(diag(ana$cov_gwas)), 0)
+
+  boot <- mrwin_multiplier_bootstrap(
+    time = dat$time, status = dat$status, G = dat$G, X = dat$X,
+    beta_hat = dat$true_betas, sigma_beta = 0.2, n_strata = 5, B = 3000,
+    seed = 303, adjustment = "none"
+  )
+  expect_equal(ana$se_delta_gls, boot$se_delta_gls, tolerance = 0.12)
+})
+
+test_that("GWAS resample covariance is symmetric with correct dimensions", {
+  cfg <- mrwin_config(n_outcome = 400, m_snps = 10, seed = 44)
+  dat <- mrwin_simulate(cfg, seed = 44)
+  est <- mrwin_estimate(dat$time, dat$status, dat$G, dat$X, dat$true_betas, n_strata = 4)
+  cg <- mrwin_gwas_resample_covariance(
+    est$kernel, dat$G, dat$X, dat$true_betas, sigma_beta = 0.15,
+    n_strata = 4, contrast_plan = est$contrast_plan, B_gwas = 500, seed = 44
+  )
+  dm1 <- nrow(est$contrast_plan)
+  expect_equal(dim(cg), c(2L * dm1, 2L * dm1))
+  expect_true(isSymmetric(unname(cg), tol = 1e-8))
+})
+
 test_that("analytic inference requires the dense kernel", {
   est <- structure(list(kernel = NULL), class = "mrwin_estimate")
   expect_error(mrwin_analytic_inference(est, 1:3), "dense kernel")

@@ -70,12 +70,69 @@ mrwin_analytic_covariance <- function(kernel, strata, X, contrast_plan, floor = 
   cov_u
 }
 
+# GWAS-uncertainty covariance term, Sigma_gwas = Cov_{beta*}(point estimate over
+# re-stratification). The point estimate (LT^0, DX^0) is piecewise-constant in
+# beta (strata jump discretely), so it has no pointwise gradient: a pure-analytic
+# Sigma_gwas would require a smoothed / boundary-density approximation that adds a
+# bandwidth and its own bias. This routine instead computes the term *exactly* by
+# resampling beta* ~ N(beta, diag(sigma_beta^2)), re-stratifying, and recomputing
+# the UNWEIGHTED point estimate (no multiplier xi) on the FIXED precomputed
+# kernel. It is the irreducible GWAS-only Monte Carlo; the (usually dominant)
+# multiplier/sampling part stays analytic, so the full xi resampling is removed.
+mrwin_gwas_resample_covariance <- function(kernel, G, X, beta_hat, sigma_beta,
+                                           n_strata, contrast_plan,
+                                           B_gwas = 200L, seed = NULL, floor = 1e-12) {
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
+  kernel <- as.matrix(kernel)
+  G <- as.matrix(G)
+  X <- as.numeric(X)
+  beta_hat <- as.numeric(beta_hat)
+  sigma_beta <- as.numeric(sigma_beta)
+  if (length(sigma_beta) == 1L) {
+    sigma_beta <- rep(sigma_beta, length(beta_hat))
+  }
+  if (length(sigma_beta) != length(beta_hat)) {
+    stop("`sigma_beta` must have length 1 or length(beta_hat).", call. = FALSE)
+  }
+  dm1 <- nrow(contrast_plan)
+  U <- matrix(NA_real_, nrow = B_gwas, ncol = 2L * dm1)
+
+  for (b in seq_len(B_gwas)) {
+    beta_star <- beta_hat + stats::rnorm(length(beta_hat)) * sigma_beta
+    strata <- mrwin_prs_strata(G, beta_star, n_strata = n_strata)$strata
+    for (a in seq_len(dm1)) {
+      H <- which(strata == contrast_plan$high[a])
+      L <- which(strata == contrast_plan$low[a])
+      if (length(H) == 0L || length(L) == 0L) {
+        next
+      }
+      sums <- mrwin_stratum_win_loss(kernel, H, L)
+      U[b, a] <- log(max(sums[["wins"]], floor) / max(sums[["losses"]], floor))
+      U[b, dm1 + a] <- mean(X[H]) - mean(X[L])
+    }
+  }
+
+  valid <- stats::complete.cases(U)
+  if (sum(valid) < 2L) {
+    stop("Too few valid GWAS-resample iterations.", call. = FALSE)
+  }
+  cov_u <- stats::cov(U[valid, , drop = FALSE])
+  cov_u <- 0.5 * (cov_u + t(cov_u))
+  nm <- c(paste0("log_theta:", contrast_plan$label), paste0("delta_x:", contrast_plan$label))
+  dimnames(cov_u) <- list(nm, nm)
+  cov_u
+}
+
 # Analytic inference: feed the analytic cov_u through the SAME downstream
 # machinery the bootstrap uses (bivariate-Delta ISG covariance, GLS pooling,
 # Fieller). Replaces the multiplier-bootstrap loop for the sampling part with
 # fixed GWAS weights and adjustment = "none". `estimate` is an `mrwin_estimate`
 # object (dense backend, so it carries the kernel); `X` is the exposure vector.
-mrwin_analytic_inference <- function(estimate, X, z = 1.96) {
+mrwin_analytic_inference <- function(estimate, X, G = NULL, beta_hat = NULL,
+                                     sigma_beta = 0, n_strata = NULL,
+                                     B_gwas = 200L, seed = NULL, z = 1.96) {
   if (!inherits(estimate, "mrwin_estimate")) {
     stop("`estimate` must be an `mrwin_estimate` object.", call. = FALSE)
   }
@@ -83,9 +140,22 @@ mrwin_analytic_inference <- function(estimate, X, z = 1.96) {
     stop("Analytic inference needs the dense kernel; run `mrwin_estimate()` ",
          "(or `mrwin(backend = \"dense\")`) so the kernel is available.", call. = FALSE)
   }
-  cov_u <- mrwin_analytic_covariance(
+  cov_sampling <- mrwin_analytic_covariance(
     estimate$kernel, estimate$strata, X, estimate$contrast_plan
   )
+  cov_gwas <- NULL
+  gwas_included <- !is.null(G) && !is.null(beta_hat) && any(as.numeric(sigma_beta) > 0)
+  if (gwas_included) {
+    if (is.null(n_strata)) {
+      n_strata <- max(estimate$strata)
+    }
+    cov_gwas <- mrwin_gwas_resample_covariance(
+      kernel = estimate$kernel, G = G, X = X, beta_hat = beta_hat,
+      sigma_beta = sigma_beta, n_strata = n_strata,
+      contrast_plan = estimate$contrast_plan, B_gwas = B_gwas, seed = seed
+    )
+  }
+  cov_u <- if (gwas_included) cov_sampling + cov_gwas else cov_sampling
   sigma_isg <- .mrwin_isg_covariance(
     cov_u = cov_u,
     point_log_theta = estimate$log_theta,
@@ -101,8 +171,15 @@ mrwin_analytic_inference <- function(estimate, X, z = 1.96) {
   )
 
   list(
-    method = "analytic_influence_function_sampling",
+    method = if (gwas_included) {
+      "analytic_sampling_plus_gwas_resample"
+    } else {
+      "analytic_influence_function_sampling"
+    },
+    gwas_included = gwas_included,
     cov_u = cov_u,
+    cov_sampling = cov_sampling,
+    cov_gwas = cov_gwas,
     sigma_isg = sigma_isg,
     sigma_lw = pooled$sigma,
     point_log_theta = estimate$log_theta,

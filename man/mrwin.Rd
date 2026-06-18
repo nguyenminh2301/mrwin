@@ -27,6 +27,7 @@
 \alias{mrwin_aalen_per_snp}
 \alias{mrwin_analytic_covariance}
 \alias{mrwin_analytic_inference}
+\alias{mrwin_gwas_resample_covariance}
 \alias{mrwin_cox_per_snp}
 \alias{mrwin_mr_egger}
 \alias{mrwin_pleiotropy_bounded_ci}

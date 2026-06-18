@@ -53,10 +53,14 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   `R/analytic_variance.R`: `mrwin_analytic_covariance()` (influence-function
   `cov_u = CᵀC`) + `mrwin_analytic_inference()` reusing the existing
   ISG/GLS/Fieller machinery. Validated vs the fixed-strata multiplier bootstrap:
-  `se` ratio 0.99–1.00 (N∈{500,1500,4000}), no systematic bias — replaces the
-  B-loop for the sampling part (adjustment="none", fixed GWAS weights). Remaining:
-  `Σ_gwas` (cutpoint Jacobian), IPTW terms, and `inference=` wiring into
-  `mrwin()`. Full suite 86 groups, 0 failures.
+  `se` ratio 0.99–1.00 (N∈{500,1500,4000}), no systematic bias.
+  **Σ_gwas added 2026-06-18** via the exact GWAS-only resample
+  (`mrwin_gwas_resample_covariance`; point estimate is piecewise-constant in β so
+  has no pointwise gradient — the resample is the exact term, the dominant `xi`
+  part stays analytic). Combined `[Σ_sampling + Σ_gwas]` matches the full
+  bootstrap: `se` ratio 0.997–1.009 with σ_β∈{0.05,0.15,0.30} (GWAS share ~50%).
+  Remaining: IPTW influence terms and `inference=` wiring into `mrwin()`. Full
+  suite 88 groups, 0 failures.
 
 ### Direction (2026-06-18): the O(N²) goal is solved
 
