@@ -62,8 +62,12 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   **Wired end-to-end 2026-06-18:** `mrwin(inference="analytic")` (via
   `mrwin_analytic_bootstrap`, output-compatible with the bootstrap so the S3
   methods work). 7× faster than bootstrap at σ_β=0 (pure closed-form), ~1.5× at
-  σ_β>0. Guarded to `adjustment="none"`. Remaining: IPTW influence terms. Full
-  suite 91 groups, 0 failures.
+  σ_β>0. **IPTW done 2026-06-18:** `adjustment="ordinal_iptw"` supported (weighted
+  influence function + per-`β*` propensity-refit GWAS resample); it omits the
+  estimated-weights correction (first-order), measured gap ≤~3% vs the bootstrap
+  (either sign, shrinks with N; small because MR strata are ~independent of
+  covariates). Bootstrap stays the exact default. **M3 complete.** Full suite 92
+  groups, 0 failures.
 
 ### Direction (2026-06-18): the O(N²) goal is solved
 

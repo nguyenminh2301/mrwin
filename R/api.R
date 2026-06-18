@@ -197,10 +197,6 @@ mrwin <- function(
 
   inference <- if (is.null(controls$inference)) "bootstrap" else controls$inference
   if (inference == "analytic") {
-    if (controls$adjustment != "none") {
-      stop("`inference = \"analytic\"` currently supports `adjustment = \"none\"` only; ",
-           "use `inference = \"bootstrap\"` with IPTW adjustment.", call. = FALSE)
-    }
     boot <- mrwin_analytic_bootstrap(
       time = endpoint_data$time,
       status = endpoint_data$status,
@@ -211,7 +207,11 @@ mrwin <- function(
       n_strata = controls$n_strata,
       B_gwas = controls$bootstrap,
       seed = controls$seed,
-      block_size = controls$block_size
+      block_size = controls$block_size,
+      covariates = validated$covariates,
+      adjustment = controls$adjustment,
+      iptw_truncation = controls$iptw_truncation,
+      ess_fraction = controls$ess_fraction
     )
   } else if (controls$backend %in% c("sparse", "fast")) {
     boot <- mrwin_sparse_bootstrap(

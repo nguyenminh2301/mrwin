@@ -50,7 +50,7 @@ Each row is discharged only when its test is green. Keep the status current.
 | P-C3 | Incremental re-stratification cost `O(I log N)`, `I` = inversions; exact vs full re-query | WP14 | pending |
 | D-M1 | Continuous ISG: definition, identification, consistency; boxcar limit = decile estimator; U-process CLT | WP15 | pending |
 | S-M2 | Doubly-ranked strata validity under rank-preservation; weaker than linearity/homogeneity | WP16 | pending |
-| V-M3 | Variance decomposition `cov_u = Σ_sampling + Σ_gwas`; Σ_sampling analytic (`CᵀC`), Σ_gwas exact GWAS-only resample (point estimate is piecewise-constant in β, so no pointwise gradient); analytic = bootstrap | WP17 | discharged for `adjustment="none"`: validated vs full bootstrap, `se` ratio 0.997–1.009 incl. σ_β∈{0.05,0.15,0.30} (test: `test-analytic-variance.R`). IPTW terms + `mrwin()` wiring pending |
+| V-M3 | Variance decomposition `cov_u = Σ_sampling + Σ_gwas`; Σ_sampling analytic (`CᵀC`), Σ_gwas exact GWAS-only resample (point estimate piecewise-constant in β → no pointwise gradient); IPTW via weighted IF (estimated-weights correction omitted, ~1–3%); analytic = bootstrap | WP17 | discharged: `adjustment="none"` exact (`se` ratio 0.997–1.009 incl. σ_β∈{0.05,0.15,0.30}); IPTW first-order (`se` ratio 0.985–1.026); wired as `mrwin(inference="analytic")` (test: `test-analytic-variance.R`) |
 
 ---
 

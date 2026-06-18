@@ -1,7 +1,27 @@
 # WP17 — Analytic Influence-Function Variance + GWAS Delta-Method (M3)
 
-Status block: `T1 [done] T2 [done] T3 [done: mrwin(inference="analytic")] T4 [done: validated vs full bootstrap]`  | IPTW [todo]
+Status block: `T1 [done] T2 [done] T3 [done] T4 [done]` | IPTW [done: weights-as-known approximation, validated]
 Branch: developed on `C-wp13`.
+
+### IPTW (2026-06-18): first-order analytic, validated, honestly characterised
+
+`adjustment="ordinal_iptw"` is supported by `mrwin(inference="analytic")`:
+- The influence function uses the **point IPTW weights** `ω` (weighted `CᵀC`);
+  the GWAS-only resample **refits the propensity per `β*`** (`mrwin_estimate`
+  weighted by `ω*`).
+- It **omits the estimated-weights (propensity-refit) correction** — i.e. it
+  treats `ω` as known rather than estimated. This is a first-order
+  approximation.
+- **Measured gap** vs the IPTW bootstrap (σ_β=0, isolating the term): se ratio
+  0.985–1.026, i.e. **≤~3%, either sign, shrinking with N**. The gap is small by
+  construction: in MR the instrument strata are nearly independent of the
+  covariates, so `P(stratum | Z)` is near-flat and the IPTW weights are mild.
+  Confirmed across mild and adversarial (`Z`–score correlation up to 0.95,
+  weight CV up to 1.2) configurations.
+- **Default unchanged:** the bootstrap remains the exact default for IPTW;
+  analytic is the fast approximation. The exact estimated-weights M-estimation
+  correction (propensity score projection) is an optional future refinement —
+  low priority given the measured ~1–3% size.
 
 Wiring (T3, 2026-06-18): `inference = c("bootstrap","analytic")` in
 `mrwin_controls()`; `mrwin(inference="analytic")` routes to
@@ -52,15 +72,12 @@ G, beta_hat, sigma_beta, ...)`. Validated vs the full multiplier bootstrap with
 0.997–1.009 — exact agreement. Tests in `test-analytic-variance.R`; full suite
 88 groups, 0 failures.
 
-**Remaining (next steps):**
-- **IPTW:** extend the influence function for `adjustment="ordinal_iptw"`
-  (propensity refit contributes additional IF terms); until then the analytic
-  path covers `adjustment="none"`.
-- **T3 wiring:** `inference = c("bootstrap","analytic")` in `mrwin_controls()` /
-  `mrwin()` (route to `mrwin_analytic_inference`), keeping bootstrap the default
-  until coverage simulations (WP19) confirm the analytic CI.
-- **Optional:** a pure-analytic `Σ_gwas` via differentiable ranking (would be an
-  approximation of the exactly-resampled term — low priority).
+**WP17 / M3 is complete.** `inference="analytic"` covers `adjustment` in
+`{"none","ordinal_iptw"}`, validated against the bootstrap. Optional future
+refinements (both low priority): the exact IPTW estimated-weights correction
+(~1–3% gap), and a pure-analytic `Σ_gwas` via differentiable ranking (would
+approximate an exactly-resampled term). Coverage simulations to confirm the
+analytic CI before flipping any default live in WP19.
 Depends on: WP4 (estimator), WP5 (bootstrap), existing
 `python/p1_engine_v5/q_statistic_asymptotics.py` (the analytic-distribution
 groundwork already started).

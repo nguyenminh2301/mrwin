@@ -104,18 +104,33 @@ test_that("mrwin(inference='analytic') agrees with the bootstrap on se", {
   expect_equal(fit_a$inference$se_delta_gls, fit_b$inference$se_delta_gls, tolerance = 0.15)
 })
 
-test_that("inference='analytic' rejects IPTW adjustment", {
-  cfg <- mrwin_config(n_outcome = 200, m_snps = 8, seed = 9)
+test_that("inference='analytic' supports IPTW end-to-end", {
+  cfg <- mrwin_config(n_outcome = 300, m_snps = 8, seed = 9)
   dat <- mrwin_simulate(cfg, seed = 9)
   ep <- mrwin_endpoint(dat$time, dat$status, colnames(dat$time))
   gw <- mrwin_gwas(dat$true_betas, rep(0.05, length(dat$true_betas)))
-  expect_error(
-    mrwin(endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw,
-          covariates = cbind(z = scale(dat$U)),
-          controls = mrwin_controls(n_strata = 4, bootstrap = 50, seed = 9,
-                                    inference = "analytic", adjustment = "ordinal_iptw")),
-    "adjustment = \"none\""
-  )
+  fit <- mrwin(endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw,
+               covariates = cbind(z = as.numeric(scale(dat$U))),
+               controls = mrwin_controls(n_strata = 4, bootstrap = 100, seed = 9,
+                                         inference = "analytic", adjustment = "ordinal_iptw",
+                                         run_sdpd = FALSE))
+  expect_s3_class(fit, "mrwin_fit")
+  expect_true(is.finite(fit$inference$se_delta_gls))
+  expect_no_error(summary(fit))
+})
+
+test_that("IPTW analytic agrees with the IPTW bootstrap up to the estimated-weights gap", {
+  cfg <- mrwin_config(n_outcome = 400, m_snps = 10, seed = 66)
+  dat <- mrwin_simulate(cfg, seed = 66)
+  ep <- mrwin_endpoint(dat$time, dat$status, colnames(dat$time))
+  gw <- mrwin_gwas(dat$true_betas, rep(0, length(dat$true_betas)))  # sigma_beta=0 isolates the weighted IF
+  Z <- cbind(u = as.numeric(scale(dat$U)))
+  ctrl <- function(inf) mrwin_controls(n_strata = 5, bootstrap = 800, seed = 66, inference = inf,
+                                       adjustment = "ordinal_iptw", run_sdpd = FALSE)
+  fit_a <- mrwin(endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw, covariates = Z, controls = ctrl("analytic"))
+  fit_b <- mrwin(endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw, covariates = Z, controls = ctrl("bootstrap"))
+  # weights-fixed IF omits the (small) estimated-weights correction -> ~few % gap
+  expect_equal(fit_a$inference$se_delta_gls, fit_b$inference$se_delta_gls, tolerance = 0.12)
 })
 
 test_that("analytic covariance flags zero win/loss contrasts", {
