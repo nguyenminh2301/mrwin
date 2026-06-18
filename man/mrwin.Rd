@@ -25,6 +25,7 @@
 \alias{mrwin_gls_pool}
 \alias{mrwin_multiplier_bootstrap}
 \alias{mrwin_aalen_per_snp}
+\alias{mrwin_analytic_bootstrap}
 \alias{mrwin_analytic_covariance}
 \alias{mrwin_analytic_inference}
 \alias{mrwin_gwas_resample_covariance}

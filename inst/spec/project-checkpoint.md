@@ -59,8 +59,11 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   has no pointwise gradient — the resample is the exact term, the dominant `xi`
   part stays analytic). Combined `[Σ_sampling + Σ_gwas]` matches the full
   bootstrap: `se` ratio 0.997–1.009 with σ_β∈{0.05,0.15,0.30} (GWAS share ~50%).
-  Remaining: IPTW influence terms and `inference=` wiring into `mrwin()`. Full
-  suite 88 groups, 0 failures.
+  **Wired end-to-end 2026-06-18:** `mrwin(inference="analytic")` (via
+  `mrwin_analytic_bootstrap`, output-compatible with the bootstrap so the S3
+  methods work). 7× faster than bootstrap at σ_β=0 (pure closed-form), ~1.5× at
+  σ_β>0. Guarded to `adjustment="none"`. Remaining: IPTW influence terms. Full
+  suite 91 groups, 0 failures.
 
 ### Direction (2026-06-18): the O(N²) goal is solved
 

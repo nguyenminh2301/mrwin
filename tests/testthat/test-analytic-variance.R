@@ -73,6 +73,51 @@ test_that("analytic inference requires the dense kernel", {
   expect_error(mrwin_analytic_inference(est, 1:3), "dense kernel")
 })
 
+test_that("mrwin(inference='analytic') runs end-to-end and methods work", {
+  cfg <- mrwin_config(n_outcome = 500, m_snps = 12, seed = 77)
+  dat <- mrwin_simulate(cfg, seed = 77)
+  ep <- mrwin_endpoint(dat$time, dat$status, colnames(dat$time))
+  gw <- mrwin_gwas(dat$true_betas, rep(0.05, length(dat$true_betas)))
+  fit <- mrwin(
+    endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw,
+    controls = mrwin_controls(n_strata = 5, bootstrap = 500, seed = 77,
+                              inference = "analytic", run_sdpd = FALSE)
+  )
+  expect_s3_class(fit, "mrwin_fit")
+  expect_true(is.finite(fit$point$delta_gls))
+  expect_true(is.finite(fit$inference$se_delta_gls))
+  expect_equal(fit$bootstrap$covariance_method, "analytic_sampling_plus_gwas_resample")
+  expect_output(print(fit))
+  expect_no_error(summary(fit))
+  expect_no_error(tidy(fit))
+})
+
+test_that("mrwin(inference='analytic') agrees with the bootstrap on se", {
+  cfg <- mrwin_config(n_outcome = 700, m_snps = 12, seed = 88)
+  dat <- mrwin_simulate(cfg, seed = 88)
+  ep <- mrwin_endpoint(dat$time, dat$status, colnames(dat$time))
+  gw <- mrwin_gwas(dat$true_betas, rep(0.05, length(dat$true_betas)))
+  ctrl <- function(inf) mrwin_controls(n_strata = 5, bootstrap = 2500, seed = 88,
+                                       inference = inf, run_sdpd = FALSE)
+  fit_a <- mrwin(endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw, controls = ctrl("analytic"))
+  fit_b <- mrwin(endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw, controls = ctrl("bootstrap"))
+  expect_equal(fit_a$inference$se_delta_gls, fit_b$inference$se_delta_gls, tolerance = 0.15)
+})
+
+test_that("inference='analytic' rejects IPTW adjustment", {
+  cfg <- mrwin_config(n_outcome = 200, m_snps = 8, seed = 9)
+  dat <- mrwin_simulate(cfg, seed = 9)
+  ep <- mrwin_endpoint(dat$time, dat$status, colnames(dat$time))
+  gw <- mrwin_gwas(dat$true_betas, rep(0.05, length(dat$true_betas)))
+  expect_error(
+    mrwin(endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw,
+          covariates = cbind(z = scale(dat$U)),
+          controls = mrwin_controls(n_strata = 4, bootstrap = 50, seed = 9,
+                                    inference = "analytic", adjustment = "ordinal_iptw")),
+    "adjustment = \"none\""
+  )
+})
+
 test_that("analytic covariance flags zero win/loss contrasts", {
   # a degenerate kernel with no wins in a contrast triggers a clear error
   cfg <- mrwin_config(n_outcome = 200, m_snps = 8, seed = 5)

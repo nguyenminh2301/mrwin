@@ -193,10 +193,86 @@ mrwin_analytic_inference <- function(estimate, X, G = NULL, beta_hat = NULL,
     ci95_delta_fieller = fieller$delta,
     ci95_dscwr_fieller = exp(pmax(pmin(fieller$delta, 50), -50)),
     fieller_unbounded = fieller$unbounded,
+    fieller_coefficients = fieller$coefficients,
     q = pooled$q,
     q_df = pooled$q_df,
     q_p_value = pooled$q_p_value,
     gls_weights = pooled$gls_weights,
     ledoit_wolf_rho = pooled$ledoit_wolf_rho
   )
+}
+
+# Top-level analytic inference engine, output-compatible with
+# mrwin_multiplier_bootstrap so mrwin() and the S3 methods consume it unchanged.
+# Supports adjustment = "none"; covariance = analytic sampling + (if sigma_beta>0)
+# exact GWAS-only resample. Uses the dense kernel (moderate N).
+mrwin_analytic_bootstrap <- function(
+    time, status, G, X, beta_hat,
+    sigma_beta = 0, n_strata = 10L, B_gwas = 200L, seed = NULL,
+    kernel = NULL, block_size = 4000L, floor = 1e-12
+) {
+  checked <- .mrwin_validate_estimate_inputs(
+    time = time, status = status, G = G, X = X, beta_hat = beta_hat,
+    n_strata = n_strata, kernel = kernel, weights = NULL, floor = floor
+  )
+  time <- checked$time; status <- checked$status; G <- checked$G; X <- checked$X
+  beta_hat <- checked$beta_hat; n_strata <- checked$n_strata; floor <- checked$floor
+  sigma_beta <- as.numeric(sigma_beta)
+  if (length(sigma_beta) == 1L) sigma_beta <- rep(sigma_beta, length(beta_hat))
+
+  if (is.null(kernel)) kernel <- mrwin_kernel(time, status, block_size = block_size)
+
+  point_strata <- mrwin_prs_strata(G, beta_hat, n_strata = n_strata)$strata
+  point_adjustment <- .mrwin_point_adjustment(
+    strata = point_strata, covariates = NULL, adjustment = "none",
+    iptw_truncation = c(0.01, 0.99), ess_fraction = 0.5, n_strata = n_strata
+  )
+  est <- mrwin_estimate(
+    time = time, status = status, G = G, X = X, beta_hat = beta_hat,
+    n_strata = n_strata, kernel = kernel, weights = point_adjustment$weights,
+    floor = floor, active_strata = point_adjustment$active_strata
+  )
+  ana <- mrwin_analytic_inference(
+    est, X, G = G, beta_hat = beta_hat, sigma_beta = sigma_beta,
+    n_strata = n_strata, B_gwas = B_gwas, seed = seed
+  )
+
+  dm1 <- nrow(est$contrast_plan)
+  na_vec <- rep(NA_real_, dm1)
+  names(na_vec) <- names(est$log_theta)
+
+  structure(list(
+    B = as.integer(if (any(sigma_beta > 0)) B_gwas else 0L),
+    n_valid = as.integer(if (any(sigma_beta > 0)) B_gwas else 0L),
+    n_invalid = 0L,
+    n_strata = as.integer(n_strata),
+    active_strata = point_adjustment$active_strata,
+    dropped_strata = point_adjustment$dropped_strata,
+    contrast_plan = est$contrast_plan,
+    point_log_theta = est$log_theta,
+    point_cwr = est$cwr,
+    point_delta_x = est$delta_x,
+    delta_isg = est$delta_isg,
+    delta_gls = ana$delta_gls,
+    se_delta_gls = ana$se_delta_gls,
+    dscwr = ana$dscwr,
+    ci95_delta = ana$ci95_delta,
+    ci95_dscwr = ana$ci95_dscwr,
+    ci95_delta_bivariate_delta = ana$ci95_delta,
+    ci95_dscwr_bivariate_delta = ana$ci95_dscwr,
+    ci95_delta_fieller = ana$ci95_delta_fieller,
+    ci95_dscwr_fieller = ana$ci95_dscwr_fieller,
+    fieller_unbounded = ana$fieller_unbounded,
+    fieller_coefficients = ana$fieller_coefficients,
+    q = ana$q, q_df = ana$q_df, q_p_value = ana$q_p_value,
+    gls_weights = ana$gls_weights,
+    ledoit_wolf_rho = ana$ledoit_wolf_rho,
+    cov_u = ana$cov_u, sigma_isg = ana$sigma_isg, sigma_lw = ana$sigma_lw,
+    kurtosis_log_theta = na_vec, kurtosis_delta_x = na_vec,
+    skew_log_theta = na_vec, skew_delta_x = na_vec,
+    bootstrap_log_theta = NULL, bootstrap_delta_x = NULL,
+    bootstrap_ess = NULL, bootstrap_dropped_strata = NULL, valid_bootstrap = NULL,
+    covariance_method = ana$method,
+    adjustment = point_adjustment, kernel = kernel, strata = est$strata
+  ), class = c("mrwin_bootstrap", "list"))
 }

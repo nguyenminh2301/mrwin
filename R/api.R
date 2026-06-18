@@ -88,6 +88,7 @@ mrwin_controls <- function(
     pleiotropy_bias_radius = NULL,
     adjustment = c("none", "ordinal_iptw", "gps"),
     backend = c("dense", "sparse", "fast", "rcpp"),
+    inference = c("bootstrap", "analytic"),
     delta_x_tol = 1e-8,
     iptw_truncation = c(0.01, 0.99),
     ess_fraction = 0.5
@@ -95,6 +96,7 @@ mrwin_controls <- function(
   sdpd_scale <- match.arg(sdpd_scale)
   adjustment <- match.arg(adjustment)
   backend <- match.arg(backend)
+  inference <- match.arg(inference)
   if (!is.null(pleiotropy_bias_radius)) {
     pleiotropy_bias_radius <- as.numeric(pleiotropy_bias_radius)
   }
@@ -111,6 +113,7 @@ mrwin_controls <- function(
     pleiotropy_bias_radius = pleiotropy_bias_radius,
     adjustment = adjustment,
     backend = backend,
+    inference = inference,
     delta_x_tol = delta_x_tol,
     iptw_truncation = iptw_truncation,
     ess_fraction = ess_fraction
@@ -192,7 +195,25 @@ mrwin <- function(
     )
   }
 
-  if (controls$backend %in% c("sparse", "fast")) {
+  inference <- if (is.null(controls$inference)) "bootstrap" else controls$inference
+  if (inference == "analytic") {
+    if (controls$adjustment != "none") {
+      stop("`inference = \"analytic\"` currently supports `adjustment = \"none\"` only; ",
+           "use `inference = \"bootstrap\"` with IPTW adjustment.", call. = FALSE)
+    }
+    boot <- mrwin_analytic_bootstrap(
+      time = endpoint_data$time,
+      status = endpoint_data$status,
+      G = G,
+      X = X,
+      beta_hat = gwas$beta,
+      sigma_beta = gwas$se,
+      n_strata = controls$n_strata,
+      B_gwas = controls$bootstrap,
+      seed = controls$seed,
+      block_size = controls$block_size
+    )
+  } else if (controls$backend %in% c("sparse", "fast")) {
     boot <- mrwin_sparse_bootstrap(
       time = endpoint_data$time,
       status = endpoint_data$status,

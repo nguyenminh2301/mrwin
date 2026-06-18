@@ -1,7 +1,16 @@
 # WP17 — Analytic Influence-Function Variance + GWAS Delta-Method (M3)
 
-Status block: `T1 [done: sampling IF + variance decomposition] T2 [done: sampling analytic + GWAS exact resample] T3 [todo: mrwin wiring] T4 [done: validated vs full bootstrap incl. sigma_beta>0]`
+Status block: `T1 [done] T2 [done] T3 [done: mrwin(inference="analytic")] T4 [done: validated vs full bootstrap]`  | IPTW [todo]
 Branch: developed on `C-wp13`.
+
+Wiring (T3, 2026-06-18): `inference = c("bootstrap","analytic")` in
+`mrwin_controls()`; `mrwin(inference="analytic")` routes to
+`mrwin_analytic_bootstrap()` (output-compatible with the bootstrap object, so
+`print`/`summary`/`tidy` work unchanged). Guarded to `adjustment="none"`.
+End-to-end speed: **7×** faster than the bootstrap when `sigma_beta=0` (pure
+closed-form, no resampling at all); ~1.5× when `sigma_beta>0` (the GWAS resample
+still loops, reusing the fixed kernel). Tests in `test-analytic-variance.R`
+(end-to-end run + methods + bootstrap se agreement + IPTW rejection).
 
 ### Why Sigma_gwas is an exact resample, not pure-analytic (decision, 2026-06-18)
 
