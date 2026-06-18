@@ -49,6 +49,15 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   0.083 s — biobank-scale. Differential testing (16k cohorts, 0 mismatches)
   caught and fixed a double-`eq` regime bug. Full suite 82 groups, 0 failures.
 
+- **M3 (analytic variance) — sampling part landed + R-verified 2026-06-18.**
+  `R/analytic_variance.R`: `mrwin_analytic_covariance()` (influence-function
+  `cov_u = CᵀC`) + `mrwin_analytic_inference()` reusing the existing
+  ISG/GLS/Fieller machinery. Validated vs the fixed-strata multiplier bootstrap:
+  `se` ratio 0.99–1.00 (N∈{500,1500,4000}), no systematic bias — replaces the
+  B-loop for the sampling part (adjustment="none", fixed GWAS weights). Remaining:
+  `Σ_gwas` (cutpoint Jacobian), IPTW terms, and `inference=` wiring into
+  `mrwin()`. Full suite 86 groups, 0 failures.
+
 ### Direction (2026-06-18): the O(N²) goal is solved
 
 See `inst/spec/phase2-direction.md` for the strategic evaluation. The speed goal

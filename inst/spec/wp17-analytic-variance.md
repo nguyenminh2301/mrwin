@@ -1,7 +1,32 @@
 # WP17 — Analytic Influence-Function Variance + GWAS Delta-Method (M3)
 
-Status block: `T1 [todo] T2 [todo] T3 [todo] T4 [todo]`
-Branch: `C-wp17` (from `C`; independent of WP13/WP14).
+Status block: `T1 [partial: sampling IF derived] T2 [done: sampling part] T3 [todo: mrwin wiring] T4 [done: sampling part validated]`
+Branch: developed on `C-wp13`.
+
+Progress (2026-06-18, R-verified). **Sampling part landed** (adjustment="none",
+fixed GWAS weights):
+- `R/analytic_variance.R`: `mrwin_analytic_covariance(kernel, strata, X,
+  contrast_plan)` builds the N×2(D-1) influence-coefficient matrix `C` and
+  returns `cov_u = CᵀC`; `mrwin_analytic_inference(estimate, X)` feeds it through
+  the existing `.mrwin_isg_covariance` / `mrwin_gls_pool` / `.mrwin_fieller_ci`.
+- Influence coefficients (multiplier weights `ξ_i = 1+e_i`, Var(e)=1):
+  `log θ_d`: `k∈H → P⁺_k/W₀ − P⁻_k/L₀`, `k∈L → Q⁺_k/W₀ − Q⁻_k/L₀`;
+  `Δx_d`: `k∈H → (X_k−X̄_H)/n_H`, `k∈L → −(X_k−X̄_L)/n_L`. Shared strata across
+  adjacent contrasts reproduce the induced correlation automatically.
+- **Validated** vs the fixed-strata (`sigma_beta=0`) multiplier bootstrap: `se`
+  ratio 0.99–1.00 across N∈{500,1500,4000} (B=4000), relative Frobenius ≈3–4%
+  (Monte-Carlo limited), no systematic bias. Tests `test-analytic-variance.R`;
+  full suite 86 groups, 0 failures.
+
+**Remaining (next steps):**
+- **Step B — `Σ_gwas`:** GWAS-uncertainty term via the Jacobian of `(logθ,Δx)`
+  through the stratum cutpoints (boundary movers); add `Σ = Σ_sampling + Σ_gwas`.
+- **IPTW:** extend the influence function for `adjustment="ordinal_iptw"`
+  (propensity refit contributes additional IF terms).
+- **T3 wiring:** `inference = c("bootstrap","analytic","analytic+bootstrap")` in
+  `mrwin_controls()` / `mrwin()`, guarded so the analytic path is only the
+  default once `Σ_gwas` + IPTW are in (until then it covers the sampling part
+  with fixed GWAS weights and `adjustment="none"`).
 Depends on: WP4 (estimator), WP5 (bootstrap), existing
 `python/p1_engine_v5/q_statistic_asymptotics.py` (the analytic-distribution
 groundwork already started).

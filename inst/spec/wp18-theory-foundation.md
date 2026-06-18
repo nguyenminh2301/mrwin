@@ -50,7 +50,7 @@ Each row is discharged only when its test is green. Keep the status current.
 | P-C3 | Incremental re-stratification cost `O(I log N)`, `I` = inversions; exact vs full re-query | WP14 | pending |
 | D-M1 | Continuous ISG: definition, identification, consistency; boxcar limit = decile estimator; U-process CLT | WP15 | pending |
 | S-M2 | Doubly-ranked strata validity under rank-preservation; weaker than linearity/homogeneity | WP16 | pending |
-| V-M3 | Influence function of stratified DS-CWR; delta-method through cutpoints; analytic = bootstrap in the limit | WP17 | pending |
+| V-M3 | Influence function of stratified DS-CWR; analytic = bootstrap in the limit | WP17 | discharged for the **sampling part** (adjustment="none", fixed GWAS): `cov_u=CᵀC`, validated `se` ratio 0.99–1.00 (test: `test-analytic-variance.R`). Σ_gwas (cutpoint Jacobian) + IPTW pending |
 
 ---
 
