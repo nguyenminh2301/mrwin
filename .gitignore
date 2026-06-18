@@ -53,6 +53,13 @@ htmlcov/
 .RData
 .Ruserdata
 
+# Compiled objects (Rcpp / C++)
+*.o
+*.so
+*.dll
+src/*.o
+src/*.so
+
 # Manuscript drafts and generated writing artifacts
 manuscript/
 drafts/
@@ -66,3 +73,30 @@ paper*/
 PRODUCTION_PARAMETERS.md
 REPLICATION_LOG.md
 REPLICATION_CHECKSUMS.txt
+
+# Raw benchmark / profiling artifacts (commit only curated summary tables,
+# e.g. inst/spec/benchmark-results.md)
+benchmark_results*.csv
+out/
+prof/
+profiling/
+*.prof
+*.lprof
+perf.data*
+
+# Raw / individual-level data (never commit cohort or trial data)
+data/
+*.sas7bdat
+*.dta
+*.sav
+*.parquet
+*.feather
+
+# Internal working material (not for public release)
+notes/
+scratch/
+.scratch/
+*.local.md
+TODO.local
+.agent/
+.sessions/

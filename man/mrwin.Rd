@@ -13,11 +13,14 @@
 \alias{mrwin_kernel}
 \alias{mrwin_pair_kernel}
 \alias{mrwin_pair_win_loss}
+\alias{mrwin_fast_pair_win_loss}
+\alias{mrwin_fast_adjacent_win_loss}
 \alias{mrwin_pair_log_cwr}
 \alias{mrwin_sparse_adjacent_win_loss}
 \alias{mrwin_stratum_win_loss}
 \alias{mrwin_stratum_log_cwr}
 \alias{mrwin_prs_strata}
+\alias{mrwin_doubly_ranked_strata}
 \alias{mrwin_estimate}
 \alias{mrwin_gls_pool}
 \alias{mrwin_multiplier_bootstrap}

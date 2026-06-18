@@ -3,8 +3,8 @@ params.py — Centralised replication-vs-publication parameter switchboard.
 
 Two parameter sets:
 
-  REPLICATION       — exact parameters Claude executed in the May 2026
-                      revision session on a 1-CPU container. Reproduces
+  REPLICATION       — exact parameters executed in the May 2026
+                      reference run on a 1-CPU container. Reproduces
                       every number reported in:
                         - results_packageA_R1.json (analytical, no MC)
                         - results_packageA_R2.json
@@ -43,7 +43,7 @@ From the CLI (every engine entry-point supports --mode):
 NOTE ON MODE INTERACTIONS
 =========================
 
-- Replication-mode runs use Claude's audited seeds and produce *bitwise
+- Replication-mode runs use the audited reference seeds and produce *bitwise
   identical* results to results_packageA_R2.json etc. on any platform with
   numpy >= 2.0 (verify by checksum after running).
 - Publication-mode runs share the same seeding scheme (cfg.seed * 10_000 + k)
@@ -60,7 +60,7 @@ MODE_PUBLICATION = "publication"
 
 
 # =============================================================================
-# REPLICATION  (what Claude actually ran on the 1-CPU container, May 2026)
+# REPLICATION  (what was run on the 1-CPU reference container, May 2026)
 # =============================================================================
 REPLICATION = {
     # ---- DGP / cohort
@@ -150,6 +150,6 @@ def add_mode_arg(parser):
     """Helper: add --mode flag to an argparse parser."""
     parser.add_argument(
         "--mode", choices=["replication", "publication"], default="replication",
-        help="Parameter set: 'replication' (Claude's audited 1-CPU run, ~5 min) "
+        help="Parameter set: 'replication' (audited 1-CPU reference run, ~5 min) "
              "or 'publication' (canonical IJE-submission scale, ~2–3 h on 32-core cluster)."
     )

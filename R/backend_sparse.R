@@ -38,7 +38,8 @@ mrwin_sparse_estimate <- function(
     weights = NULL,
     floor = 1e-12,
     active_strata = NULL,
-    pair_kernels = NULL
+    pair_kernels = NULL,
+    fast = FALSE
 ) {
   checked <- .mrwin_validate_estimate_inputs(
     time = time,
@@ -96,13 +97,14 @@ mrwin_sparse_estimate <- function(
     } else {
       idx_high <- which(strata == contrast_plan$high[row])
       idx_low <- which(strata == contrast_plan$low[row])
-      sums <- mrwin_pair_win_loss(
+      sums <- .mrwin_pair_win_loss_backend(
         time[idx_high, , drop = FALSE],
         status[idx_high, , drop = FALSE],
         time[idx_low, , drop = FALSE],
         status[idx_low, , drop = FALSE],
         weights_high = if (is.null(weights)) NULL else weights[idx_high],
-        weights_low = if (is.null(weights)) NULL else weights[idx_low]
+        weights_low = if (is.null(weights)) NULL else weights[idx_low],
+        fast = fast
       )
       wins[row] <- sums[["wins"]]
       losses[row] <- sums[["losses"]]
@@ -161,7 +163,8 @@ mrwin_sparse_bootstrap <- function(
     covariates = NULL,
     adjustment = c("none", "ordinal_iptw"),
     iptw_truncation = c(0.01, 0.99),
-    ess_fraction = 0.5
+    ess_fraction = 0.5,
+    fast = FALSE
 ) {
   adjustment <- match.arg(adjustment)
   checked <- .mrwin_validate_bootstrap_inputs(
@@ -216,7 +219,11 @@ mrwin_sparse_bootstrap <- function(
 
   contrast_plan <- .mrwin_make_contrast_plan(point_adjustment$active_strata, n_strata = n_strata)
 
-  point_pair_kernels <- mrwin_precompute_pair_kernels(time, status, point_strata, contrast_plan)
+  point_pair_kernels <- if (isTRUE(fast)) {
+    NULL
+  } else {
+    mrwin_precompute_pair_kernels(time, status, point_strata, contrast_plan)
+  }
 
   point <- mrwin_sparse_estimate(
     time = time,
@@ -228,7 +235,8 @@ mrwin_sparse_bootstrap <- function(
     weights = point_adjustment$weights,
     floor = floor,
     active_strata = point_adjustment$active_strata,
-    pair_kernels = point_pair_kernels
+    pair_kernels = point_pair_kernels,
+    fast = fast
   )
 
   n_contrasts <- nrow(contrast_plan)
@@ -282,13 +290,14 @@ mrwin_sparse_bootstrap <- function(
         next
       }
 
-      sums <- mrwin_pair_win_loss(
+      sums <- .mrwin_pair_win_loss_backend(
         time[idx_high, , drop = FALSE],
         status[idx_high, , drop = FALSE],
         time[idx_low, , drop = FALSE],
         status[idx_low, , drop = FALSE],
         weights_high = wh,
-        weights_low = wl
+        weights_low = wl,
+        fast = fast
       )
       lt[b, row] <- log(max(sums[["wins"]], floor) / max(sums[["losses"]], floor))
 

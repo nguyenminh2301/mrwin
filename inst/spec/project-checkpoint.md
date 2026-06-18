@@ -8,13 +8,63 @@ This file tracks current implementation state. The roadmap remains canonical for
 
 | Area | State |
 |---|---|
-| Completed work packages | WP0-WP12 |
-| Current work package | Post-release validation |
-| Current branch | `main` |
-| Remote | `origin/main` |
+| Completed work packages | WP0-WP12 (Phase I) |
+| Current work package | Phase II (WP13-WP19): scalability, continuous estimator, theory |
+| Current branch | `C` |
+| Integration branch | `C` (Phase II); `main` holds Phase I |
 | Primary interface | R package |
 | Python role | Reference/oracle harness only |
-| Release readiness | Not release-ready; core path works, validation/reporting/performance/CI still pending |
+| Release readiness | Phase I core path works; Phase II makes it biobank-scale and adds the continuous estimator + analytic variance before external release |
+
+## Phase II Pointer
+
+The second program of work is canonically defined in
+`inst/spec/acceleration-roadmap.md`, with per-work-package specs in
+`inst/spec/wp13-fast-kernel.md` … `inst/spec/wp19-scalability-validation.md`.
+Phase II addresses the one structural gap Phase I left open: the win/loss pair
+sweep is `Θ(N²/D)` per bootstrap iteration, which is infeasible at biobank
+scale. Phase II replaces it with a subquadratic algorithm, removes the arbitrary
+stratum-count `D` via a continuous estimator, and derives an analytic variance.
+
+### Phase II progress
+
+- **S1 (C1, single-endpoint fast kernel) — landed + R-verified 2026-06-14** on
+  branch `C-wp13`. `R/kernel_fast.R` + `python/p1_engine_v5/kernel_fast.py`;
+  parity bit-for-bit (Python) and full testthat suite under **R 4.3.3** (71
+  groups, 0 failures) including `test-backend-fast.R` end-to-end; benchmark shows
+  fast tail exponent 1.21 vs dense 2.30 (`inst/spec/benchmark-results.md`);
+  `backend = "fast"` opt-in for K=1.
+- **S2 (C2, hierarchical K=2 fast kernel) — landed + R-verified 2026-06-14** on
+  `C-wp13`. Fenwick 2D dominance counter + four-regime tie-split; parity vs dense
+  oracle (Python 28k random cohorts, 0 mismatches; R full suite 74 groups, 0
+  failures); scaling exponent 1.18; `backend = "fast"` covers K∈{1,2}.
+- **K=3 fast path (the v5 flagship) — landed + R-verified 2026-06-14** on
+  `C-wp13`. CDQ 3D dominance counter + 16-regime level-3 tie-split; parity vs
+  dense oracle; `backend = "fast"` covers K∈{1,2,3}; K≥4 falls back to dense.
+- **Rcpp port — landed + R-verified 2026-06-18.** `src/fast_kernel.cpp`
+  (`mrwin_fast_pair_cpp`), exact port of the validated kernel;
+  `mrwin_fast_pair_win_loss` dispatches to it (pure-R fallback retained). The
+  package now has compiled code (`LinkingTo: Rcpp`). Wall-clock: K=3 is 72×
+  (n=2000) / 300× (n=5000) faster than dense, K=3 N=80k in 0.78 s, K=1 N=200k in
+  0.083 s — biobank-scale. Differential testing (16k cohorts, 0 mismatches)
+  caught and fixed a double-`eq` regime bug. Full suite 82 groups, 0 failures.
+
+### Direction (2026-06-18): the O(N²) goal is solved
+
+See `inst/spec/phase2-direction.md` for the strategic evaluation. The speed goal
+is done; remaining value is methodological. Recommended path: **M3 (analytic
+variance) → M1 (continuous ISG) → WP19 (validation) → release**, with M2-wiring
+in parallel; **WP14 and K≥4 are deferred** (WP14 is now constant-factor only and
+largely superseded by M3 removing the bootstrap `B`-loop; v5 is K=3). ~23 steps
+remain to a publishable + released package.
+- **M2 (doubly-ranked stratification) core — landed + R-verified 2026-06-14.**
+  `mrwin_doubly_ranked_strata()` in `R/strata.R`, exported, tested
+  (`test-doubly-ranked.R`). Pipeline wiring (WP16 T2) still to do.
+- Next options: K≥3 structural fast kernel; WP14 (build-once/reuse +
+  incremental re-stratification); M2 T2 (wire doubly-ranked through the
+  pipeline); or M3 (analytic variance).
+- Verification environment: R 4.3.3 installed in the dev container; full
+  testthat suite (79 groups, 0 failures) + Python differential tests green.
 
 ## Completed Commits
 

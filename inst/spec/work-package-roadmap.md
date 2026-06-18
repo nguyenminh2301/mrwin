@@ -5,9 +5,11 @@ Status: canonical implementation roadmap.
 Date recorded: 2026-05-09.
 Last updated: 2026-05-10.
 
-Progress: WP0, WP1, WP2, WP3, WP4, WP5, WP6, WP7, WP8, WP9, WP10, WP11, and WP12 are complete. Post-release validation remains.
+Progress: WP0, WP1, WP2, WP3, WP4, WP5, WP6, WP7, WP8, WP9, WP10, WP11, and WP12 are complete (Phase I). A second program of work (Phase II, WP13–WP19) covers scalability, a continuous estimator, and the theory manuscript.
 
-Important sequencing rule: this roadmap defines WP0 plus 12 main work packages, WP1 through WP12. When the user asks for `WP4`, `WP5`, and later package names, use the package definitions in this file.
+Phase II is defined in its own canonical file: `inst/spec/acceleration-roadmap.md`. WP13–WP19 specs live in `inst/spec/wp13-*.md` … `wp19-*.md`. Read the acceleration roadmap before starting any WP13+ task.
+
+Important sequencing rule: this file (Phase I) defines WP0 plus WP1 through WP12. Phase II (WP13–WP19) is sequenced by `acceleration-roadmap.md`. When asked for a WP by number, use the matching file.
 
 ## Design Principles
 

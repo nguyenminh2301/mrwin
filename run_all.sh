@@ -3,7 +3,7 @@
 # run_all.sh — End-to-end orchestrator for the mrwin (P1 v5.2) simulation engine.
 #
 # Usage:
-#   bash run_all.sh replication       # Reproduces Claude's audited 1-CPU run (~30-45 min)
+#   bash run_all.sh replication       # Reproduces the audited 1-CPU reference run (~30-45 min)
 #   bash run_all.sh publication       # Canonical IJE-submission scale (~2-3 hr on 32 cores)
 #
 # Output: 8 JSON files in the current directory:
@@ -47,8 +47,6 @@ t_total_start=$(date +%s)
 echo "[1/8] Package A R1 — pleiotropy-bounded CI"
 python -m p1_engine_v5.pleiotropy_bounded_ci
 mv -f results_packageA_R1.json "$OUTDIR/" 2>/dev/null || true
-[[ -f "/home/claude/p1_dgepi/results_packageA_R1.json" ]] && \
-  mv -f /home/claude/p1_dgepi/results_packageA_R1.json "$OUTDIR/" || true
 echo
 
 # ----------------------------------------------------------------------------
