@@ -14,6 +14,12 @@ manuscript** that turns the implementation into a citable contribution.
 Read this file first. Then read the per-work-package spec it points to before
 touching code.
 
+> **Status (2026-06-18):** WP13 (fast kernel C1+C2, K=1/2/3) and its **Rcpp port**
+> are DONE — the `O(N²)` goal is solved and biobank-scale. M2 core is done. The
+> remaining directions are evaluated and re-prioritised in
+> **`phase2-direction.md`**: recommended path **M3 → M1 → WP19 → release**;
+> WP14 and K≥4 deferred. ~23 steps remain.
+
 ---
 
 ## 1. Why Phase II exists

@@ -48,6 +48,15 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   (n=2000) / 300× (n=5000) faster than dense, K=3 N=80k in 0.78 s, K=1 N=200k in
   0.083 s — biobank-scale. Differential testing (16k cohorts, 0 mismatches)
   caught and fixed a double-`eq` regime bug. Full suite 82 groups, 0 failures.
+
+### Direction (2026-06-18): the O(N²) goal is solved
+
+See `inst/spec/phase2-direction.md` for the strategic evaluation. The speed goal
+is done; remaining value is methodological. Recommended path: **M3 (analytic
+variance) → M1 (continuous ISG) → WP19 (validation) → release**, with M2-wiring
+in parallel; **WP14 and K≥4 are deferred** (WP14 is now constant-factor only and
+largely superseded by M3 removing the bootstrap `B`-loop; v5 is K=3). ~23 steps
+remain to a publishable + released package.
 - **M2 (doubly-ranked stratification) core — landed + R-verified 2026-06-14.**
   `mrwin_doubly_ranked_strata()` in `R/strata.R`, exported, tested
   (`test-doubly-ranked.R`). Pipeline wiring (WP16 T2) still to do.

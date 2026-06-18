@@ -6,6 +6,13 @@ Reads alongside: `acceleration-roadmap.md` (strategy), `wp13`–`wp19` (per-WP
 specs). This file is the **ordered, concrete** plan: what to build first, in
 what order, with exact signatures, tests, and benchmark protocol.
 
+> **Status banner (2026-06-18).** S1 (K=1), S2 (K=2 + K=3), and the **Rcpp port**
+> are DONE and R-verified — the `O(N²)` goal is solved and biobank-scale. The
+> remaining work is re-prioritised in **`phase2-direction.md`** (the strategic
+> decision doc): the recommended path is **M3 → M1 → WP19 → release**, with
+> M2-wiring in parallel; WP14 and K≥4 are deferred. ~23 steps remain to a
+> publishable + released package. Read `phase2-direction.md` first.
+
 Priority rationale (highest leverage / lowest risk first):
 
 1. **S1 = C1** — Fenwick / sorted-sweep `O(N log N)` single-endpoint win/loss in
