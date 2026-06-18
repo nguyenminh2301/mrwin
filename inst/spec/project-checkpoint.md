@@ -69,11 +69,21 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   covariates). Bootstrap stays the exact default. **M3 complete.** Full suite 92
   groups, 0 failures.
 
-### Direction (2026-06-18): the O(N²) goal is solved
+### CRITICAL — R2 calibration finding (2026-06-18)
 
-See `inst/spec/phase2-direction.md` for the strategic evaluation. The speed goal
-is done; remaining value is methodological. Recommended path: **M3 (analytic
-variance) → M1 (continuous ISG) → WP19 (validation) → release**, with M2-wiring
+First external validation (type-I / coverage) found the package's **primary
+bivariate-Delta CI is mis-calibrated** (type-I 0.000, coverage 0.995 — ~2× too
+wide, no power); the **Fieller CI is correctly calibrated** (type-I 0.055,
+coverage 0.955). Point estimator is consistent/unbiased with adequate
+instruments. Bug is in the original WP4/WP5 ratio propagation, not Phase II;
+`cov_u` is correct (Fieller uses it). See `inst/spec/validation-findings.md`.
+**Fix (validated): make Fieller the primary interval — required before M1.**
+Internal `analytic==bootstrap` parity never caught it (both reproduce the same
+mis-calibrated interval).
+
+### Direction (2026-06-18): the O(N²) goal is solved. The speed goal
+is done; remaining value is methodological. Recommended path: **fix calibration
+(Fieller) → M1 (continuous ISG) → WP19 (validation) → release**, with M2-wiring
 in parallel; **WP14 and K≥4 are deferred** (WP14 is now constant-factor only and
 largely superseded by M3 removing the bootstrap `B`-loop; v5 is K=3). ~23 steps
 remain to a publishable + released package.
