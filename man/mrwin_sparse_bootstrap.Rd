@@ -12,7 +12,7 @@ mrwin_sparse_bootstrap(
   beta_draws = NULL, multiplier_weights = NULL,
   floor = 1e-12, covariates = NULL,
   adjustment = c("none", "ordinal_iptw"),
-  iptw_truncation = c(0.01, 0.99), ess_fraction = 0.5
+  iptw_truncation = c(0.01, 0.99), ess_fraction = 0.5, fast = FALSE
 )
 }
 \arguments{
@@ -32,6 +32,8 @@ mrwin_sparse_bootstrap(
 \item{adjustment}{Adjustment method: \code{"none"} or \code{"ordinal_iptw"}.}
 \item{iptw_truncation}{Length-2 numeric vector of truncation quantiles.}
 \item{ess_fraction}{Numeric ESS fraction threshold.}
+
+\item{fast}{Logical; if \code{TRUE}, use the compiled subquadratic win/loss kernel for K in \{1,2,3\}. Results are identical to the dense path.}
 }
 \value{
 An object of class \code{mrwin_bootstrap} containing bootstrap inference
