@@ -352,6 +352,7 @@ mrwin_sparse_bootstrap <- function(
     ci95_dscwr_fieller = exp(pmax(pmin(fieller$delta, 50), -50)),
     fieller_unbounded = fieller$unbounded,
     fieller_coefficients = fieller$coefficients,
+    fieller_p_value = fieller$p_value,
     q = pooled$q,
     q_df = pooled$q_df,
     q_p_value = pooled$q_p_value,

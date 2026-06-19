@@ -192,6 +192,7 @@ mrwin_multiplier_bootstrap <- function(
     ci95_dscwr_fieller = exp(pmax(pmin(fieller$delta, 50), -50)),
     fieller_unbounded = fieller$unbounded,
     fieller_coefficients = fieller$coefficients,
+    fieller_p_value = fieller$p_value,
     q = pooled$q,
     q_df = pooled$q_df,
     q_p_value = pooled$q_p_value,
@@ -451,10 +452,16 @@ mrwin_multiplier_bootstrap <- function(
     roots <- c(-Inf, Inf)
   }
   names(roots) <- c("low", "high")
+  # Fieller-consistent test of H0: delta = 0  <=>  pooled numerator u1 = 0.
+  # Substituting delta = 0 into the Fieller inequality gives |u1|/sqrt(Var(u1)).
+  z_null <- if (is.finite(var_u1) && var_u1 > 0) u1 / sqrt(var_u1) else NA_real_
+  p_null <- if (is.finite(z_null)) 2 * stats::pnorm(-abs(z_null)) else NA_real_
   list(
     delta = roots,
     unbounded = any(!is.finite(roots)),
-    coefficients = c(a = a, b = b, c = cc, discriminant = disc)
+    coefficients = c(a = a, b = b, c = cc, discriminant = disc),
+    z_null = z_null,
+    p_value = p_null
   )
 }
 

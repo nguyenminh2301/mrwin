@@ -10,7 +10,16 @@ print.mrwin_fit <- function(x, ...) {
   cat("  delta_GLS:", formatC(x$point$delta_gls, digits = 4, format = "f"), "\n")
   cat("  DS-CWR:", formatC(x$point$dscwr, digits = 4, format = "f"), "\n")
   cat(
-    "  95% CI:",
+    "  95% CI (Fieller):",
+    if (isTRUE(x$bootstrap$fieller_unbounded)) {
+      "unbounded (weak instrument)"
+    } else {
+      paste(formatC(x$inference$ci95_dscwr_fieller, digits = 4, format = "f"), collapse = " to ")
+    },
+    "\n"
+  )
+  cat(
+    "    delta-method CI (reference):",
     paste(formatC(x$inference$ci95_dscwr, digits = 4, format = "f"), collapse = " to "),
     "\n"
   )
@@ -24,14 +33,23 @@ print.mrwin_fit <- function(x, ...) {
 }
 
 summary.mrwin_fit <- function(object, ...) {
+  fieller_p <- object$bootstrap$fieller_p_value
+  if (is.null(fieller_p)) fieller_p <- NA_real_
   estimate <- data.frame(
     term = "DS-CWR",
     delta = object$point$delta_gls,
     se_delta = object$inference$se_delta_gls,
     dscwr = object$point$dscwr,
-    ci_low = object$inference$ci95_dscwr[1L],
-    ci_high = object$inference$ci95_dscwr[2L],
-    p_value = 2 * stats::pnorm(-abs(object$point$delta_gls / max(object$inference$se_delta_gls, 1e-12))),
+    ci_method = "Fieller",
+    ci_low = object$inference$ci95_dscwr_fieller[1L],
+    ci_high = object$inference$ci95_dscwr_fieller[2L],
+    ci_delta_low = object$inference$ci95_delta_fieller[1L],
+    ci_delta_high = object$inference$ci95_delta_fieller[2L],
+    p_value = fieller_p,
+    fieller_unbounded = isTRUE(object$bootstrap$fieller_unbounded),
+    ci_low_delta_method = object$inference$ci95_dscwr[1L],
+    ci_high_delta_method = object$inference$ci95_dscwr[2L],
+    p_value_delta_method = 2 * stats::pnorm(-abs(object$point$delta_gls / max(object$inference$se_delta_gls, 1e-12))),
     pleiotropy_ci_low = .mrwin_bound_or_na(object$inference$pleiotropy_bounded, "ci_dscwr_pleiotropy_bounded", 1L),
     pleiotropy_ci_high = .mrwin_bound_or_na(object$inference$pleiotropy_bounded, "ci_dscwr_pleiotropy_bounded", 2L),
     stringsAsFactors = FALSE
@@ -96,10 +114,16 @@ print.summary.mrwin_fit <- function(x, ...) {
       "(", x$diagnostics$n_valid_bootstrap, "valid) | Backend:", x$controls$backend, "\n")
   cat(strrep("-", 60), "\n\n")
 
-  cat("Main Estimate\n")
+  cat("Main Estimate  (primary CI: Fieller)\n")
   est <- x$estimate
-  cat(sprintf("  DS-CWR:     %.4f  (95%% CI: %.4f to %.4f)\n", est$dscwr, est$ci_low, est$ci_high))
-  cat(sprintf("  delta_GLS:  %.4f  (SE: %.4f, p = %.4f)\n", est$delta, est$se_delta, est$p_value))
+  if (isTRUE(est$fieller_unbounded)) {
+    cat(sprintf("  DS-CWR:     %.4f  (95%% CI Fieller: unbounded -- weak instrument)\n", est$dscwr))
+  } else {
+    cat(sprintf("  DS-CWR:     %.4f  (95%% CI Fieller: %.4f to %.4f)\n", est$dscwr, est$ci_low, est$ci_high))
+  }
+  cat(sprintf("  delta_GLS:  %.4f  (Fieller p = %.4f)\n", est$delta, est$p_value))
+  cat(sprintf("  delta-method CI (reference): %.4f to %.4f  (SE %.4f, p = %.4f)\n",
+              est$ci_low_delta_method, est$ci_high_delta_method, est$se_delta, est$p_value_delta_method))
   if (!is.na(est$pleiotropy_ci_low)) {
     cat(sprintf("  Pleiotropy-bounded CI: %.4f to %.4f\n", est$pleiotropy_ci_low, est$pleiotropy_ci_high))
   }
@@ -268,17 +292,23 @@ tidy <- function(x, ...) {
 }
 
 tidy.mrwin_fit <- function(x, ...) {
+  fieller_p <- x$bootstrap$fieller_p_value
+  if (is.null(fieller_p)) fieller_p <- NA_real_
   data.frame(
     term = "DS-CWR",
     estimate = x$point$dscwr,
     delta = x$point$delta_gls,
     se_delta = x$inference$se_delta_gls,
-    statistic = x$point$delta_gls / max(x$inference$se_delta_gls, 1e-12),
-    p_value = 2 * stats::pnorm(-abs(x$point$delta_gls / max(x$inference$se_delta_gls, 1e-12))),
-    ci_low = x$inference$ci95_dscwr[1L],
-    ci_high = x$inference$ci95_dscwr[2L],
-    ci_delta_low = x$inference$ci95_delta[1L],
-    ci_delta_high = x$inference$ci95_delta[2L],
+    ci_method = "Fieller",
+    p_value = fieller_p,
+    ci_low = x$inference$ci95_dscwr_fieller[1L],
+    ci_high = x$inference$ci95_dscwr_fieller[2L],
+    ci_delta_low = x$inference$ci95_delta_fieller[1L],
+    ci_delta_high = x$inference$ci95_delta_fieller[2L],
+    fieller_unbounded = isTRUE(x$bootstrap$fieller_unbounded),
+    ci_low_delta_method = x$inference$ci95_dscwr[1L],
+    ci_high_delta_method = x$inference$ci95_dscwr[2L],
+    p_value_delta_method = 2 * stats::pnorm(-abs(x$point$delta_gls / max(x$inference$se_delta_gls, 1e-12))),
     q_stat = x$heterogeneity$q,
     q_p_value = x$heterogeneity$q_p_value,
     n = x$data_info$n,
@@ -324,10 +354,11 @@ mrwin_report <- function(x, file = NULL, format = c("text", "markdown")) {
   lines <- c(lines, sprintf("  Backend: %s", x$controls$backend))
   lines <- c(lines, sprintf("  Adjustment: %s", x$controls$adjustment), "")
 
-  lines <- c(lines, "Main Estimate", strrep("-", 40))
+  lines <- c(lines, "Main Estimate  (primary CI: Fieller)", strrep("-", 40))
   est <- s$estimate
-  lines <- c(lines, sprintf("  DS-CWR: %.4f (95%% CI: %.4f to %.4f)", est$dscwr, est$ci_low, est$ci_high))
-  lines <- c(lines, sprintf("  delta_GLS: %.4f (SE: %.4f, p = %.4f)", est$delta, est$se_delta, est$p_value))
+  lines <- c(lines, sprintf("  DS-CWR: %.4f (95%% CI Fieller: %.4f to %.4f)", est$dscwr, est$ci_low, est$ci_high))
+  lines <- c(lines, sprintf("  delta_GLS: %.4f (Fieller p = %.4f; delta-method SE %.4f)", est$delta, est$p_value, est$se_delta))
+  lines <- c(lines, sprintf("  delta-method CI (reference): %.4f to %.4f", est$ci_low_delta_method, est$ci_high_delta_method))
   if (!is.na(est$pleiotropy_ci_low)) {
     lines <- c(lines, sprintf("  Pleiotropy-bounded CI: %.4f to %.4f", est$pleiotropy_ci_low, est$pleiotropy_ci_high))
   }
@@ -397,11 +428,12 @@ mrwin_report <- function(x, file = NULL, format = c("text", "markdown")) {
 
   lines <- c(lines, "## Main Estimate", "")
   est <- s$estimate
-  lines <- c(lines, "| Metric | Value | 95% CI |")
+  lines <- c(lines, "| Metric | Value | 95% CI (Fieller) |")
   lines <- c(lines, "|---|---|---|")
   lines <- c(lines, sprintf("| DS-CWR | %.4f | %.4f to %.4f |", est$dscwr, est$ci_low, est$ci_high))
   lines <- c(lines, sprintf("| delta_GLS | %.4f | %.4f to %.4f |", est$delta, est$ci_delta_low, est$ci_delta_high))
-  lines <- c(lines, sprintf("| p-value | %.4f | |", est$p_value), "")
+  lines <- c(lines, sprintf("| Fieller p-value | %.4f | |", est$p_value))
+  lines <- c(lines, sprintf("| delta-method CI (reference) | | %.4f to %.4f |", est$ci_low_delta_method, est$ci_high_delta_method), "")
 
   lines <- c(lines, "## Adjacent Stratum Gradients", "")
   lines <- c(lines, "| Contrast | log(theta) | Delta_X | ISG | CWR |")

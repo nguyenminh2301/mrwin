@@ -62,12 +62,20 @@ found a real bug. "analytic ≈ bootstrap" guarantees the two compute the same
 number — not that the number is right; both reproduced the same mis-calibrated
 interval.
 
-## Recommended fix (validated)
+## Fix (IMPLEMENTED 2026-06-18)
 
-**Make Fieller the primary interval** (it is already computed as
-`ci95_delta_fieller`), or equivalently correct the bivariate-Delta variance.
-Fieller is empirically calibrated (type-I 0.055, coverage 0.955). This must be
-done **before M1**, because M1's inference builds on this layer.
+**Fieller is now the primary reported interval.** `.mrwin_fieller_ci` returns a
+Fieller-consistent p-value (the numerator test of `H0: pooled logθ = 0`, i.e. the
+test whose type-I is 0.055); `print`/`summary`/`tidy`/`mrwin_report` show the
+Fieller 95% CI and p-value as the headline, handle the unbounded (weak
+instrument) case explicitly, and keep the bivariate-Delta interval as a labelled
+`delta-method (reference)`. Verified: full suite 92+ groups 0 failures;
+`test-fieller-primary.R`. Empirically Fieller is calibrated (type-I 0.055,
+coverage 0.955) and, under a weak instrument, honestly reports "unbounded"
+instead of a falsely-bounded over-conservative interval.
+
+Optional follow-up (low priority): identify the ≈2× factor in the bivariate-Delta
+ratio variance so it agrees with Fieller.
 
 Follow-ups: (a) identify and fix the ≈2× factor in the bivariate-Delta path so
 both agree; (b) widen the validation grid (more N, D, instrument strengths,
