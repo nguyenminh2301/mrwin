@@ -1,6 +1,8 @@
 # WP15 — Continuous Kernel-Smoothed ISG (M1)
 
-Status block: `T1 [in-progress] T2 [done: reference + exact boxcar reduction] T3 [todo] T4 [todo] T5 [todo: consistency + calibration]`
+Status block: `EXPLORED -> NOT PURSUED (negative finding; see below)`. Reference
++ exact boxcar reduction done; consistency/sensitivity validation shows it does
+not beat the decile. Decile + Fieller is the foundation.
 Branch: developed on `C-wp13`.
 
 ## Design (2026-06-18) — concrete, validated estimand
@@ -37,12 +39,40 @@ in the first attempt (a single boundary subject mis-assigned) was fixed by
 working in integer rank space — caught by the external decile reference, not
 assumed (R2 lesson).
 
-**Next (the parts that matter most, per the R2 lesson — external validation):**
-- T1/T5 theory + **consistency**: smooth-kernel estimator recovers the large-N
-  truth; demonstrate **lower bandwidth-sensitivity than the decile `D`-sensitivity**.
-- T5 **calibration**: type-I / coverage of the continuous Fieller CI (MUST be
-  checked externally, like R2 — overlapping centres make the cov_u correlation
-  structure the key risk). Bandwidth CV (T4). Then export + finalise API (T6).
+## NEGATIVE FINDING (2026-06-18) — M1 as designed does not deliver
+
+External validation (the R2 lesson) shows the continuous estimator **does not**
+achieve its headline goal and is **worse** than the decile:
+
+- **Tuning sensitivity not reduced.** delta_gls varies as much across bandwidth
+  `b` as the decile varies across `D` (CV ~1.9 vs ~2.1; at small `b` it is more
+  unstable — ratio blow-up).
+- **Higher variance.** At matched scale (decile D=5 ~ continuous b=0.10, N=8000,
+  8 cohorts): decile sd 0.075; continuous GLS-pool sd 0.189; continuous simple
+  Wald sd 0.278 — i.e. 2.5–3.7× noisier than the decile, regardless of pooling
+  (the simple Wald is the noisiest, so pooling is NOT the cause; `sigma_isg`
+  condition number ~2e3 is fine).
+- **Root cause (the math).** The ISG is a RATIO `logθ/ΔX`. Smoothing into finer
+  windows shrinks the denominator `ΔX` (upper- vs lower-half of a window are
+  closer than adjacent disjoint decile bins), so the ratio gets NOISIER, not
+  smoother. Coarse disjoint bins give larger, more stable `ΔX`. "Smoothing to
+  remove D" trades the arbitrary-D problem for a worse variance problem.
+- **The estimand is fine.** At large N the decile delta_gls is ~stable (~0.19,
+  mild D-variation 0.14–0.24) — the cCWR is not fundamentally scale-broken; the
+  problem is the continuous *estimator*, not the target.
+
+**Decision:** the validated **decile estimator + Fieller inference** is the solid
+foundation; M1 (continuous smoothing) is not worth pursuing as the headline. A
+local-linear / single-regression-slope reformulation could be attempted, but the
+root cause (ratio denominator shrinking at fine scale) would affect it too, so
+expected payoff is low. The `D`-sensitivity concern is better handled by a
+sensitivity analysis over `D` (report the range) than by a noisier continuous
+estimator. `R/continuous_isg.R` is kept as a correct, boxcar-reduction-validated
+reference of this exploration.
+
+The project's genuine, validated contributions stand: the subquadratic + Rcpp
+fast kernel (biobank-scale), the analytic influence-function variance, and the
+R2 calibration finding + Fieller fix.
 
 Original WP15 task list (T1..T5) follows below.
 Depends on: WP13 (for the accelerated form; theory/prototype may use the dense

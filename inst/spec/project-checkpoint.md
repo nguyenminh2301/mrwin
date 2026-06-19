@@ -87,9 +87,22 @@ across bootstrap/analytic × σ_β∈{0,0.01} × {none, IPTW}, Fieller type-I is
 0.960 — calibrated-to-conservative everywhere. Calibration foundation is now
 sound for M1. (`R/validate_calibration.R`; details in validation-findings.md.)
 
+### M1 (continuous ISG) — EXPLORED, NOT PURSUED (2026-06-18)
+
+External validation (the R2 lesson) showed the continuous kernel-smoothed ISG
+**does not beat the decile**: it is 2.5–3.7× noisier (matched scale, N=8000) and
+no less tuning-sensitive. Root cause: the ISG is a ratio `logθ/ΔX`, and finer
+smoothing shrinks the denominator → noisier, not smoother. The decile estimand is
+~scale-stable at large N, so the target is fine; the continuous *estimator* is
+the problem. Decision: keep the validated **decile + Fieller** as the foundation;
+`R/continuous_isg.R` retained as a boxcar-validated reference. See
+`wp15-continuous-isg.md`. Genuine validated contributions stand: fast kernel +
+Rcpp, analytic IF variance, R2 calibration fix.
+
 ### Direction (2026-06-18): the O(N²) goal is solved. The speed goal
 is done; remaining value is methodological. Recommended path: **fix calibration
-(Fieller) → M1 (continuous ISG) → WP19 (validation) → release**, with M2-wiring
+(Fieller) [done] → widen WP19 validation → release** (M1 dropped after testing),
+with M2-wiring
 in parallel; **WP14 and K≥4 are deferred** (WP14 is now constant-factor only and
 largely superseded by M3 removing the bootstrap `B`-loop; v5 is K=3). ~23 steps
 remain to a publishable + released package.
