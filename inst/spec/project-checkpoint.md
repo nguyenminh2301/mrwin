@@ -77,9 +77,11 @@ wide, no power); the **Fieller CI is correctly calibrated** (type-I 0.055,
 coverage 0.955). Point estimator is consistent/unbiased with adequate
 instruments. Bug is in the original WP4/WP5 ratio propagation, not Phase II;
 `cov_u` is correct (Fieller uses it). See `inst/spec/validation-findings.md`.
-**Fix (validated): make Fieller the primary interval — required before M1.**
 Internal `analytic==bootstrap` parity never caught it (both reproduce the same
-mis-calibrated interval).
+mis-calibrated interval). **FIX IMPLEMENTED (`03d55e2`):** Fieller is now the
+primary reported CI + p-value (print/summary/tidy/report), bivariate-Delta kept
+as a labelled reference, weak-instrument unbounded case handled. Full suite 93
+groups, 0 failures. Calibration foundation is now sound for M1.
 
 ### Direction (2026-06-18): the O(N²) goal is solved. The speed goal
 is done; remaining value is methodological. Recommended path: **fix calibration

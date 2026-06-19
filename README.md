@@ -309,15 +309,22 @@ mrwin fit
   Adjustment: none
   delta_GLS: -0.2000
   DS-CWR: 0.8187
-  95% CI: 0.7000 to 0.9600
+  95% CI (Fieller): 0.7000 to 0.9600
+    delta-method CI (reference): 0.6900 to 0.9700
   Q: 1.2345 ( df = 2 , p = 0.5394 )
 ```
+
+The primary 95% CI is the **Fieller** interval. Simulation (type-I / coverage)
+showed the delta-method (bivariate-Delta) interval is over-conservative
+(~2× too wide), so it is kept only as a labelled reference; under a weak
+instrument the Fieller interval is reported as `unbounded (weak instrument)`
+rather than a falsely-bounded one. See `inst/spec/validation-findings.md`.
 
 | Field | What it means | What to look for |
 |---|---|---|
 | `delta_GLS` | Log-scale pooled effect | Negative = harmful, positive = beneficial |
 | `DS-CWR` | Exponentiated effect (win ratio) | < 1 = harmful, > 1 = beneficial, 1 = no effect |
-| `95% CI` | Bootstrap confidence interval | Does it cross 1? |
+| `95% CI (Fieller)` | Primary, calibrated confidence interval | Does it cross 1? (or "unbounded" = weak instrument) |
 | `Q` | Heterogeneity statistic | Small p-value = effect varies across strata |
 | `Warnings` | Structured caveats | Always check before interpreting |
 
