@@ -1,7 +1,50 @@
 # WP15 — Continuous Kernel-Smoothed ISG (M1)
 
-Status block: `T1 [todo] T2 [todo] T3 [todo] T4 [todo] T5 [todo]`
-Branch: `C-wp15` (from `C`).
+Status block: `T1 [in-progress] T2 [done: reference + exact boxcar reduction] T3 [todo] T4 [todo] T5 [todo: consistency + calibration]`
+Branch: developed on `C-wp13`.
+
+## Design (2026-06-18) — concrete, validated estimand
+
+`r_i = rank(PRS)/N`. At a centre `c` (quantile in (0,1)) with bandwidth `b` and
+kernel `K`, define smooth half-open upper/lower membership weights (computed in
+**integer rank space** `R = rank(PRS)` to avoid float boundary errors):
+
+```
+a_i(c) = K((R_i - cN)/(bN)) * 1{cN <  R_i <= cN + bN}      (upper)
+b_i(c) = K((R_i - cN)/(bN)) * 1{cN-bN < R_i <= cN}          (lower)
+W(c) = sum_ij a_i b_j 1{win};  L(c) = sum_ij a_i b_j 1{loss}
+log_theta(c) = log(W/L);  Delta_X(c) = wmean(X|a) - wmean(X|b)
+delta_isg(c) = log_theta(c)/Delta_X(c)
+```
+
+Pooled via the **validated calibrated inference**: the influence-function
+covariance generalises to smooth weights —
+`C[t,c] = a_t(P+_t/W0 - P-_t/L0) + b_t(Q+_t/W0 - Q-_t/L0)`,
+`C[t,m+c] = a_t(X_t - Xbar_a)/sum(a) - b_t(X_t - Xbar_b)/sum(b)`,
+`cov_u = C^T C` (cross-centre correlation via shared subjects) → `.mrwin_isg_covariance`
+→ GLS + **Fieller** (the R2-validated, calibrated CI).
+
+**Decile is the boxcar special case:** `K = boxcar`, `b = 1/D`, centres `c = k/D`
+(k=1..D-1) reproduce the D-1 adjacent decile contrasts EXACTLY. Continuous = a
+smooth kernel (Epanechnikov) + a centre grid + a continuous bandwidth `b`,
+removing the arbitrary `D`.
+
+Progress: `R/continuous_isg.R::mrwin_continuous_isg()` (internal reference, dense
+kernel). **Exact boxcar reduction validated** vs the decile estimator
+(`log_theta` diff 0, `cov_u` diff 0, `delta_gls` diff ~1e-14, Fieller match) over
+N/D grid — `tests/testthat/test-continuous-isg.R`. The float-boundary bug found
+in the first attempt (a single boundary subject mis-assigned) was fixed by
+working in integer rank space — caught by the external decile reference, not
+assumed (R2 lesson).
+
+**Next (the parts that matter most, per the R2 lesson — external validation):**
+- T1/T5 theory + **consistency**: smooth-kernel estimator recovers the large-N
+  truth; demonstrate **lower bandwidth-sensitivity than the decile `D`-sensitivity**.
+- T5 **calibration**: type-I / coverage of the continuous Fieller CI (MUST be
+  checked externally, like R2 — overlapping centres make the cov_u correlation
+  structure the key risk). Bandwidth CV (T4). Then export + finalise API (T6).
+
+Original WP15 task list (T1..T5) follows below.
 Depends on: WP13 (for the accelerated form; theory/prototype may use the dense
 backend).
 Blocks: WP19 (validation), feeds WP18 (theory) as a headline result.
