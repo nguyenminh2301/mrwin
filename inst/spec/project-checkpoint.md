@@ -81,7 +81,11 @@ Internal `analytic==bootstrap` parity never caught it (both reproduce the same
 mis-calibrated interval). **FIX IMPLEMENTED (`03d55e2`):** Fieller is now the
 primary reported CI + p-value (print/summary/tidy/report), bivariate-Delta kept
 as a labelled reference, weak-instrument unbounded case handled. Full suite 93
-groups, 0 failures. Calibration foundation is now sound for M1.
+groups, 0 failures. **WP19 widened grid (2026-06-18)** confirms the fix:
+across bootstrap/analytic × σ_β∈{0,0.01} × {none, IPTW}, Fieller type-I is
+0.007–0.060 (no over-rejection; conservative under GWAS uncertainty) and coverage
+0.960 — calibrated-to-conservative everywhere. Calibration foundation is now
+sound for M1. (`R/validate_calibration.R`; details in validation-findings.md.)
 
 ### Direction (2026-06-18): the O(N²) goal is solved. The speed goal
 is done; remaining value is methodological. Recommended path: **fix calibration

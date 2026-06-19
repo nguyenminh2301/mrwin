@@ -82,8 +82,39 @@ both agree; (b) widen the validation grid (more N, D, instrument strengths,
 `sigma_beta>0`, IPTW); (c) confirm Fieller handles weak instruments via its
 unbounded-interval branch (it returned `unbounded=0` here, i.e. all bounded).
 
+## WP19 widened calibration grid (2026-06-18)
+
+Confirming the Fieller fix holds beyond the single cell that found the bug.
+Strong instrument (N=3000, 100 SNPs, D=5), Fieller interval, M = 150-200 cohorts
+(MC SE ~ 0.015-0.018). Harness: `R/validate_calibration.R`.
+
+| scenario | inference | sigma_beta | adjustment | Fieller rate | target |
+|---|---|---:|---|---:|---:|
+| null (type-I) | bootstrap | 0 | none | **0.047** | 0.05 |
+| null (type-I) | analytic | 0 | none | 0.020 | 0.05 |
+| null (type-I) | analytic | 0.01 | none | 0.007 | 0.05 |
+| null (type-I) | bootstrap | 0.01 | none | 0.020 | 0.05 |
+| null (type-I) | analytic | 0 | ordinal_iptw | **0.060** | 0.05 |
+| valid_iv (coverage) | bootstrap | 0.01 | none | **0.960** | 0.95 |
+
+Findings:
+- **No cell over-rejects** (max type-I 0.060). The method is calibrated-to-
+  **conservative** across every path tested (bootstrap, analytic, GWAS
+  uncertainty, IPTW) -- the safe direction (no false-positive inflation).
+- Bootstrap, sigma_beta=0, no adjustment is on target (0.047); IPTW stays
+  calibrated (0.060), so the first-order IPTW influence-function approximation
+  does not break calibration; coverage is on target (0.960).
+- Adding GWAS uncertainty (sigma_beta>0) makes inference more conservative
+  (0.007-0.020) -- expected (wider CI), possibly slightly over-propagated; a
+  future refinement, not a defect (it errs wide, never narrow).
+- The analytic vs bootstrap difference at sigma_beta=0/none (0.020 vs 0.047) is
+  within ~1.3 MC SE -- not a real discrepancy.
+
+Still not covered (future WP19): bootstrap x IPTW, multiple N/D, pleiotropy/SDPD
+rejection grids, discordant-component warnings, weak-instrument unbounded rate.
+The **core inference foundation is now validated and sound for M1.**
+
 ## Reproduce
 
-`/tmp` scripts used: `r2_type1.R`, `r2_strong.R`, `r2_z.R`, `r2_fieller.R`,
-`r2_cov_fieller.R` (to be folded into a committed WP19 harness
-`R/validate_calibration.R`).
+Harness `R/validate_calibration.R::.mrwin_validate_calibration()`. Exploratory
+`/tmp` scripts (`r2_*.R`, `wp19_grid.R`) drove the runs above.
