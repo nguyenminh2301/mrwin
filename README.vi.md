@@ -397,10 +397,12 @@ summary(fit)
 ```
 
 Tạo ra một báo cáo có định dạng với:
-- Ước lượng DS-CWR chính, CI, giá trị p và CI giới hạn pleiotropy tùy chọn
+- Ước lượng DS-CWR chính, CI chính (Fieller), giá trị p và CI giới hạn
+  pleiotropy tùy chọn
 - Các gradient tầng liền kề (log-theta, Delta-X, ISG, CWR)
 - Thống kê không đồng nhất Q
-- CI độ nhạy Fieller
+- CI delta-method được giữ lại như một tham chiếu có nhãn (CI Fieller là CI
+  chính; xem mục *Khoảng tin cậy* bên dưới)
 - Chẩn đoán SDPD (khi được kích hoạt)
 - Cảnh báo có cấu trúc
 
@@ -493,13 +495,40 @@ suốt các tầng PRS. SDPD kiểm tra pleiotropy trực tiếp.
   thể làm sụp đổ độ phủ xuống còn 12%.
 - **Yêu cầu về cỡ mẫu**: Mẫu quy mô biobank (N > 100.000) là điều kiện tiên
   quyết thống kê nghiêm ngặt cho suy luận đáng tin cậy.
-- **Khả năng mở rộng tính toán (đang phát triển)**: phép quét win/loss theo cặp
-  hiện có độ phức tạp bậc hai theo N cho mỗi vòng bootstrap, nên quy mô biobank
-  là điều kiện tiên quyết về thống kê nhưng chưa phải mặc định về tính toán. Một
-  backend dưới-bậc-hai (gần `N log N`), một ước lượng gradient liên tục loại bỏ
-  việc chọn số tầng tuỳ ý, và một phương sai giải tích được đặc tả trong lộ trình
-  Giai đoạn II (`inst/spec/acceleration-roadmap.md`); tất cả được bổ sung dưới
-  dạng backend tuỳ chọn, không thay đổi kết quả hiện có.
+- **Số tầng `D`**: ước lượng kiểu thập phân vị đòi hỏi chọn số tầng. Một ước
+  lượng gradient liên tục, điều khiển bằng băng thông (mà ước lượng thập phân vị
+  là trường hợp boxcar đặc biệt chính xác) đã được hiện thực và thẩm định, nhưng
+  kiểm tra ngoại vi cho thấy nó nhiễu hơn ước lượng thập phân vị và không làm giảm
+  độ nhạy theo `D` (gradient chuẩn-hoá-theo-công-cụ là một tỉ số, làm mịn càng
+  nhỏ thì mẫu số càng co lại). Khuyến nghị là dùng ước lượng rời rạc kèm phân
+  tích độ nhạy theo `D`, không tái tham số hoá liên tục
+  (xem `inst/spec/wp15-continuous-isg.md`).
+
+### Backend hiệu năng và suy luận (tuỳ chọn)
+
+Backend mặc định không đổi, nhưng công việc Giai đoạn II
+(`inst/spec/acceleration-roadmap.md`) đã bổ sung các lựa chọn tuỳ chọn đã thẩm
+định qua `mrwin_controls()`:
+
+- `backend = "fast"` — nhân win/loss dưới-bậc-hai, biên dịch (Rcpp)
+  (`Theta(N log^{K-1} N)` cho `K` mức ưu tiên), giống hệt từng bit so với backend
+  dense và đưa ước lượng tới quy mô biobank (ví dụ `K = 3`, `N = 80.000` dưới một
+  giây).
+- `inference = "analytic"` — phương sai hàm ảnh hưởng dạng đóng tái tạo lại
+  multiplier bootstrap (kèm một số hạng Monte-Carlo chính xác cho độ không chắc
+  chắn của trọng số GWAS), loại bỏ vòng lặp bootstrap cho thành phần lấy mẫu.
+- `stratification = "doubly_ranked"` — phân tầng xếp-hạng-kép kiểu Tian/Burgess,
+  một lựa chọn với giả định yếu hơn so với chia tầng theo thứ hạng PRS (mặc định
+  vẫn là `"prs_rank"`).
+
+#### Khoảng tin cậy
+
+**Khoảng tin cậy chính được báo cáo là khoảng Fieller.** Mô phỏng thẩm định hiệu
+chuẩn cho thấy khoảng delta-method tỉ số ban đầu quá rộng (không đạt sai số loại
+I danh nghĩa), trong khi cấu trúc Fieller trên cùng ma trận hiệp phương sai được
+hiệu chuẩn đúng; khoảng delta-method chỉ được giữ lại như một tham chiếu có nhãn.
+Khi công cụ yếu, khoảng Fieller được báo cáo trung thực là không giới hạn thay vì
+một khoảng hẹp sai lệch.
 
 ---
 

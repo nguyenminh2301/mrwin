@@ -392,10 +392,12 @@ summary(fit)
 ```
 
 Produces a formatted report with:
-- Main DS-CWR estimate, CI, p-value, and optional pleiotropy-bounded CI
+- Main DS-CWR estimate, primary (Fieller) CI, p-value, and optional
+  pleiotropy-bounded CI
 - Adjacent stratum gradients (log-theta, Delta-X, ISG, CWR)
 - Heterogeneity Q statistic
-- Fieller sensitivity CI
+- The delta-method interval as a labelled reference (the Fieller interval is the
+  primary one; see *Confidence intervals* below)
 - SDPD diagnostics (when enabled)
 - Structured warnings
 
@@ -488,13 +490,40 @@ strata. The SDPD tests for direct pleiotropy.
   small as gamma = 0.05 can collapse coverage to 12%.
 - **Sample size requirements**: Biobank-scale samples (N > 100,000) are
   a strict statistical prerequisite for reliable inference.
-- **Computational scalability (in progress)**: the current win/loss pair
-  sweep is quadratic in N per bootstrap iteration, so biobank-scale runs are a
-  statistical prerequisite but not yet a computational default. A subquadratic
-  (near `N log N`) backend, a continuous gradient estimator that removes the
-  arbitrary stratum count, and an analytic variance are specified in the
-  Phase II roadmap (`inst/spec/acceleration-roadmap.md`) and land behind opt-in
-  backends without changing existing results.
+- **Stratum count `D`**: the decile-style estimator requires choosing a stratum
+  count. A continuous, bandwidth-controlled gradient estimator (of which the
+  decile estimator is the exact boxcar special case) was implemented and
+  validated, but external checks showed it is noisier than the decile and does
+  not reduce `D`-sensitivity (the instrument-standardized gradient is a ratio,
+  and finer smoothing shrinks its denominator). The recommended practice is the
+  discrete estimator with a sensitivity analysis over `D`, not a continuous
+  reparameterization (see `inst/spec/wp15-continuous-isg.md`).
+
+### Performance and inference backends (opt-in)
+
+The default backend is unchanged, but the Phase II work
+(`inst/spec/acceleration-roadmap.md`) added validated, opt-in alternatives via
+`mrwin_controls()`:
+
+- `backend = "fast"` — a subquadratic, compiled (Rcpp) win/loss kernel
+  (`Theta(N log^{K-1} N)` for `K` priority levels) that is bit-for-bit identical
+  to the dense backend and takes the estimator to biobank scale (e.g. `K = 3`,
+  `N = 80,000` in under a second).
+- `inference = "analytic"` — a closed-form influence-function variance that
+  reproduces the multiplier bootstrap (with an exact Monte-Carlo term for GWAS
+  weight uncertainty), removing the bootstrap loop for the sampling component.
+- `stratification = "doubly_ranked"` — Tian/Burgess doubly-ranked strata, a
+  weaker-assumption alternative to PRS-rank binning (default stays
+  `"prs_rank"`).
+
+#### Confidence intervals
+
+The **primary reported interval is the Fieller interval**. External calibration
+simulation showed the original delta-method ratio interval is too wide (it does
+not reach nominal type-I error), whereas the Fieller construction on the same
+covariance is correctly calibrated; the delta-method interval is retained only
+as a labelled reference. Under a weak instrument the Fieller interval is honestly
+reported as unbounded rather than as a falsely tight set.
 
 ---
 
