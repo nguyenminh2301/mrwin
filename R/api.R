@@ -89,6 +89,7 @@ mrwin_controls <- function(
     adjustment = c("none", "ordinal_iptw", "gps"),
     backend = c("dense", "sparse", "fast", "rcpp"),
     inference = c("bootstrap", "analytic"),
+    stratification = c("prs_rank", "doubly_ranked"),
     delta_x_tol = 1e-8,
     iptw_truncation = c(0.01, 0.99),
     ess_fraction = 0.5
@@ -97,6 +98,7 @@ mrwin_controls <- function(
   adjustment <- match.arg(adjustment)
   backend <- match.arg(backend)
   inference <- match.arg(inference)
+  stratification <- match.arg(stratification)
   if (!is.null(pleiotropy_bias_radius)) {
     pleiotropy_bias_radius <- as.numeric(pleiotropy_bias_radius)
   }
@@ -114,6 +116,7 @@ mrwin_controls <- function(
     adjustment = adjustment,
     backend = backend,
     inference = inference,
+    stratification = stratification,
     delta_x_tol = delta_x_tol,
     iptw_truncation = iptw_truncation,
     ess_fraction = ess_fraction
@@ -196,6 +199,7 @@ mrwin <- function(
   }
 
   inference <- if (is.null(controls$inference)) "bootstrap" else controls$inference
+  stratification <- if (is.null(controls$stratification)) "prs_rank" else controls$stratification
   if (inference == "analytic") {
     boot <- mrwin_analytic_bootstrap(
       time = endpoint_data$time,
@@ -211,7 +215,8 @@ mrwin <- function(
       covariates = validated$covariates,
       adjustment = controls$adjustment,
       iptw_truncation = controls$iptw_truncation,
-      ess_fraction = controls$ess_fraction
+      ess_fraction = controls$ess_fraction,
+      stratification = stratification
     )
   } else if (controls$backend %in% c("sparse", "fast")) {
     boot <- mrwin_sparse_bootstrap(
@@ -228,7 +233,8 @@ mrwin <- function(
       adjustment = controls$adjustment,
       iptw_truncation = controls$iptw_truncation,
       ess_fraction = controls$ess_fraction,
-      fast = identical(controls$backend, "fast")
+      fast = identical(controls$backend, "fast"),
+      stratification = stratification
     )
   } else {
     boot <- mrwin_multiplier_bootstrap(
@@ -245,7 +251,8 @@ mrwin <- function(
       covariates = validated$covariates,
       adjustment = controls$adjustment,
       iptw_truncation = controls$iptw_truncation,
-      ess_fraction = controls$ess_fraction
+      ess_fraction = controls$ess_fraction,
+      stratification = stratification
     )
   }
 

@@ -112,8 +112,10 @@ mrwin_gwas_resample_covariance <- function(kernel, G, X, beta_hat, sigma_beta,
                                            covariates = NULL,
                                            adjustment = c("none", "ordinal_iptw"),
                                            iptw_truncation = c(0.01, 0.99),
-                                           ess_fraction = 0.5) {
+                                           ess_fraction = 0.5,
+                                           stratification = c("prs_rank", "doubly_ranked")) {
   adjustment <- match.arg(adjustment)
+  stratification <- match.arg(stratification)
   if (!is.null(seed)) {
     set.seed(seed)
   }
@@ -136,7 +138,7 @@ mrwin_gwas_resample_covariance <- function(kernel, G, X, beta_hat, sigma_beta,
 
   for (b in seq_len(B_gwas)) {
     beta_star <- beta_hat + stats::rnorm(length(beta_hat)) * sigma_beta
-    strata <- mrwin_prs_strata(G, beta_star, n_strata = n_strata)$strata
+    strata <- .mrwin_assign_strata(G, beta_star, X, n_strata, stratification)$strata
     # IPTW: refit propensity at this re-stratification (multiplier xi = 1, the
     # point); skip the iteration if positivity filtering drops a needed stratum.
     w <- NULL
@@ -190,8 +192,10 @@ mrwin_analytic_inference <- function(estimate, X, G = NULL, beta_hat = NULL,
                                      weights = NULL, covariates = NULL,
                                      adjustment = c("none", "ordinal_iptw"),
                                      iptw_truncation = c(0.01, 0.99),
-                                     ess_fraction = 0.5) {
+                                     ess_fraction = 0.5,
+                                     stratification = c("prs_rank", "doubly_ranked")) {
   adjustment <- match.arg(adjustment)
+  stratification <- match.arg(stratification)
   if (!inherits(estimate, "mrwin_estimate")) {
     stop("`estimate` must be an `mrwin_estimate` object.", call. = FALSE)
   }
@@ -213,7 +217,8 @@ mrwin_analytic_inference <- function(estimate, X, G = NULL, beta_hat = NULL,
       sigma_beta = sigma_beta, n_strata = n_strata,
       contrast_plan = estimate$contrast_plan, B_gwas = B_gwas, seed = seed,
       covariates = covariates, adjustment = adjustment,
-      iptw_truncation = iptw_truncation, ess_fraction = ess_fraction
+      iptw_truncation = iptw_truncation, ess_fraction = ess_fraction,
+      stratification = stratification
     )
   }
   cov_u <- if (gwas_included) cov_sampling + cov_gwas else cov_sampling
@@ -276,9 +281,11 @@ mrwin_analytic_bootstrap <- function(
     sigma_beta = 0, n_strata = 10L, B_gwas = 200L, seed = NULL,
     kernel = NULL, block_size = 4000L, floor = 1e-12,
     covariates = NULL, adjustment = c("none", "ordinal_iptw"),
-    iptw_truncation = c(0.01, 0.99), ess_fraction = 0.5
+    iptw_truncation = c(0.01, 0.99), ess_fraction = 0.5,
+    stratification = c("prs_rank", "doubly_ranked")
 ) {
   adjustment <- match.arg(adjustment)
+  stratification <- match.arg(stratification)
   checked <- .mrwin_validate_estimate_inputs(
     time = time, status = status, G = G, X = X, beta_hat = beta_hat,
     n_strata = n_strata, kernel = kernel, weights = NULL, floor = floor
@@ -295,7 +302,7 @@ mrwin_analytic_bootstrap <- function(
 
   if (is.null(kernel)) kernel <- mrwin_kernel(time, status, block_size = block_size)
 
-  point_strata <- mrwin_prs_strata(G, beta_hat, n_strata = n_strata)$strata
+  point_strata <- .mrwin_assign_strata(G, beta_hat, X, n_strata, stratification)$strata
   point_adjustment <- .mrwin_point_adjustment(
     strata = point_strata, covariates = covariates, adjustment = adjustment,
     iptw_truncation = iptw_truncation, ess_fraction = ess_fraction, n_strata = n_strata
@@ -303,13 +310,15 @@ mrwin_analytic_bootstrap <- function(
   est <- mrwin_estimate(
     time = time, status = status, G = G, X = X, beta_hat = beta_hat,
     n_strata = n_strata, kernel = kernel, weights = point_adjustment$weights,
-    floor = floor, active_strata = point_adjustment$active_strata
+    floor = floor, active_strata = point_adjustment$active_strata,
+    stratification = stratification
   )
   ana <- mrwin_analytic_inference(
     est, X, G = G, beta_hat = beta_hat, sigma_beta = sigma_beta,
     n_strata = n_strata, B_gwas = B_gwas, seed = seed,
     weights = point_adjustment$weights, covariates = covariates,
-    adjustment = adjustment, iptw_truncation = iptw_truncation, ess_fraction = ess_fraction
+    adjustment = adjustment, iptw_truncation = iptw_truncation, ess_fraction = ess_fraction,
+    stratification = stratification
   )
 
   dm1 <- nrow(est$contrast_plan)

@@ -9,8 +9,10 @@ mrwin_estimate <- function(
     weights = NULL,
     block_size = 4000L,
     floor = 1e-12,
-    active_strata = NULL
+    active_strata = NULL,
+    stratification = c("prs_rank", "doubly_ranked")
 ) {
+  stratification <- match.arg(stratification)
   checked <- .mrwin_validate_estimate_inputs(
     time = time,
     status = status,
@@ -39,7 +41,7 @@ mrwin_estimate <- function(
     kernel <- checked$kernel
   }
 
-  strata_obj <- mrwin_prs_strata(G, beta_hat, n_strata = n_strata)
+  strata_obj <- .mrwin_assign_strata(G, beta_hat, X, n_strata, stratification)
   strata <- strata_obj$strata
   x <- as.numeric(X)
 

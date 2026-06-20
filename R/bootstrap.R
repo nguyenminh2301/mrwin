@@ -16,9 +16,11 @@ mrwin_multiplier_bootstrap <- function(
     covariates = NULL,
     adjustment = c("none", "ordinal_iptw"),
     iptw_truncation = c(0.01, 0.99),
-    ess_fraction = 0.5
+    ess_fraction = 0.5,
+    stratification = c("prs_rank", "doubly_ranked")
 ) {
   adjustment <- match.arg(adjustment)
+  stratification <- match.arg(stratification)
   checked <- .mrwin_validate_bootstrap_inputs(
     time = time,
     status = status,
@@ -64,7 +66,7 @@ mrwin_multiplier_bootstrap <- function(
     kernel <- mrwin_kernel(time, status, block_size = block_size)
   }
 
-  point_strata <- mrwin_prs_strata(G, beta_hat, n_strata = n_strata)$strata
+  point_strata <- .mrwin_assign_strata(G, beta_hat, X, n_strata, stratification)$strata
   point_adjustment <- .mrwin_point_adjustment(
     strata = point_strata,
     covariates = covariates,
@@ -84,7 +86,8 @@ mrwin_multiplier_bootstrap <- function(
     kernel = kernel,
     weights = point_adjustment$weights,
     floor = floor,
-    active_strata = point_adjustment$active_strata
+    active_strata = point_adjustment$active_strata,
+    stratification = stratification
   )
 
   contrast_plan <- point$contrast_plan
@@ -103,7 +106,7 @@ mrwin_multiplier_bootstrap <- function(
     } else {
       beta_draws[b, ]
     }
-    strata <- mrwin_prs_strata(G, beta_star, n_strata = n_strata)$strata
+    strata <- .mrwin_assign_strata(G, beta_star, X, n_strata, stratification)$strata
     xi <- if (is.null(multiplier_weights)) {
       stats::rexp(nrow(G), rate = 1)
     } else {

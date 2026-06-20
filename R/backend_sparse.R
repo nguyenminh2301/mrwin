@@ -39,8 +39,10 @@ mrwin_sparse_estimate <- function(
     floor = 1e-12,
     active_strata = NULL,
     pair_kernels = NULL,
-    fast = FALSE
+    fast = FALSE,
+    stratification = c("prs_rank", "doubly_ranked")
 ) {
+  stratification <- match.arg(stratification)
   checked <- .mrwin_validate_estimate_inputs(
     time = time,
     status = status,
@@ -63,7 +65,7 @@ mrwin_sparse_estimate <- function(
   floor <- checked$floor
   active_strata <- checked$active_strata
 
-  strata_obj <- mrwin_prs_strata(G, beta_hat, n_strata = n_strata)
+  strata_obj <- .mrwin_assign_strata(G, beta_hat, X, n_strata, stratification)
   strata <- strata_obj$strata
   x <- as.numeric(X)
 
@@ -164,9 +166,11 @@ mrwin_sparse_bootstrap <- function(
     adjustment = c("none", "ordinal_iptw"),
     iptw_truncation = c(0.01, 0.99),
     ess_fraction = 0.5,
-    fast = FALSE
+    fast = FALSE,
+    stratification = c("prs_rank", "doubly_ranked")
 ) {
   adjustment <- match.arg(adjustment)
+  stratification <- match.arg(stratification)
   checked <- .mrwin_validate_bootstrap_inputs(
     time = time,
     status = status,
@@ -206,7 +210,7 @@ mrwin_sparse_bootstrap <- function(
     set.seed(seed)
   }
 
-  point_strata_obj <- mrwin_prs_strata(G, beta_hat, n_strata = n_strata)
+  point_strata_obj <- .mrwin_assign_strata(G, beta_hat, X, n_strata, stratification)
   point_strata <- point_strata_obj$strata
   point_adjustment <- .mrwin_point_adjustment(
     strata = point_strata,
@@ -236,7 +240,8 @@ mrwin_sparse_bootstrap <- function(
     floor = floor,
     active_strata = point_adjustment$active_strata,
     pair_kernels = point_pair_kernels,
-    fast = fast
+    fast = fast,
+    stratification = stratification
   )
 
   n_contrasts <- nrow(contrast_plan)
@@ -254,7 +259,7 @@ mrwin_sparse_bootstrap <- function(
     } else {
       beta_draws[b, ]
     }
-    strata <- mrwin_prs_strata(G, beta_star, n_strata = n_strata)$strata
+    strata <- .mrwin_assign_strata(G, beta_star, X, n_strata, stratification)$strata
     xi <- if (is.null(multiplier_weights)) {
       stats::rexp(nrow(G), rate = 1)
     } else {

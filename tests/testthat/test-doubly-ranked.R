@@ -54,3 +54,64 @@ test_that("doubly-ranked validates inputs", {
     "must be finite"
   )
 })
+
+test_that(".mrwin_assign_strata dispatches and requires X for doubly-ranked", {
+  set.seed(7)
+  N <- 300L; M <- 5L
+  G <- matrix(rbinom(N * M, 2, 0.3), N, M)
+  beta <- rnorm(M, 0, 0.3)
+  score <- as.numeric(G %*% beta)
+  X <- 0.7 * scale(score)[, 1] + rnorm(N)
+
+  assign_strata <- getFromNamespace(".mrwin_assign_strata", "mrwin")
+  prs <- assign_strata(G, beta, X, 5L, "prs_rank")
+  dr <- assign_strata(G, beta, X, 5L, "doubly_ranked")
+  expect_identical(prs$strata, mrwin_prs_strata(G, beta, n_strata = 5L)$strata)
+  expect_identical(dr$strata, mrwin_doubly_ranked_strata(score, X, n_strata = 5L)$strata)
+  expect_false(identical(prs$strata, dr$strata))
+  expect_error(
+    assign_strata(G, beta, NULL, 5L, "doubly_ranked"),
+    "`X` is required"
+  )
+})
+
+test_that("stratification wires end-to-end through mrwin() on every backend", {
+  set.seed(42)
+  N <- 800L; M <- 6L
+  G <- matrix(rbinom(N * M, 2, 0.3), N, M)
+  beta <- rnorm(M, 0, 0.3)
+  score <- as.numeric(G %*% beta)
+  X <- 0.8 * scale(score)[, 1] + rnorm(N)
+  lp <- 0.4 * X
+  time <- matrix(rexp(N, rate = exp(lp - mean(lp))), N, 1)
+  status <- matrix(1L, N, 1)
+
+  s_dr <- mrwin_doubly_ranked_strata(score, X, n_strata = 5L)$strata
+
+  run <- function(strat, backend = "dense", inference = "bootstrap") {
+    ctl <- mrwin_controls(
+      n_strata = 5L, bootstrap = 30L, seed = 1L, backend = backend,
+      inference = inference, stratification = strat, run_sdpd = FALSE
+    )
+    mrwin(
+      endpoint = mrwin_endpoint(time, status), genotype = G, exposure = X,
+      beta_gwas = beta, se_gwas = rep(0, M), controls = ctl
+    )
+  }
+
+  f_prs <- run("prs_rank")
+  f_dr <- run("doubly_ranked")
+  expect_identical(
+    as.integer(f_prs$bootstrap$strata),
+    mrwin_prs_strata(G, beta, n_strata = 5L)$strata
+  )
+  expect_identical(as.integer(f_dr$bootstrap$strata), s_dr)
+  expect_false(identical(f_prs$bootstrap$strata, f_dr$bootstrap$strata))
+
+  for (b in c("dense", "sparse", "fast")) {
+    ff <- run("doubly_ranked", backend = b)
+    expect_identical(as.integer(ff$bootstrap$strata), s_dr)
+  }
+  fa <- run("doubly_ranked", inference = "analytic")
+  expect_identical(as.integer(fa$bootstrap$strata), s_dr)
+})

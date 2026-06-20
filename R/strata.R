@@ -65,3 +65,20 @@ mrwin_doubly_ranked_strata <- function(prs, exposure, n_strata = 10L) {
 
   list(score = prs, strata = as.integer(strata))
 }
+
+# Internal stratification dispatch used across the estimator/bootstrap paths.
+# "prs_rank" = rank-bin the PRS (the default). "doubly_ranked" = Tian/Burgess
+# doubly-ranked strata (needs the exposure X). Returns list(score, strata),
+# matching the mrwin_prs_strata contract.
+.mrwin_assign_strata <- function(G, beta, X, n_strata,
+                                 stratification = c("prs_rank", "doubly_ranked")) {
+  stratification <- match.arg(stratification)
+  score <- drop(as.matrix(G) %*% as.numeric(beta))
+  if (stratification == "doubly_ranked") {
+    if (is.null(X)) stop("`X` is required for doubly-ranked stratification.", call. = FALSE)
+    return(mrwin_doubly_ranked_strata(score, X, n_strata = n_strata))
+  }
+  strata <- ceiling(rank(score, ties.method = "first") * n_strata / length(score))
+  strata <- pmin(pmax(strata, 1L), n_strata)
+  list(score = score, strata = as.integer(strata))
+}
