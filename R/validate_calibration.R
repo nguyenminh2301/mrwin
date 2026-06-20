@@ -12,10 +12,12 @@
     scenario = c("null", "valid_iv"),
     inference = c("bootstrap", "analytic"),
     sigma_beta = 0, adjustment = c("none", "ordinal_iptw"),
+    stratification = c("prs_rank", "doubly_ranked"),
     bootstrap = 200L, backend = "fast", truth = NULL, seed0 = 1000L) {
   scenario <- match.arg(scenario)
   inference <- match.arg(inference)
   adjustment <- match.arg(adjustment)
+  stratification <- match.arg(stratification)
   ax <- if (scenario == "null") c(0, 0, 0) else c(-0.4, -0.4, -0.4)
   if (scenario == "valid_iv" && is.null(truth)) {
     stop("`truth` required for coverage.", call. = FALSE)
@@ -33,6 +35,7 @@
     cov <- if (adjustment == "ordinal_iptw") cbind(z = as.numeric(scale(dat$U))) else NULL
     ctrl <- mrwin_controls(n_strata = n_strata, bootstrap = bootstrap, seed = s,
                            inference = inference, adjustment = adjustment,
+                           stratification = stratification,
                            backend = be, run_sdpd = FALSE)
     fit <- tryCatch(
       mrwin(endpoint = ep, genotype = dat$G, exposure = dat$X, gwas = gw,
@@ -51,6 +54,7 @@
   ok <- !is.na(hit)
   n <- sum(ok)
   list(scenario = scenario, inference = inference, sigma_beta = sigma_beta,
-       adjustment = adjustment, M = M, valid = n, rate = mean(hit[ok]),
+       adjustment = adjustment, stratification = stratification,
+       M = M, valid = n, rate = mean(hit[ok]),
        se = sqrt(0.05 * 0.95 / max(n, 1)), weak_frac = mean(weak[ok]))
 }

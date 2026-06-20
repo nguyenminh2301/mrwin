@@ -22,20 +22,36 @@ corresponding implementation test passes.** Theory never gets ahead of code.
 
 ## 1. Manuscript skeleton (`manuscript/` — gitignored)
 
+Headline contributions (the validated four): (i) a subquadratic + compiled win/
+loss kernel that takes the estimator to biobank scale; (ii) an analytic
+influence-function variance that replaces the multiplier-bootstrap loop; (iii) a
+calibration finding — the original delta-method ratio CI is mis-calibrated and
+**Fieller** is the correct, now-primary interval; (iv) doubly-ranked
+stratification wired end to end as a weaker-assumption alternative.
+
 1. **Introduction** — hierarchical composite endpoints; causal win statistics;
-   the scalability and `D`-sensitivity gaps Phase II closes.
-2. **Estimand** — cCWR / DS-CWR, the continuous ISG (WP15), identification under
-   the MR assumptions, non-collapsibility caveat.
+   the scalability gap and the (subtler) inference-calibration gap Phase II
+   closes.
+2. **Estimand** — cCWR / DS-CWR, the instrument-standardised gradient (ISG),
+   identification under the MR assumptions, non-collapsibility caveat. The
+   continuous-ISG generalisation (WP15) is reported as an explored **negative
+   result** (a ratio-variance obstruction), motivating the discrete decile +
+   sensitivity-over-`D` recommendation.
 3. **Computation** — the fast kernel (WP13), bootstrap reuse and incremental
-   re-stratification (WP14); complexity theorems.
-4. **Inference** — analytic influence-function variance + GWAS delta-method
-   (WP17); relation to the multiplier bootstrap; Q statistic asymptotics
-   (existing `q_statistic_asymptotics.py`).
+   re-stratification (WP14); complexity theorems and the Rcpp wall-clock.
+4. **Inference** — analytic influence-function variance + exact GWAS-only
+   resample (WP17); relation to the multiplier bootstrap; **calibration: the
+   bivariate-Delta vs Fieller ratio CI** (WP19, the R2 finding) — the headline
+   correctness result.
 5. **Stratification** — doubly-ranked strata (WP16) and the assumption
-   trade-off vs residual ranking.
-6. **Simulations** — coverage, type-I, power, scalability (WP19).
+   trade-off vs residual ranking; end-to-end wiring and calibration of the path.
+6. **Simulations** — type-I, coverage, scalability, and the calibration grid
+   across bootstrap/analytic/GWAS-uncertainty/IPTW/doubly-ranked paths (WP19).
 7. **Application** — template only unless a real cohort is authorised.
-8. **Discussion** — limitations, pleiotropy sensitivity, scope of claims.
+8. **Discussion** — limitations (weak-instrument fragility of the ratio
+   estimand; first-order IPTW correction), pleiotropy sensitivity, scope of
+   claims; the methodological lesson that internal consistency (fast == dense,
+   analytic == bootstrap) cannot detect a shared calibration defect.
 
 ---
 
@@ -48,9 +64,10 @@ Each row is discharged only when its test is green. Keep the status current.
 | L-C1 | Single-endpoint win/loss = weighted dominance count; `Θ(N log N)` | WP13 | discharged (test: `tests/python/test_kernel_fast.py`, `tests/testthat/test-kernel-fast.R`; benchmark: `benchmark-results.md`) |
 | T-C2 | Hierarchical win/loss via tie-split + Fenwick 2D / CDQ 3D dominance counting; `Θ(N log^{K-1} N)`, exact vs dense kernel | WP13 | discharged for K=2,3 (tests: `test_kernel_fast.py::test_pair_2d_parity_random`/`test_pair_3d_parity_random`, `test-kernel-fast.R`); K≥4 open |
 | P-C3 | Incremental re-stratification cost `O(I log N)`, `I` = inversions; exact vs full re-query | WP14 | pending |
-| D-M1 | Continuous ISG: definition, identification, consistency; boxcar limit = decile estimator; U-process CLT | WP15 | pending |
-| S-M2 | Doubly-ranked strata validity under rank-preservation; weaker than linearity/homogeneity | WP16 | pending |
+| D-M1 | Continuous ISG: definition, identification, consistency; boxcar limit = decile estimator; U-process CLT | WP15 | **explored → not pursued (negative finding)**: boxcar-limit = decile reduction verified exactly (test: `test-continuous-isg.R`), but external validation shows the continuous estimator is 2.5–3.7× noisier than the decile and does **not** reduce `D`-sensitivity — the ISG is a ratio `logθ/ΔX` and finer smoothing shrinks `ΔX`, inflating the ratio variance. Decile + Fieller is the foundation. See `wp15-continuous-isg.md`. |
+| S-M2 | Doubly-ranked strata validity under rank-preservation; weaker than linearity/homogeneity | WP16 | discharged: `mrwin_doubly_ranked_strata` (Tian/Burgess 2023) wired through the full estimator/inference API via `.mrwin_assign_strata` and `mrwin_controls(stratification=)`; assignment matches a hand example, gives strictly-increasing mean exposure with balanced instrument means, and the fitted strata match the helper across dense/sparse/fast/analytic paths (test: `test-doubly-ranked.R`). Calibration of the new path validated externally (see C-R2). |
 | V-M3 | Variance decomposition `cov_u = Σ_sampling + Σ_gwas`; Σ_sampling analytic (`CᵀC`), Σ_gwas exact GWAS-only resample (point estimate piecewise-constant in β → no pointwise gradient); IPTW via weighted IF (estimated-weights correction omitted, ~1–3%); analytic = bootstrap | WP17 | discharged: `adjustment="none"` exact (`se` ratio 0.997–1.009 incl. σ_β∈{0.05,0.15,0.30}); IPTW first-order (`se` ratio 0.985–1.026); wired as `mrwin(inference="analytic")` (test: `test-analytic-variance.R`) |
+| C-R2 | Calibration: the package's original bivariate-Delta ratio CI is mis-calibrated (~2× too wide → structural type-I 0.000, coverage 0.995); the **Fieller** construction on the same `cov_u` is correctly calibrated (type-I 0.055, coverage 0.955) and is now the primary reported interval | WP19 | discharged: found by **external** calibration simulation, not internal consistency; Fieller made primary across `print`/`summary`/`tidy`/`mrwin_report` (test: `test-fieller-primary.R`); widened grid confirms no over-rejection across bootstrap/analytic/GWAS-uncertainty/IPTW paths (`validation-findings.md`, harness `R/validate_calibration.R`); doubly-ranked + bootstrap×IPTW cells in progress |
 
 ---
 
