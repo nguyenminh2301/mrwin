@@ -398,10 +398,12 @@ summary(fit)
 ```
 
 Erstellt einen formatierten Bericht mit:
-- DS-CWR-Hauptschätzung, KI, p-Wert und optionalem Pleiotropie-begrenztem KI
+- DS-CWR-Hauptschätzung, primärem (Fieller-)KI, p-Wert und optionalem
+  Pleiotropie-begrenztem KI
 - Benachbarten Stratumgradienten (log-theta, Delta-X, ISG, CWR)
 - Heterogenitäts-Q-Statistik
-- Fieller-Sensitivitäts-KI
+- Dem Delta-Methoden-Intervall als beschriftete Referenz (das Fieller-Intervall
+  ist das primäre; siehe *Konfidenzintervalle* unten)
 - SDPD-Diagnostik (wenn aktiviert)
 - Strukturierte Warnungen
 
@@ -499,14 +501,49 @@ PRS-Strata balanciert werden. Die SDPD testet auf direkte Pleiotropie.
 - **Stichprobengrößenanforderungen**: Biobank-große Stichproben
   (N > 100.000) sind eine strenge statistische Voraussetzung für
   zuverlässige Inferenz.
-- **Rechnerische Skalierbarkeit (in Arbeit)**: Der aktuelle paarweise
-  Win/Loss-Durchlauf ist pro Bootstrap-Iteration quadratisch in N, sodass
-  Biobank-Größe eine statistische Voraussetzung, aber noch keine rechnerische
-  Standardeinstellung ist. Ein subquadratisches (nahezu N log N) Backend, ein
-  kontinuierlicher Gradientenschätzer, der die willkürliche Stratenzahl
-  entfernt, und eine analytische Varianz sind in der Phase-II-Roadmap
-  (`inst/spec/acceleration-roadmap.md`) spezifiziert; alle werden als optionale
-  Backends hinzugefügt, ohne bestehende Ergebnisse zu ändern.
+- **Stratenzahl `D`**: Der Dezil-artige Schätzer erfordert die Wahl einer
+  Stratenzahl. Ein kontinuierlicher, bandbreitengesteuerter Gradientenschätzer
+  (von dem der Dezil-Schätzer der exakte Boxcar-Spezialfall ist) wurde
+  implementiert und validiert, doch externe Prüfungen zeigten, dass er
+  verrauschter als das Dezil ist und die `D`-Empfindlichkeit nicht reduziert
+  (der instrumentenstandardisierte Gradient ist ein Quotient, und feinere
+  Glättung lässt seinen Nenner schrumpfen). Die empfohlene Praxis ist der
+  diskrete Schätzer mit einer Sensitivitätsanalyse über `D`, nicht eine
+  kontinuierliche Reparametrisierung (siehe `inst/spec/wp15-continuous-isg.md`).
+
+### Leistungs- und Inferenz-Backends (optional)
+
+Das Standard-Backend ist unverändert, aber die Arbeit der Phase II
+(`inst/spec/acceleration-roadmap.md`) fügte validierte, optionale Alternativen
+über `mrwin_controls()` hinzu:
+
+- `backend = "fast"` — ein subquadratischer, kompilierter (Rcpp) Win/Loss-Kernel
+  (`Theta(N log^{K-1} N)` für `K` Prioritätsebenen), der bit-für-bit identisch
+  mit dem dichten Backend ist und den Schätzer auf Biobank-Größe bringt (z. B.
+  `K = 3`, `N = 80.000` in unter einer Sekunde).
+- `inference = "analytic"` — eine geschlossene Influenzfunktions-Varianz, die den
+  Multiplikator-Bootstrap reproduziert (mit einem exakten Monte-Carlo-Term für
+  die Unsicherheit der GWAS-Gewichte) und die Bootstrap-Schleife für die
+  Stichprobenkomponente entfernt.
+
+> **Doppelt geordnete Stratifizierung — nicht empfohlen (negativer Befund).**
+> `mrwin_doubly_ranked_strata()` (Tian/Burgess) ist implementiert, aber eine
+> externe Kalibrierung zeigte, dass `stratification = "doubly_ranked"` mit dem
+> Zwischen-Strata-DS-CWR-Estimand **inkompatibel** ist: Es balanciert das
+> Instrument über die Strata hinweg, sodass der Kontrast benachbarter Strata
+> konfounder-getrieben wird (Typ-I-Fehler ~1,0 unter Konfundierung). `mrwin()`
+> führt es zwar weiterhin aus, gibt aber eine `doubly_ranked_invalid`-Warnung
+> aus; der Standard ist `"prs_rank"`. Siehe `inst/spec/validation-findings.md`.
+
+#### Konfidenzintervalle
+
+Das **primär berichtete Intervall ist das Fieller-Intervall**. Eine externe
+Kalibrierungssimulation zeigte, dass das ursprüngliche
+Delta-Methoden-Quotientenintervall zu weit ist (es erreicht nicht den nominalen
+Typ-I-Fehler), während die Fieller-Konstruktion auf derselben Kovarianz korrekt
+kalibriert ist; das Delta-Methoden-Intervall wird nur als beschriftete Referenz
+beibehalten. Bei einem schwachen Instrument wird das Fieller-Intervall ehrlich
+als unbeschränkt berichtet, anstatt als fälschlicherweise enge Menge.
 
 ---
 

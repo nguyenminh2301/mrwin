@@ -85,7 +85,13 @@ verification, honest benchmarking).
 5. Coverage simulation on the WP8 DGP; show lower `D`-sensitivity than deciles.
 6. Wire `estimator = c("decile","continuous")` into `mrwin_controls()`; docs.
 
-### M3 — analytic variance (final result: `inference="analytic"` matching the bootstrap, no `B`-loop). 5 steps.
+### M3 — analytic variance (final result: `inference="analytic"` matching the bootstrap). **[DONE 2026-06-18; only the manuscript section remains]**
+Done: influence-function `Σ_sampling` (closed form) + exact GWAS-only resample
+`Σ_gwas`, validated vs the full bootstrap (`se` ratio 0.997–1.009), wired as
+`mrwin(inference="analytic")` (7× at σ_β=0). **IPTW** (`adjustment="ordinal_iptw"`)
+supported via the weighted influence function + per-`β*` propensity-refit
+resample; first-order (omits the estimated-weights correction, measured gap
+≤~3%). Bootstrap stays the exact default. Remaining: the WP18 manuscript section.
 1. Theory note: influence function of `log θ_d` (ratio of two-sample U-stats →
    per-subject win/loss projections); Jacobian of `(logθ,ΔX)` through the stratum
    cutpoints for GWAS-uncertainty propagation. (→ WP18)

@@ -10,3 +10,12 @@
 ^pyproject\.toml$
 ^requirements\.txt$
 ^run_all\.sh$
+^CITATION\.cff$
+^tools$
+^manuscript$
+^drafts$
+^notes$
+^scratch$
+^\.scratch$
+^paper.*$
+^.*\.local\.md$

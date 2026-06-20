@@ -316,10 +316,12 @@ summary(fit)
 ```
 
 Produit un rapport formaté avec :
-- Estimation principale DS-CWR, IC, valeur p, et IC borné par pléiotropie optionnel
+- Estimation principale DS-CWR, IC primaire (de Fieller), valeur p, et IC borné
+  par pléiotropie optionnel
 - Gradients des strates adjacentes (log-theta, Delta-X, ISG, CWR)
 - Statistique d'hétérogénéité Q
-- IC de sensibilité de Fieller
+- L'intervalle delta-method comme référence étiquetée (l'intervalle de Fieller
+  est l'intervalle primaire ; voir *Intervalles de confiance* ci-dessous)
 - Diagnostics SDPD (lorsqu'activés)
 - Avertissements structurés
 
@@ -393,7 +395,28 @@ L'ajustement IPTW améliore la précision en équilibrant les covariables entre 
 - **Covariance GWAS diagonale** : Le bootstrap actuel utilise les erreurs standard SNP par SNP, pas la matrice de covariance LD complète. Cela peut sous-estimer l'incertitude lorsque les SNPs sont en déséquilibre de liaison.
 - **Vulnérabilité à la pléiotropie** : Le cCWR est sensible à la pléiotropie contaminant la hiérarchie. Une pléiotropie au niveau de la mortalité aussi faible que gamma = 0,05 peut réduire la couverture à 12 %.
 - **Exigences de taille d'échantillon** : Des échantillons de taille biobanque (N > 100 000) sont un prérequis statistique strict pour une inférence fiable.
-- **Évolutivité computationnelle (en cours)** : Le balayage par paires win/loss actuel est quadratique en N à chaque itération du bootstrap, de sorte que l'échelle biobanque est un prérequis statistique mais pas encore une valeur par défaut computationnelle. Un backend sous-quadratique (proche de N log N), un estimateur de gradient continu qui supprime le nombre arbitraire de strates, et une variance analytique sont spécifiés dans la feuille de route de la Phase II (`inst/spec/acceleration-roadmap.md`) ; tous sont ajoutés comme backends optionnels, sans modifier les résultats existants.
+- **Nombre de strates `D`** : l'estimateur de type décile nécessite de choisir un nombre de strates. Un estimateur de gradient continu, contrôlé par largeur de bande (dont l'estimateur décile est le cas particulier boxcar exact), a été implémenté et validé, mais des vérifications externes ont montré qu'il est plus bruité que le décile et ne réduit pas la sensibilité à `D` (le gradient standardisé par instrument est un rapport, et un lissage plus fin rétrécit son dénominateur). La pratique recommandée est l'estimateur discret avec une analyse de sensibilité sur `D`, et non une reparamétrisation continue (voir `inst/spec/wp15-continuous-isg.md`).
+
+### Backends de performance et d'inférence (en option)
+
+Le backend par défaut est inchangé, mais le travail de la Phase II (`inst/spec/acceleration-roadmap.md`) a ajouté des alternatives validées et optionnelles via `mrwin_controls()` :
+
+- `backend = "fast"` — un noyau win/loss sous-quadratique, compilé (Rcpp) (`Theta(N log^{K-1} N)` pour `K` niveaux de priorité) qui est identique bit à bit au backend dense et porte l'estimateur à l'échelle biobanque (ex. : `K = 3`, `N = 80 000` en moins d'une seconde).
+- `inference = "analytic"` — une variance par fonction d'influence en forme close qui reproduit le bootstrap multiplicatif (avec un terme de Monte-Carlo exact pour l'incertitude des poids GWAS), supprimant la boucle bootstrap pour la composante d'échantillonnage.
+
+> **Stratification doublement ordonnée — non recommandée (résultat négatif).**
+> `mrwin_doubly_ranked_strata()` (Tian/Burgess) est implémentée, mais une
+> calibration externe a montré que `stratification = "doubly_ranked"` est
+> **incompatible** avec l'estimande DS-CWR inter-strates : elle équilibre
+> l'instrument entre les strates, de sorte que le contraste entre strates
+> adjacentes devient piloté par les facteurs de confusion (erreur de type I
+> ~1,0 sous confusion). `mrwin()` l'exécute toujours mais émet un avertissement
+> `doubly_ranked_invalid` ; la valeur par défaut est `"prs_rank"`. Voir
+> `inst/spec/validation-findings.md`.
+
+#### Intervalles de confiance
+
+L'**intervalle rapporté en priorité est l'intervalle de Fieller**. Une simulation de calibration externe a montré que l'intervalle de ratio par delta-method d'origine est trop large (il n'atteint pas l'erreur de type I nominale), tandis que la construction de Fieller sur la même covariance est correctement calibrée ; l'intervalle delta-method n'est conservé que comme référence étiquetée. Sous un instrument faible, l'intervalle de Fieller est honnêtement rapporté comme non borné plutôt que comme un ensemble faussement étroit.
 
 ---
 

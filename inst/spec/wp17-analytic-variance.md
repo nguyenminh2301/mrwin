@@ -1,7 +1,83 @@
 # WP17 — Analytic Influence-Function Variance + GWAS Delta-Method (M3)
 
-Status block: `T1 [todo] T2 [todo] T3 [todo] T4 [todo]`
-Branch: `C-wp17` (from `C`; independent of WP13/WP14).
+Status block: `T1 [done] T2 [done] T3 [done] T4 [done]` | IPTW [done: weights-as-known approximation, validated]
+Branch: developed on `C-wp13`.
+
+### IPTW (2026-06-18): first-order analytic, validated, honestly characterised
+
+`adjustment="ordinal_iptw"` is supported by `mrwin(inference="analytic")`:
+- The influence function uses the **point IPTW weights** `ω` (weighted `CᵀC`);
+  the GWAS-only resample **refits the propensity per `β*`** (`mrwin_estimate`
+  weighted by `ω*`).
+- It **omits the estimated-weights (propensity-refit) correction** — i.e. it
+  treats `ω` as known rather than estimated. This is a first-order
+  approximation.
+- **Measured gap** vs the IPTW bootstrap (σ_β=0, isolating the term): se ratio
+  0.985–1.026, i.e. **≤~3%, either sign, shrinking with N**. The gap is small by
+  construction: in MR the instrument strata are nearly independent of the
+  covariates, so `P(stratum | Z)` is near-flat and the IPTW weights are mild.
+  Confirmed across mild and adversarial (`Z`–score correlation up to 0.95,
+  weight CV up to 1.2) configurations.
+- **Default unchanged:** the bootstrap remains the exact default for IPTW;
+  analytic is the fast approximation. The exact estimated-weights M-estimation
+  correction (propensity score projection) is an optional future refinement —
+  low priority given the measured ~1–3% size.
+
+Wiring (T3, 2026-06-18): `inference = c("bootstrap","analytic")` in
+`mrwin_controls()`; `mrwin(inference="analytic")` routes to
+`mrwin_analytic_bootstrap()` (output-compatible with the bootstrap object, so
+`print`/`summary`/`tidy` work unchanged). Guarded to `adjustment="none"`.
+End-to-end speed: **7×** faster than the bootstrap when `sigma_beta=0` (pure
+closed-form, no resampling at all); ~1.5× when `sigma_beta>0` (the GWAS resample
+still loops, reusing the fixed kernel). Tests in `test-analytic-variance.R`
+(end-to-end run + methods + bootstrap se agreement + IPTW rejection).
+
+### Why Sigma_gwas is an exact resample, not pure-analytic (decision, 2026-06-18)
+
+By the law of total covariance, `cov_u = Sigma_sampling + Sigma_gwas` where
+`Sigma_gwas = Cov_{beta*}(point estimate over re-stratification)`. The point
+estimate `(LT^0, DX^0)` is **piecewise-constant in beta** (strata jump
+discretely as `beta*` moves), so it has **no pointwise gradient** — a
+"pure-analytic" `Sigma_gwas` would have to differentiate a step function, which
+requires a smoothed / boundary-density (differentiable-ranking) approximation
+that introduces a bandwidth and its own bias. The principled choice is therefore
+to compute `Sigma_gwas` **exactly** by a GWAS-only resample (draw `beta*`,
+re-stratify, recompute the UNWEIGHTED point estimate on the FIXED precomputed
+kernel — no multiplier `xi`), while the (usually dominant, ~50% here) sampling
+part stays closed-form. This removes the entire `xi` resampling and reuses the
+fixed kernel, and it matches the full bootstrap exactly (not approximately). A
+genuinely pure-analytic `Sigma_gwas` via differentiable ranking remains an
+optional research refinement, but it would be an *approximation* of a term we can
+compute *exactly*.
+
+Progress (2026-06-18, R-verified). **Sampling part landed** (adjustment="none",
+fixed GWAS weights):
+- `R/analytic_variance.R`: `mrwin_analytic_covariance(kernel, strata, X,
+  contrast_plan)` builds the N×2(D-1) influence-coefficient matrix `C` and
+  returns `cov_u = CᵀC`; `mrwin_analytic_inference(estimate, X)` feeds it through
+  the existing `.mrwin_isg_covariance` / `mrwin_gls_pool` / `.mrwin_fieller_ci`.
+- Influence coefficients (multiplier weights `ξ_i = 1+e_i`, Var(e)=1):
+  `log θ_d`: `k∈H → P⁺_k/W₀ − P⁻_k/L₀`, `k∈L → Q⁺_k/W₀ − Q⁻_k/L₀`;
+  `Δx_d`: `k∈H → (X_k−X̄_H)/n_H`, `k∈L → −(X_k−X̄_L)/n_L`. Shared strata across
+  adjacent contrasts reproduce the induced correlation automatically.
+- **Validated** vs the fixed-strata (`sigma_beta=0`) multiplier bootstrap: `se`
+  ratio 0.99–1.00 across N∈{500,1500,4000} (B=4000), relative Frobenius ≈3–4%
+  (Monte-Carlo limited), no systematic bias. Tests `test-analytic-variance.R`;
+  full suite 86 groups, 0 failures.
+
+**Done (2026-06-18):** `Σ_gwas` via the exact GWAS-only resample
+(`mrwin_gwas_resample_covariance`), combined in `mrwin_analytic_inference(...,
+G, beta_hat, sigma_beta, ...)`. Validated vs the full multiplier bootstrap with
+`sigma_beta ∈ {0.05,0.15,0.30}` (GWAS variance share ~50%): `se` ratio
+0.997–1.009 — exact agreement. Tests in `test-analytic-variance.R`; full suite
+88 groups, 0 failures.
+
+**WP17 / M3 is complete.** `inference="analytic"` covers `adjustment` in
+`{"none","ordinal_iptw"}`, validated against the bootstrap. Optional future
+refinements (both low priority): the exact IPTW estimated-weights correction
+(~1–3% gap), and a pure-analytic `Σ_gwas` via differentiable ranking (would
+approximate an exactly-resampled term). Coverage simulations to confirm the
+analytic CI before flipping any default live in WP19.
 Depends on: WP4 (estimator), WP5 (bootstrap), existing
 `python/p1_engine_v5/q_statistic_asymptotics.py` (the analytic-distribution
 groundwork already started).

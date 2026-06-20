@@ -9,7 +9,8 @@ the sparse backend (no full N x N kernel matrix).
 mrwin_sparse_estimate(
   time, status, G, X, beta_hat,
   n_strata = 10L, weights = NULL, floor = 1e-12,
-  active_strata = NULL, pair_kernels = NULL
+  active_strata = NULL, pair_kernels = NULL, fast = FALSE,
+  stratification = c("prs_rank", "doubly_ranked")
 )
 }
 \arguments{
@@ -23,6 +24,10 @@ mrwin_sparse_estimate(
 \item{floor}{Numeric floor for log-ratio stability.}
 \item{active_strata}{Optional integer vector of active stratum labels.}
 \item{pair_kernels}{Optional pre-computed pair kernels from \code{mrwin_precompute_pair_kernels}.}
+
+\item{fast}{Logical; if \code{TRUE}, use the compiled subquadratic win/loss kernel for K in \{1,2,3\}. Results are identical to the dense path.}
+
+\item{stratification}{Stratification scheme: \code{"prs_rank"} (rank-bin the polygenic score, the default) or \code{"doubly_ranked"} (Tian/Burgess doubly-ranked strata, which use the exposure \code{X} and are valid under a weaker rank-preservation assumption).}
 }
 \value{
 An object of class \code{mrwin_estimate} containing point estimates,

@@ -88,6 +88,8 @@ mrwin_controls <- function(
     pleiotropy_bias_radius = NULL,
     adjustment = c("none", "ordinal_iptw", "gps"),
     backend = c("dense", "sparse", "fast", "rcpp"),
+    inference = c("bootstrap", "analytic"),
+    stratification = c("prs_rank", "doubly_ranked"),
     delta_x_tol = 1e-8,
     iptw_truncation = c(0.01, 0.99),
     ess_fraction = 0.5
@@ -95,6 +97,8 @@ mrwin_controls <- function(
   sdpd_scale <- match.arg(sdpd_scale)
   adjustment <- match.arg(adjustment)
   backend <- match.arg(backend)
+  inference <- match.arg(inference)
+  stratification <- match.arg(stratification)
   if (!is.null(pleiotropy_bias_radius)) {
     pleiotropy_bias_radius <- as.numeric(pleiotropy_bias_radius)
   }
@@ -111,6 +115,8 @@ mrwin_controls <- function(
     pleiotropy_bias_radius = pleiotropy_bias_radius,
     adjustment = adjustment,
     backend = backend,
+    inference = inference,
+    stratification = stratification,
     delta_x_tol = delta_x_tol,
     iptw_truncation = iptw_truncation,
     ess_fraction = ess_fraction
@@ -192,7 +198,40 @@ mrwin <- function(
     )
   }
 
-  if (controls$backend %in% c("sparse", "fast")) {
+  inference <- if (is.null(controls$inference)) "bootstrap" else controls$inference
+  stratification <- if (is.null(controls$stratification)) "prs_rank" else controls$stratification
+  if (stratification == "doubly_ranked") {
+    msg <- paste0(
+      "stratification = \"doubly_ranked\" balances the instrument (PRS) across ",
+      "strata, so the adjacent-stratum DS-CWR contrast is no longer ",
+      "instrument-driven and does not identify the causal effect (external ",
+      "calibration: type-I error ~1.0 under confounding). Doubly-ranked strata ",
+      "are designed for a within-stratum LACE estimator, not the between-stratum ",
+      "gradient this estimand uses. Use stratification = \"prs_rank\". See ",
+      "inst/spec/validation-findings.md."
+    )
+    warning(msg, call. = FALSE)
+    warning_log <- .mrwin_add_warning(warning_log, "doubly_ranked_invalid", msg)
+  }
+  if (inference == "analytic") {
+    boot <- mrwin_analytic_bootstrap(
+      time = endpoint_data$time,
+      status = endpoint_data$status,
+      G = G,
+      X = X,
+      beta_hat = gwas$beta,
+      sigma_beta = gwas$se,
+      n_strata = controls$n_strata,
+      B_gwas = controls$bootstrap,
+      seed = controls$seed,
+      block_size = controls$block_size,
+      covariates = validated$covariates,
+      adjustment = controls$adjustment,
+      iptw_truncation = controls$iptw_truncation,
+      ess_fraction = controls$ess_fraction,
+      stratification = stratification
+    )
+  } else if (controls$backend %in% c("sparse", "fast")) {
     boot <- mrwin_sparse_bootstrap(
       time = endpoint_data$time,
       status = endpoint_data$status,
@@ -207,7 +246,8 @@ mrwin <- function(
       adjustment = controls$adjustment,
       iptw_truncation = controls$iptw_truncation,
       ess_fraction = controls$ess_fraction,
-      fast = identical(controls$backend, "fast")
+      fast = identical(controls$backend, "fast"),
+      stratification = stratification
     )
   } else {
     boot <- mrwin_multiplier_bootstrap(
@@ -224,7 +264,8 @@ mrwin <- function(
       covariates = validated$covariates,
       adjustment = controls$adjustment,
       iptw_truncation = controls$iptw_truncation,
-      ess_fraction = controls$ess_fraction
+      ess_fraction = controls$ess_fraction,
+      stratification = stratification
     )
   }
 

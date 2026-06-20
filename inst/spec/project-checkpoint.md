@@ -49,11 +49,60 @@ stratum-count `D` via a continuous estimator, and derives an analytic variance.
   0.083 s — biobank-scale. Differential testing (16k cohorts, 0 mismatches)
   caught and fixed a double-`eq` regime bug. Full suite 82 groups, 0 failures.
 
-### Direction (2026-06-18): the O(N²) goal is solved
+- **M3 (analytic variance) — sampling part landed + R-verified 2026-06-18.**
+  `R/analytic_variance.R`: `mrwin_analytic_covariance()` (influence-function
+  `cov_u = CᵀC`) + `mrwin_analytic_inference()` reusing the existing
+  ISG/GLS/Fieller machinery. Validated vs the fixed-strata multiplier bootstrap:
+  `se` ratio 0.99–1.00 (N∈{500,1500,4000}), no systematic bias.
+  **Σ_gwas added 2026-06-18** via the exact GWAS-only resample
+  (`mrwin_gwas_resample_covariance`; point estimate is piecewise-constant in β so
+  has no pointwise gradient — the resample is the exact term, the dominant `xi`
+  part stays analytic). Combined `[Σ_sampling + Σ_gwas]` matches the full
+  bootstrap: `se` ratio 0.997–1.009 with σ_β∈{0.05,0.15,0.30} (GWAS share ~50%).
+  **Wired end-to-end 2026-06-18:** `mrwin(inference="analytic")` (via
+  `mrwin_analytic_bootstrap`, output-compatible with the bootstrap so the S3
+  methods work). 7× faster than bootstrap at σ_β=0 (pure closed-form), ~1.5× at
+  σ_β>0. **IPTW done 2026-06-18:** `adjustment="ordinal_iptw"` supported (weighted
+  influence function + per-`β*` propensity-refit GWAS resample); it omits the
+  estimated-weights correction (first-order), measured gap ≤~3% vs the bootstrap
+  (either sign, shrinks with N; small because MR strata are ~independent of
+  covariates). Bootstrap stays the exact default. **M3 complete.** Full suite 92
+  groups, 0 failures.
 
-See `inst/spec/phase2-direction.md` for the strategic evaluation. The speed goal
-is done; remaining value is methodological. Recommended path: **M3 (analytic
-variance) → M1 (continuous ISG) → WP19 (validation) → release**, with M2-wiring
+### CRITICAL — R2 calibration finding (2026-06-18)
+
+First external validation (type-I / coverage) found the package's **primary
+bivariate-Delta CI is mis-calibrated** (type-I 0.000, coverage 0.995 — ~2× too
+wide, no power); the **Fieller CI is correctly calibrated** (type-I 0.055,
+coverage 0.955). Point estimator is consistent/unbiased with adequate
+instruments. Bug is in the original WP4/WP5 ratio propagation, not Phase II;
+`cov_u` is correct (Fieller uses it). See `inst/spec/validation-findings.md`.
+Internal `analytic==bootstrap` parity never caught it (both reproduce the same
+mis-calibrated interval). **FIX IMPLEMENTED (`03d55e2`):** Fieller is now the
+primary reported CI + p-value (print/summary/tidy/report), bivariate-Delta kept
+as a labelled reference, weak-instrument unbounded case handled. Full suite 93
+groups, 0 failures. **WP19 widened grid (2026-06-18)** confirms the fix:
+across bootstrap/analytic × σ_β∈{0,0.01} × {none, IPTW}, Fieller type-I is
+0.007–0.060 (no over-rejection; conservative under GWAS uncertainty) and coverage
+0.960 — calibrated-to-conservative everywhere. Calibration foundation is now
+sound for M1. (`R/validate_calibration.R`; details in validation-findings.md.)
+
+### M1 (continuous ISG) — EXPLORED, NOT PURSUED (2026-06-18)
+
+External validation (the R2 lesson) showed the continuous kernel-smoothed ISG
+**does not beat the decile**: it is 2.5–3.7× noisier (matched scale, N=8000) and
+no less tuning-sensitive. Root cause: the ISG is a ratio `logθ/ΔX`, and finer
+smoothing shrinks the denominator → noisier, not smoother. The decile estimand is
+~scale-stable at large N, so the target is fine; the continuous *estimator* is
+the problem. Decision: keep the validated **decile + Fieller** as the foundation;
+`R/continuous_isg.R` retained as a boxcar-validated reference. See
+`wp15-continuous-isg.md`. Genuine validated contributions stand: fast kernel +
+Rcpp, analytic IF variance, R2 calibration fix.
+
+### Direction (2026-06-18): the O(N²) goal is solved. The speed goal
+is done; remaining value is methodological. Recommended path: **fix calibration
+(Fieller) [done] → widen WP19 validation → release** (M1 dropped after testing),
+with M2-wiring
 in parallel; **WP14 and K≥4 are deferred** (WP14 is now constant-factor only and
 largely superseded by M3 removing the bootstrap `B`-loop; v5 is K=3). ~23 steps
 remain to a publishable + released package.
