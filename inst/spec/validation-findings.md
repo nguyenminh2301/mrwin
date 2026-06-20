@@ -189,5 +189,7 @@ problem. Internal agreement certifies that two computations match; only coverage
 
 ## Reproduce
 
-Harness `R/validate_calibration.R::.mrwin_validate_calibration()`. Exploratory
-`/tmp` scripts (`r2_*.R`, `wp19_grid.R`) drove the runs above.
+Harness `R/validate_calibration.R::.mrwin_validate_calibration()`. The
+exploratory scripts that drove the runs above are kept under
+`tools/validation-scripts/` (`r2_*.R`, `m1_*.R`, `m3_validate.R`, `iptw_*.R`,
+`wp19_grid.R`, `wp19_cells.R`).

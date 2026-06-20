@@ -11,6 +11,7 @@
 ^requirements\.txt$
 ^run_all\.sh$
 ^CITATION\.cff$
+^tools$
 ^manuscript$
 ^drafts$
 ^notes$
