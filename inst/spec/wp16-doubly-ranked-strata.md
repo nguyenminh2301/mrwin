@@ -1,7 +1,36 @@
 # WP16 — Doubly-Ranked Stratification (M2)
 
-Status block: `T1 [done] T2 [done] T3 [partial: unit + balance + end-to-end wiring tests done]`
+Status block: `T1 [done] T2 [wired, but INCOMPATIBLE with the cCWR estimand —
+negative finding] T3 [done: external calibration exposes the incompatibility]`
 Branch: developed on `C-wp13` alongside S1/S2 (independent of the kernel work).
+
+## NEGATIVE FINDING (2026-06-20) — doubly-ranked is incompatible with DS-CWR
+
+External calibration (the R2 lesson, second occurrence) shows that
+`stratification = "doubly_ranked"` gives **type-I error ~1.000** under the causal
+null on both the bootstrap and analytic engines — it rejects in *every* cohort.
+The wiring is mechanically correct (fitted strata match `mrwin_doubly_ranked_strata`
+across dense/sparse/fast/analytic), but the **inference is invalid**.
+
+Root cause: doubly-ranked stratification **balances the instrument across strata**
+(PRS-mean spread 0.001 vs 1.343 for PRS-rank in a 12-cohort null probe; null
+`delta_gls` = −0.179 ± 0.017 vs +0.016 ± 0.272 for PRS-rank). That balance is the
+method's *intended* property for *within-stratum* non-linear MR (each final
+stratum spans the full instrument range, enabling a local IV / LACE analysis).
+But the cCWR / DS-CWR estimand is a **between-adjacent-strata** contrast that
+identifies the causal effect only when the strata differ in the **instrument**.
+With the instrument balanced out, the between-stratum exposure shift is driven by
+the confounder, so the win-odds contrast estimates the confounded association →
+~100% false positives under MR-strength confounding. See
+`validation-findings.md` for the full table and diagnosis.
+
+Decision: `mrwin(stratification = "doubly_ranked")` is kept runnable (for
+reproducibility and a possible future within-stratum LACE estimator) but emits a
+structured `doubly_ranked_invalid` warning; the default stays `"prs_rank"`.
+`mrwin_doubly_ranked_strata()` (a correct Tian/Burgess implementation) and the
+internal `.mrwin_assign_strata` plumbing are retained. M2 is therefore **not** a
+contribution to the between-stratum cCWR; the validated contributions remain the
+fast/Rcpp kernel, the analytic variance, and the Fieller calibration fix.
 
 Progress (2026-06-14, R-verified): `mrwin_doubly_ranked_strata(prs, exposure,
 n_strata)` implemented in `R/strata.R`, exported, matching the

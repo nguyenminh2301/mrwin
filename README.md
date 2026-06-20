@@ -512,9 +512,14 @@ The default backend is unchanged, but the Phase II work
 - `inference = "analytic"` — a closed-form influence-function variance that
   reproduces the multiplier bootstrap (with an exact Monte-Carlo term for GWAS
   weight uncertainty), removing the bootstrap loop for the sampling component.
-- `stratification = "doubly_ranked"` — Tian/Burgess doubly-ranked strata, a
-  weaker-assumption alternative to PRS-rank binning (default stays
-  `"prs_rank"`).
+
+> **Doubly-ranked stratification — not recommended (negative finding).**
+> `mrwin_doubly_ranked_strata()` (Tian/Burgess) is implemented, but external
+> calibration showed `stratification = "doubly_ranked"` is **incompatible** with
+> the between-stratum DS-CWR estimand: it balances the instrument across strata,
+> so the adjacent-stratum contrast becomes confounder-driven (type-I error ~1.0
+> under confounding). `mrwin()` still runs it but emits a `doubly_ranked_invalid`
+> warning; the default is `"prs_rank"`. See `inst/spec/validation-findings.md`.
 
 #### Confidence intervals
 

@@ -110,9 +110,82 @@ Findings:
 - The analytic vs bootstrap difference at sigma_beta=0/none (0.020 vs 0.047) is
   within ~1.3 MC SE -- not a real discrepancy.
 
-Still not covered (future WP19): bootstrap x IPTW, multiple N/D, pleiotropy/SDPD
+Still not covered (future WP19): multiple N/D, pleiotropy/SDPD
 rejection grids, discordant-component warnings, weak-instrument unbounded rate.
 The **core inference foundation is now validated and sound for M1.**
+
+## WP19 additional cells (2026-06-20): bootstrap×IPTW + doubly-ranked path
+
+Strong instrument (N=3000, m=100, D=5). Harness `R/validate_calibration.R` (now
+takes a `stratification` argument so the M2 path can be checked externally, not
+just asserted to run).
+
+| scenario | inference | sigma_beta | adjustment | stratification | Fieller type-I | target |
+|---|---|---:|---|---|---:|---:|
+| null | bootstrap | 0 | ordinal_iptw | prs_rank | **0.017** (M=120) | 0.05 |
+| null | bootstrap | 0 | none | **doubly_ranked** | **1.000** (M=150) | 0.05 |
+| null | analytic | 0 | none | **doubly_ranked** | **1.000** (M=150) | 0.05 |
+
+### bootstrap × IPTW (prs_rank): fills the documented gap — calibrated
+
+type-I 0.017 (conservative, the safe direction). With the earlier
+analytic×IPTW = 0.060, the IPTW path is now validated on both inference engines:
+no over-rejection. The first-order IPTW influence-function approximation does not
+break calibration.
+
+### doubly-ranked stratification: CATASTROPHIC over-rejection (type-I = 1.000)
+
+A second instance of the R2 lesson, and a more serious one. The M2-wiring is
+**mechanically** correct — the fitted strata match `mrwin_doubly_ranked_strata`
+bit-for-bit across the dense/sparse/fast/analytic paths (the internal
+consistency test passes). Yet the **inference is invalid**: it rejects the causal
+null in *every* simulated cohort, on both the bootstrap and the analytic engine.
+
+Diagnosis (12-cohort null probe, `delta_gls` should be ~0):
+
+| stratification | mean delta_gls | sd | instrument-mean spread across strata |
+|---|---:|---:|---:|
+| prs_rank | +0.016 | 0.272 | 1.343 |
+| doubly_ranked | **−0.179** | 0.017 | **0.001** |
+
+The bias is large and **highly consistent** (−0.179 ± 0.017), so the CI excludes
+0 every time → type-I = 1.0. The root cause is structural and is exactly the
+property doubly-ranked stratification is *designed* to have:
+
+- Doubly-ranked stratification (rank by instrument → pre-strata → rank by exposure
+  within each pre-stratum → assign exposure rank as the stratum) **balances the
+  instrument across the final strata** (PRS-mean spread 0.001 vs 1.343 for
+  PRS-rank). That balance is its selling point for *within-stratum* non-linear MR
+  (each final stratum spans the full instrument range, so a within-stratum IV /
+  LACE analysis is valid).
+- But the cCWR / DS-CWR estimand is a **between-adjacent-strata** contrast: it
+  reads the win-odds gradient *per unit of the between-stratum exposure shift*,
+  which is only causal when the strata differ in the **instrument**. PRS-rank
+  makes strata differ in the instrument; doubly-ranked deliberately removes that
+  difference. With the instrument balanced out, the between-stratum exposure
+  difference is driven by the **confounder** (and noise) within each PRS band, so
+  the win-odds contrast estimates the *confounded* exposure-outcome association,
+  not the causal effect. Under MR-strength confounding (the whole reason MR
+  exists) this yields ~100% false positives.
+- The bias vanishes only when there is no confounding (`alpha_u = 0`) — i.e.
+  exactly the case where MR is unnecessary. So the method is invalid in every
+  setting where it would be used.
+
+**Conclusion.** Doubly-ranked stratification is **incompatible with the
+between-stratum DS-CWR estimand** — a genuine negative finding, not a tunable
+defect. `mrwin_doubly_ranked_strata()` (a correct Tian/Burgess implementation)
+and the internal `stratification` plumbing are retained for a possible future
+*within-stratum LACE* estimator, but `mrwin(stratification = "doubly_ranked")`
+now emits a structured `doubly_ranked_invalid` warning and the default stays
+`"prs_rank"`. The validated contributions are unchanged: the fast/Rcpp kernel,
+the analytic influence-function variance, and the Fieller calibration fix.
+
+Methodological note: this is the second case (after the continuous-ISG M1
+negative finding and the original R2 bivariate-Delta defect) where every
+**internal** consistency check passes — compiled == dense, analytic == bootstrap,
+fitted strata == helper — while an **external** calibration check exposes a real
+problem. Internal agreement certifies that two computations match; only coverage
+/ type-I against a known DGP certifies that the number is right.
 
 ## Reproduce
 

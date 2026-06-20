@@ -200,6 +200,19 @@ mrwin <- function(
 
   inference <- if (is.null(controls$inference)) "bootstrap" else controls$inference
   stratification <- if (is.null(controls$stratification)) "prs_rank" else controls$stratification
+  if (stratification == "doubly_ranked") {
+    msg <- paste0(
+      "stratification = \"doubly_ranked\" balances the instrument (PRS) across ",
+      "strata, so the adjacent-stratum DS-CWR contrast is no longer ",
+      "instrument-driven and does not identify the causal effect (external ",
+      "calibration: type-I error ~1.0 under confounding). Doubly-ranked strata ",
+      "are designed for a within-stratum LACE estimator, not the between-stratum ",
+      "gradient this estimand uses. Use stratification = \"prs_rank\". See ",
+      "inst/spec/validation-findings.md."
+    )
+    warning(msg, call. = FALSE)
+    warning_log <- .mrwin_add_warning(warning_log, "doubly_ranked_invalid", msg)
+  }
   if (inference == "analytic") {
     boot <- mrwin_analytic_bootstrap(
       time = endpoint_data$time,

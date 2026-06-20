@@ -517,9 +517,15 @@ Backend mặc định không đổi, nhưng công việc Giai đoạn II
 - `inference = "analytic"` — phương sai hàm ảnh hưởng dạng đóng tái tạo lại
   multiplier bootstrap (kèm một số hạng Monte-Carlo chính xác cho độ không chắc
   chắn của trọng số GWAS), loại bỏ vòng lặp bootstrap cho thành phần lấy mẫu.
-- `stratification = "doubly_ranked"` — phân tầng xếp-hạng-kép kiểu Tian/Burgess,
-  một lựa chọn với giả định yếu hơn so với chia tầng theo thứ hạng PRS (mặc định
-  vẫn là `"prs_rank"`).
+
+> **Phân tầng xếp-hạng-kép — không khuyến nghị (phát hiện phủ định).**
+> `mrwin_doubly_ranked_strata()` (Tian/Burgess) đã được hiện thực, nhưng thẩm
+> định hiệu chuẩn ngoại vi cho thấy `stratification = "doubly_ranked"` **không
+> tương thích** với estimand DS-CWR giữa-các-tầng: nó cân bằng công cụ giữa các
+> tầng, khiến tương phản tầng-liền-kề bị dẫn dắt bởi nhiễu gây nhiễu (sai số loại
+> I ~1,0 khi có gây nhiễu). `mrwin()` vẫn chạy được nhưng phát cảnh báo
+> `doubly_ranked_invalid`; mặc định là `"prs_rank"`. Xem
+> `inst/spec/validation-findings.md`.
 
 #### Khoảng tin cậy
 

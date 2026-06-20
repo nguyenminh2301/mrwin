@@ -93,10 +93,10 @@ test_that("stratification wires end-to-end through mrwin() on every backend", {
       n_strata = 5L, bootstrap = 30L, seed = 1L, backend = backend,
       inference = inference, stratification = strat, run_sdpd = FALSE
     )
-    mrwin(
+    suppressWarnings(mrwin(
       endpoint = mrwin_endpoint(time, status), genotype = G, exposure = X,
       beta_gwas = beta, se_gwas = rep(0, M), controls = ctl
-    )
+    ))
   }
 
   f_prs <- run("prs_rank")
@@ -114,4 +114,30 @@ test_that("stratification wires end-to-end through mrwin() on every backend", {
   }
   fa <- run("doubly_ranked", inference = "analytic")
   expect_identical(as.integer(fa$bootstrap$strata), s_dr)
+})
+
+test_that("mrwin() flags doubly-ranked as invalid for the between-stratum estimand", {
+  # Doubly-ranked balances the instrument across strata, so the adjacent-stratum
+  # DS-CWR contrast is confounder-driven (external calibration: type-I ~1.0).
+  # mrwin() must keep it runnable (reproducibility / future LACE work) but emit a
+  # structured `doubly_ranked_invalid` warning. prs_rank must not warn.
+  set.seed(1)
+  N <- 400L; M <- 5L
+  G <- matrix(rbinom(N * M, 2, 0.3), N, M)
+  beta <- rnorm(M, 0, 0.3)
+  X <- 0.8 * scale(as.numeric(G %*% beta))[, 1] + rnorm(N)
+  time <- matrix(rexp(N, rate = exp(0.3 * X - mean(0.3 * X))), N, 1)
+  status <- matrix(1L, N, 1)
+  fit_of <- function(strat) {
+    ctl <- mrwin_controls(n_strata = 4L, bootstrap = 20L, seed = 1L,
+                          stratification = strat, run_sdpd = FALSE)
+    mrwin(endpoint = mrwin_endpoint(time, status), genotype = G, exposure = X,
+          beta_gwas = beta, se_gwas = rep(0, M), controls = ctl)
+  }
+  expect_warning(fit <- fit_of("doubly_ranked"), "doubly.ranked|instrument")
+  codes <- vapply(fit$warnings, function(w) w$code, character(1))
+  expect_true("doubly_ranked_invalid" %in% codes)
+  f_prs <- fit_of("prs_rank")
+  prs_codes <- vapply(f_prs$warnings, function(w) w$code, character(1))
+  expect_false("doubly_ranked_invalid" %in% prs_codes)
 })
