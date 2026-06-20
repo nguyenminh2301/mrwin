@@ -525,9 +525,15 @@ Das Standard-Backend ist unverändert, aber die Arbeit der Phase II
   Multiplikator-Bootstrap reproduziert (mit einem exakten Monte-Carlo-Term für
   die Unsicherheit der GWAS-Gewichte) und die Bootstrap-Schleife für die
   Stichprobenkomponente entfernt.
-- `stratification = "doubly_ranked"` — doppelt geordnete Strata nach
-  Tian/Burgess, eine Alternative mit schwächeren Annahmen zur PRS-Rang-Einteilung
-  (der Standard bleibt `"prs_rank"`).
+
+> **Doppelt geordnete Stratifizierung — nicht empfohlen (negativer Befund).**
+> `mrwin_doubly_ranked_strata()` (Tian/Burgess) ist implementiert, aber eine
+> externe Kalibrierung zeigte, dass `stratification = "doubly_ranked"` mit dem
+> Zwischen-Strata-DS-CWR-Estimand **inkompatibel** ist: Es balanciert das
+> Instrument über die Strata hinweg, sodass der Kontrast benachbarter Strata
+> konfounder-getrieben wird (Typ-I-Fehler ~1,0 unter Konfundierung). `mrwin()`
+> führt es zwar weiterhin aus, gibt aber eine `doubly_ranked_invalid`-Warnung
+> aus; der Standard ist `"prs_rank"`. Siehe `inst/spec/validation-findings.md`.
 
 #### Konfidenzintervalle
 

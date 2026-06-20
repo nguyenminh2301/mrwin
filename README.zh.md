@@ -402,7 +402,13 @@ IPTW 调整通过在 PRS 层之间平衡协变量来提高精度。SDPD 用于�
 
 - `backend = "fast"` —— 一个次二次的、编译型（Rcpp）win/loss 核函数（对于 `K` 个优先级层级为 `Theta(N log^{K-1} N)`），与密集后端逐位相同，并将估计量推进到生物样本库规模（例如 `K = 3`、`N = 80,000` 在一秒以内）。
 - `inference = "analytic"` —— 一个闭式影响函数方差，再现了乘数自助法（带有针对 GWAS 权重不确定性的精确蒙特卡洛项），为抽样部分移除了自助法循环。
-- `stratification = "doubly_ranked"` —— Tian/Burgess 双重排序分层，是对 PRS 排序分箱的一种更弱假设的替代方案（默认仍为 `"prs_rank"`）。
+
+> **双重排序分层 —— 不推荐（阴性发现）。**
+> `mrwin_doubly_ranked_strata()`（Tian/Burgess）已实现，但外部校准表明
+> `stratification = "doubly_ranked"` 与层间 DS-CWR 估计量**不兼容**：它在各层之间
+> 平衡工具变量，因而相邻层的对比变为由混杂因素驱动（存在混杂时第一类错误约为
+> 1.0）。`mrwin()` 仍会运行它，但会发出 `doubly_ranked_invalid` 警告；默认值为
+> `"prs_rank"`。参见 `inst/spec/validation-findings.md`。
 
 #### 置信区间
 

@@ -482,8 +482,14 @@ SDPD는 직접 다면발현을 검정합니다.
 - `inference = "analytic"` — 승수 부트스트랩을 재현하는 닫힌 형식의 영향함수 분산
   (GWAS 가중치 불확실성에 대한 정확한 몬테카를로 항 포함)으로, 표본추출 성분에
   대한 부트스트랩 루프를 제거합니다.
-- `stratification = "doubly_ranked"` — Tian/Burgess의 이중 순위 계층으로, PRS 순위
-  구간화에 대한 더 약한 가정의 대안입니다(기본값은 `"prs_rank"`로 유지됨).
+
+> **이중 순위 층화 — 권장되지 않음(부정적 발견).**
+> `mrwin_doubly_ranked_strata()`(Tian/Burgess)는 구현되어 있으나, 외부 보정 결과
+> `stratification = "doubly_ranked"`가 층간 DS-CWR 추정량과 **호환되지 않음**이
+> 밝혀졌습니다. 이는 도구를 층 전반에 걸쳐 균형화하므로, 인접 층 대비가 교란
+> 요인에 의해 주도됩니다(교란 하에서 제1종 오류 ~1.0). `mrwin()`은 여전히 이를
+> 실행하지만 `doubly_ranked_invalid` 경고를 발생시킵니다; 기본값은 `"prs_rank"`
+> 입니다. `inst/spec/validation-findings.md`를 참조하십시오.
 
 #### 신뢰구간
 

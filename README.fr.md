@@ -403,7 +403,16 @@ Le backend par défaut est inchangé, mais le travail de la Phase II (`inst/spec
 
 - `backend = "fast"` — un noyau win/loss sous-quadratique, compilé (Rcpp) (`Theta(N log^{K-1} N)` pour `K` niveaux de priorité) qui est identique bit à bit au backend dense et porte l'estimateur à l'échelle biobanque (ex. : `K = 3`, `N = 80 000` en moins d'une seconde).
 - `inference = "analytic"` — une variance par fonction d'influence en forme close qui reproduit le bootstrap multiplicatif (avec un terme de Monte-Carlo exact pour l'incertitude des poids GWAS), supprimant la boucle bootstrap pour la composante d'échantillonnage.
-- `stratification = "doubly_ranked"` — strates doublement ordonnées de Tian/Burgess, une alternative à hypothèse plus faible au découpage par rang de PRS (la valeur par défaut reste `"prs_rank"`).
+
+> **Stratification doublement ordonnée — non recommandée (résultat négatif).**
+> `mrwin_doubly_ranked_strata()` (Tian/Burgess) est implémentée, mais une
+> calibration externe a montré que `stratification = "doubly_ranked"` est
+> **incompatible** avec l'estimande DS-CWR inter-strates : elle équilibre
+> l'instrument entre les strates, de sorte que le contraste entre strates
+> adjacentes devient piloté par les facteurs de confusion (erreur de type I
+> ~1,0 sous confusion). `mrwin()` l'exécute toujours mais émet un avertissement
+> `doubly_ranked_invalid` ; la valeur par défaut est `"prs_rank"`. Voir
+> `inst/spec/validation-findings.md`.
 
 #### Intervalles de confiance
 
