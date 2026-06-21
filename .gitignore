@@ -62,7 +62,10 @@ src/*.so
 src/symbols.rds
 *.Rcheck/
 
-# Manuscript drafts and generated writing artifacts
+# Manuscript drafts and generated writing artifacts.
+# The draft lives entirely under manuscript/ (and drafts/, paper*/), which are
+# ignored wholesale below. Do NOT blanket-ignore *.Rmd / *.qmd here: that would
+# also swallow legitimate package content such as vignettes/*.Rmd.
 manuscript/
 drafts/
 paper*/
@@ -70,8 +73,6 @@ paper*/
 *.docx
 *.pdf
 *.tex
-*.qmd
-*.Rmd
 PRODUCTION_PARAMETERS.md
 REPLICATION_LOG.md
 REPLICATION_CHECKSUMS.txt

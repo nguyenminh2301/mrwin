@@ -1,0 +1,141 @@
+---
+title: "Causal win statistics for hierarchical composite endpoints"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Causal win statistics for hierarchical composite endpoints}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4
+)
+set.seed(1)
+```
+
+## What `mrwin` estimates
+
+`mrwin` targets a **dose-standardised causal win ratio (DS-CWR)** for a
+hierarchical composite endpoint in a Mendelian-randomization (MR) design. The
+outcome is several priority-ordered events (e.g. death > hospitalisation >
+biomarker decline); a polygenic score (PRS) built from GWAS weights is the
+instrument for an exposure. The estimator:
+
+1. ranks subjects by the PRS and bins them into strata;
+2. for each adjacent stratum pair, forms the hierarchical win/loss log-odds
+   `log theta` and the exposure shift `Delta_X`, and takes their ratio — the
+   **instrument-standardised gradient** `ISG = log theta / Delta_X`;
+3. pools the adjacent ISGs by generalised least squares to get `delta_GLS`;
+   `DS-CWR = exp(delta_GLS)`.
+
+`DS-CWR > 1` means the genetically-predicted exposure shifts subjects toward a
+**better** prioritised outcome profile, `< 1` toward a worse one.
+
+## A worked example on simulated data
+
+The package ships a simulation engine. We draw a cohort with a genuine
+protective exposure effect (`alpha_x < 0`) and confounding.
+
+```{r simulate}
+library(mrwin)
+
+cfg <- mrwin_config(n_outcome = 3000L, m_snps = 50L, seed = 1L)
+dat <- mrwin_simulate(cfg, seed = 1L)
+
+endpoint <- mrwin_endpoint(
+  time = dat$time, status = dat$status,
+  priority = c("death", "hospitalisation", "biomarker")
+)
+gwas <- mrwin_gwas(beta = dat$true_betas, se = rep(0.01, length(dat$true_betas)))
+```
+
+Fit the model. The default backend is dense and the default inference is the
+multiplier bootstrap.
+
+```{r fit}
+fit <- mrwin(
+  endpoint = endpoint, genotype = dat$G, exposure = dat$X, gwas = gwas,
+  controls = mrwin_controls(n_strata = 5L, bootstrap = 100L, seed = 1L,
+                            run_sdpd = FALSE)
+)
+summary(fit)
+```
+
+The reported interval is the **Fieller** interval — the calibrated choice for
+this ratio estimand (see below). A tidy one-row summary is also available:
+
+```{r tidy}
+tidy(fit)
+```
+
+```{r plot, fig.alt = "Adjacent-stratum instrument-standardised gradients"}
+plot(fit, type = "isg")
+```
+
+## Biobank-scale backend
+
+The hierarchical win/loss kernel is the bottleneck. `backend = "fast"` uses a
+subquadratic, compiled (Rcpp) kernel that is **bit-for-bit identical** to the
+dense backend but scales to biobank `N`. The point estimate is unchanged:
+
+```{r fast}
+fit_fast <- mrwin(
+  endpoint = endpoint, genotype = dat$G, exposure = dat$X, gwas = gwas,
+  controls = mrwin_controls(n_strata = 5L, bootstrap = 100L, seed = 1L,
+                            backend = "fast", run_sdpd = FALSE)
+)
+c(dense = unname(fit$point$dscwr), fast = unname(fit_fast$point$dscwr))
+```
+
+## Analytic variance (a fast alternative to the bootstrap)
+
+`inference = "analytic"` replaces the bootstrap loop for the sampling component
+with a closed-form influence-function covariance (with an exact Monte-Carlo term
+for GWAS-weight uncertainty when `se > 0`).
+
+```{r analytic}
+fit_analytic <- mrwin(
+  endpoint = endpoint, genotype = dat$G, exposure = dat$X, gwas = gwas,
+  controls = mrwin_controls(n_strata = 5L, seed = 1L,
+                            inference = "analytic", run_sdpd = FALSE)
+)
+fit_analytic$inference$ci95_dscwr_fieller
+```
+
+## Why Fieller, and the weak-instrument case
+
+The ISG is a ratio. External calibration showed that a delta-method interval for
+it is structurally too wide (it never reaches nominal type-I error), whereas the
+**Fieller** construction on the same covariance is correctly calibrated. `mrwin`
+therefore reports the Fieller interval as primary and keeps the delta-method
+interval only as a labelled reference. Under a weak instrument the Fieller
+interval is honestly reported as unbounded rather than as a falsely tight set.
+
+## A caveat: doubly-ranked stratification
+
+Doubly-ranked stratification is popular in non-linear MR, but it **balances the
+instrument across strata**, which makes the *between*-stratum DS-CWR contrast
+confounder-driven (validated type-I error ~1.0). `mrwin()` keeps it runnable for
+research but warns; `prs_rank` (the default) is the only validated scheme.
+
+```{r doubly-ranked}
+fit_dr <- tryCatch(
+  withCallingHandlers(
+    mrwin(endpoint = endpoint, genotype = dat$G, exposure = dat$X, gwas = gwas,
+          controls = mrwin_controls(n_strata = 5L, bootstrap = 50L, seed = 1L,
+                                    stratification = "doubly_ranked",
+                                    run_sdpd = FALSE)),
+    warning = function(w) {
+      message("warning: ", conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+)
+```
+
+See `vignette` sources and `inst/spec/validation-findings.md` for the full
+calibration evidence behind these choices.
