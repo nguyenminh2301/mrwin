@@ -497,12 +497,12 @@ strata. The SDPD tests for direct pleiotropy.
   not reduce `D`-sensitivity (the instrument-standardized gradient is a ratio,
   and finer smoothing shrinks its denominator). The recommended practice is the
   discrete estimator with a sensitivity analysis over `D`, not a continuous
-  reparameterization (see `inst/spec/wp15-continuous-isg.md`).
+  reparameterization (see `dev/wp15-continuous-isg.md`).
 
 ### Performance and inference backends (opt-in)
 
 The default backend is unchanged, but the Phase II work
-(`inst/spec/acceleration-roadmap.md`) added validated, opt-in alternatives via
+(`dev/acceleration-roadmap.md`) added validated, opt-in alternatives via
 `mrwin_controls()`:
 
 - `backend = "fast"` — a subquadratic, compiled (Rcpp) win/loss kernel

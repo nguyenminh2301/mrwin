@@ -509,12 +509,12 @@ PRS-Strata balanciert werden. Die SDPD testet auf direkte Pleiotropie.
   (der instrumentenstandardisierte Gradient ist ein Quotient, und feinere
   Glättung lässt seinen Nenner schrumpfen). Die empfohlene Praxis ist der
   diskrete Schätzer mit einer Sensitivitätsanalyse über `D`, nicht eine
-  kontinuierliche Reparametrisierung (siehe `inst/spec/wp15-continuous-isg.md`).
+  kontinuierliche Reparametrisierung (siehe `dev/wp15-continuous-isg.md`).
 
 ### Leistungs- und Inferenz-Backends (optional)
 
 Das Standard-Backend ist unverändert, aber die Arbeit der Phase II
-(`inst/spec/acceleration-roadmap.md`) fügte validierte, optionale Alternativen
+(`dev/acceleration-roadmap.md`) fügte validierte, optionale Alternativen
 über `mrwin_controls()` hinzu:
 
 - `backend = "fast"` — ein subquadratischer, kompilierter (Rcpp) Win/Loss-Kernel

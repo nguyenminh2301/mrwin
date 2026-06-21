@@ -6,7 +6,7 @@
 # at level 1, level-2 separations split over the four (status1) regimes; the two
 # mixed regimes use a Fenwick-based 2D dominance count, O(N log N) overall.
 # Both return win/loss/total identical to the dense kernel. K>=3 is not yet a
-# fast path and falls back to the dense backend (see inst/spec/wp13-fast-kernel.md).
+# fast path and falls back to the dense backend (see dev/wp13-fast-kernel.md).
 
 # Single-endpoint weighted sweep on numeric column vectors. Returns c(wins, losses).
 .mrwin_fast_1d <- function(th, sh, wh, tl, sl, wl) {

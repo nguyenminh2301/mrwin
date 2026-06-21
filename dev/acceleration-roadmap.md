@@ -256,7 +256,7 @@ test. WP18 maintains the manuscript; the table below is the contract.
 
 The **ordered, sprint-by-sprint execution plan** with exact function signatures,
 algorithm pseudocode, parity tests, and the benchmark protocol is
-`inst/spec/implementation-plan.md`. It sequences the work as
+`dev/implementation-plan.md`. It sequences the work as
 S1=C1 → S2=C2 → S3=M2 → S4=(M3+M1). Start there.
 
 1. Read this file, then `implementation-plan.md`.

@@ -12,6 +12,7 @@
 ^run_all\.sh$
 ^CITATION\.cff$
 ^tools$
+^dev$
 ^manuscript$
 ^drafts$
 ^notes$

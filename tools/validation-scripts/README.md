@@ -1,7 +1,7 @@
 # Validation / reproducibility scripts
 
 Exploratory harnesses that produced the external-validation findings recorded in
-`inst/spec/validation-findings.md`, `inst/spec/wp15-continuous-isg.md`, and the
+`inst/spec/validation-findings.md`, `dev/wp15-continuous-isg.md`, and the
 WP18 ledger. They are **not** part of the package build (excluded via
 `.Rbuildignore`); they are kept under version control so every number in the
 specs and the manuscript is reproducible.

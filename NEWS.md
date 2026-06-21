@@ -1,0 +1,50 @@
+# mrwin 0.1.0
+
+First versioned release. Adds the scalability and inference work and records two
+externally-validated negative findings.
+
+## New features
+
+* **Subquadratic, compiled win/loss kernel** (`backend = "fast"`). The
+  hierarchical comparison is recast as a weighted multivariate dominance count
+  (Fenwick/BIT for K = 1, 2; CDQ divide-and-conquer for K = 3) and ported to
+  C++ via Rcpp. Bit-for-bit identical to the dense backend; brings the estimator
+  to biobank scale (e.g. K = 3, N = 80,000 in under a second).
+* **Analytic influence-function variance** (`inference = "analytic"`). A
+  closed-form `cov_u` reproduces the multiplier bootstrap for the sampling
+  component, with an exact Monte-Carlo term for GWAS-weight uncertainty and a
+  first-order weighted form under ordinal IPTW.
+* **Fieller confidence intervals are now the primary reported interval.**
+  External calibration showed the original delta-method ratio interval is
+  mis-calibrated (structurally too wide); the Fieller construction on the same
+  covariance is correctly calibrated and is reported by
+  `print`/`summary`/`tidy`/`mrwin_report`, with an explicit unbounded-interval
+  report under a weak instrument. The delta-method interval is retained as a
+  labelled reference.
+* **Doubly-ranked stratification** (`mrwin_doubly_ranked_strata()`,
+  `stratification = "doubly_ranked"`) is implemented and wired end to end.
+
+## Validated negative findings
+
+* **Continuous (bandwidth-controlled) ISG** reduces exactly to the decile
+  estimator in the boxcar limit, but is noisier than the decile and does not
+  reduce stratum-count sensitivity (the gradient is a ratio whose denominator
+  shrinks under finer smoothing). The discrete estimator with a sensitivity
+  analysis over the stratum count is recommended.
+* **Doubly-ranked stratification is incompatible with the between-stratum
+  DS-CWR estimand.** It balances the instrument across strata (its within-stratum
+  LACE selling point), which makes the adjacent-stratum contrast
+  confounder-driven (type-I error ~1.0 under confounding). `mrwin()` keeps it
+  runnable but emits a `doubly_ranked_invalid` warning; `prs_rank` remains the
+  default and only validated scheme.
+
+See `inst/spec/validation-findings.md` for the calibration tables and diagnoses.
+
+## Documentation and packaging
+
+* Development and planning docs (work-package specs, roadmaps, checkpoint) moved
+  to `dev/` and excluded from the package build; `inst/spec/` now ships only the
+  durable references (`algorithm-spec.md`, `validation-findings.md`,
+  `benchmark-results.md`).
+* Reproducibility scripts collected under `tools/validation-scripts/`.
+* `DESCRIPTION` updated (title, description, `URL`, `BugReports`).
