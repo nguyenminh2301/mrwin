@@ -25,7 +25,7 @@ These have a reserved home in the API and the documentation site
 | status | feature | notes |
 |--------|---------|-------|
 | 🟡 | **Complete function reference** | roxygen2 docs for every export; `R CMD check` doc-clean |
-| ⬜ | **Two-sample / summary-data mode** | run DS-CWR from GWAS summary statistics, no individual data |
+| 🟡 | **Two-sample / summary-data mode** | feasibility established — IVW of per-SNP win-odds summary stats recovers the causal gradient (`dev/findings-two-sample-winratio.md`); needs a principled per-SNP estimator + non-collapsibility correction |
 | ⬜ | **Multivariable & mediation** | multiple exposures; decompose direct vs mediated win effects |
 | ⬜ | **Plotting helpers** | forest plot of ISGs, dose–response curve, calibration plots |
 | ⬜ | **Cluster-robust / family-structure variance** | related individuals in biobanks |
