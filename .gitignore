@@ -104,3 +104,6 @@ scratch/
 TODO.local
 .agent/
 .sessions/
+
+# pkgdown-generated website (build locally / via CI, do not commit)
+docs/
