@@ -107,3 +107,4 @@ TODO.local
 
 # pkgdown-generated website (build locally / via CI, do not commit)
 docs/
+testthat-problems.rds
