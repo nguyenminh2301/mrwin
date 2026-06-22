@@ -1,3 +1,26 @@
+# mrwin (development version)
+
+Project organization and onboarding, in preparation for a multi-paper,
+multi-feature package. No change to the estimator, the compiled kernel, or any
+exported function's behaviour.
+
+## Documentation & structure
+
+* **Getting-started guide for clinicians & epidemiologists** — a bilingual
+  (Tiếng Việt + English) vignette covering installation of R/RStudio and the
+  package, a first analysis, and how to read the output, for readers with no
+  programming background.
+* **Documentation website scaffolding** (`_pkgdown.yml`): the ~40 exported
+  functions are organized into themed reference sections, with reserved
+  placeholders for planned feature families.
+* **`ROADMAP.md`** records shipped features, planned modules, and the papers in
+  the programme.
+* **Tidier repository**: the original Python prototype moved to
+  `archive/python-prototype/`; non-English READMEs to `translations/`; paper
+  drafts to private `papers/<slug>/` folders; per-WP dev notes grouped under
+  `dev/work-packages/`. The R package core (`R/`, `src/`, `man/`,
+  `tests/`) is unchanged.
+
 # mrwin 0.1.0
 
 First versioned release. Adds the scalability and inference work and records two

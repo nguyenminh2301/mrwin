@@ -262,11 +262,27 @@ the entire disease course from recurrence through death.
 
 ## Installation
 
+**New to R?** If you are a clinician or epidemiologist who has never used R,
+follow the step-by-step, no-jargon guide — installing R + RStudio, installing
+this package, and running your first analysis on your own computer:
+**[Getting started](vignettes/getting-started.Rmd)** (bilingual: Tiếng Việt +
+English). The short version, once R is installed:
+
 ```r
-# From GitHub (development version)
-# install.packages("devtools")
-devtools::install_github("nguyenminh2301/mrwin")
+# 1. Install the 'remotes' helper (only the first time)
+install.packages("remotes")
+
+# 2. Install mrwin from GitHub
+remotes::install_github("nguyenminh2301/mrwin")
+
+# 3. Load it
+library(mrwin)
 ```
+
+`mrwin` has a compiled component, so on Windows you also need
+[Rtools](https://cran.r-project.org/bin/windows/Rtools/) and on macOS the Xcode
+command-line tools (`xcode-select --install`). The Getting started guide walks
+through this.
 
 ---
 
