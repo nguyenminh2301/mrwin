@@ -1,11 +1,5 @@
 \name{mrwin}
 \alias{mrwin}
-\alias{mrwin_endpoint}
-\alias{mrwin_gwas}
-\alias{mrwin_controls}
-\alias{mrwin_validate_data}
-\alias{mrwin_config}
-\alias{mrwin_simulate}
 \alias{mrwin_scenarios}
 \alias{mrwin_run_simulation_grid}
 \alias{mrwin_simulation_summary}
@@ -34,7 +28,6 @@
 \alias{mrwin_pleiotropy_bounded_ci}
 \alias{mrwin_propensity_weights}
 \alias{mrwin_sdpd}
-\alias{mrwin_sparse_adjacent_win_loss}
 \title{Causal win statistics for hierarchical composite endpoints}
 \description{
 R implementation of causal win-statistic methods for hierarchical composite endpoints.
