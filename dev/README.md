@@ -22,12 +22,13 @@ the package:
   WP13–WP19).
 - `project-checkpoint.md` — running status snapshot.
 - `release-checklist.md` — pre-release QA gate.
-- `wp1`–`wp8` — Phase I work packages (API, data validation, kernel, estimator,
-  bootstrap, adjustment, SDPD, simulation engine).
-- `wp13`–`wp19` — Phase II work packages (fast kernel, bootstrap acceleration,
-  continuous ISG [negative finding], doubly-ranked strata [negative finding],
-  analytic variance, theory/manuscript, scalability validation).
+- `work-packages/` — the per-WP design/finding notes:
+  - `wp1`–`wp8` — Phase I work packages (API, data validation, kernel, estimator,
+    bootstrap, adjustment, SDPD, simulation engine).
+  - `wp13`–`wp19` — Phase II work packages (fast kernel, bootstrap acceleration,
+    continuous ISG [negative finding], doubly-ranked strata [negative finding],
+    analytic variance, theory/manuscript, scalability validation).
 
 The reproducibility scripts behind the findings live in
-`tools/validation-scripts/`; the manuscript draft is kept out of the repo
-(`manuscript/`, gitignored).
+`tools/validation-scripts/`; the paper drafts are kept out of the repo
+(`papers/<slug>/`, gitignored — one folder per manuscript, see `papers/README.md`).

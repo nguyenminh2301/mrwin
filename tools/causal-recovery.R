@@ -10,11 +10,12 @@
 # the stratifier) converges to a confounded, biased value.
 #
 # Entirely from the public package + simulator; no confidential data.
-#   Rscript tools/causal-recovery.R          # writes manuscript/figures/fig-recovery.pdf
+#   Rscript tools/causal-recovery.R          # writes papers/01-methods-scalable-cwr/figures/fig-recovery.pdf
 #   MRWIN_FIG_DIR=some/dir Rscript tools/causal-recovery.R
 suppressMessages(library(mrwin))
 set.seed(1)
-outdir <- Sys.getenv("MRWIN_FIG_DIR", unset = file.path("manuscript", "figures"))
+outdir <- Sys.getenv("MRWIN_FIG_DIR",
+                     unset = file.path("papers", "01-methods-scalable-cwr", "figures"))
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
 ## ---- DGP replica that exposes latent draws so X can be set exogenously -------

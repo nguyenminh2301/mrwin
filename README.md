@@ -1,6 +1,6 @@
 # mrwin: Causal Win Statistics for Hierarchical Composite Endpoints
 
-[English](README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
+[English](README.md) | [Tiếng Việt](translations/README.vi.md) | [中文](translations/README.zh.md) | [日本語](translations/README.ja.md) | [한국어](translations/README.ko.md) | [Français](translations/README.fr.md) | [Deutsch](translations/README.de.md)
 
 ## What This Package Does
 

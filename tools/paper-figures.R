@@ -5,13 +5,15 @@
 #
 #     Rscript tools/paper-figures.R
 #
-# By default it writes vector PDFs to manuscript/figures/ (the manuscript folder
-# is gitignored / kept private until submission). Override the destination with
+# By default it writes vector PDFs to papers/01-methods-scalable-cwr/figures/
+# (the papers/ folder is gitignored / kept private until submission). Override
+# the destination with
 #     MRWIN_FIG_DIR=some/dir Rscript tools/paper-figures.R
 # Seeds are fixed so every figure is bit-reproducible.
 
 suppressMessages(library(mrwin))
-outdir <- Sys.getenv("MRWIN_FIG_DIR", unset = file.path("manuscript", "figures"))
+outdir <- Sys.getenv("MRWIN_FIG_DIR",
+                     unset = file.path("papers", "01-methods-scalable-cwr", "figures"))
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 pdf_open <- function(f, w = 5, h = 4) pdf(file.path(outdir, f), width = w, height = h)
 

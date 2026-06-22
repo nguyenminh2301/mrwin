@@ -63,9 +63,10 @@ src/symbols.rds
 *.Rcheck/
 
 # Manuscript drafts and generated writing artifacts.
-# The draft lives entirely under manuscript/ (and drafts/, paper*/), which are
-# ignored wholesale below. Do NOT blanket-ignore *.Rmd / *.qmd here: that would
-# also swallow legitimate package content such as vignettes/*.Rmd.
+# Paper drafts live entirely under papers/<slug>/ (one folder per manuscript;
+# see papers/README.md), kept private via paper*/ below. drafts/ and the legacy
+# manuscript/ name are also ignored. Do NOT blanket-ignore *.Rmd / *.qmd here:
+# that would also swallow legitimate package content such as vignettes/*.Rmd.
 manuscript/
 drafts/
 paper*/
