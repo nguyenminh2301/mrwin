@@ -84,15 +84,36 @@ weak-instrument finite-sample bias — well understood in MR, with standard fixe
 median-split `delta_Gwin` is already adequate; a non-collapsibility correction is
 *not* needed.
 
-## Next steps if this becomes a method
+## Implemented: per-SNP win-odds estimator + closed-form SE + IVW API
 
-1. **Per-SNP win-odds estimator with a closed-form SE** so the IVW weights are
-   real inverse variances (Fieller / weighted-median pooling).
-2. **Weak-IV-robust pooling** (the bias is the only issue): report instrument
-   strength, use enough N / SNPs, consider winsorised / weighted-median IVW.
-3. **Pleiotropy robustness**: win-ratio MR-Egger / weighted-median (the package
+`R/twosample.R` ships the estimator with a closed-form standard error
+(`tools/twosample-winodds-se.R` reproduces the validation):
+
+- **`mrwin_win_snp(time, status, dosage)`** — per-SNP log-win-odds slope on
+  dosage with its SE. Point estimate on the subquadratic kernel; SE = the
+  influence-function variance of `log(W/L)` (`coef_k = w_k(P+_k/W0 - P-_k/L0)`,
+  `Var = sum_k coef_k^2`, the same one `mrwin_analytic_covariance` uses),
+  evaluated subquadratically from per-subject win/loss counts
+  (`mrwin_subject_win_loss_cpp`, new C++) on a capped subject subsample.
+- **`mrwin_win_gwas()`** — the win-odds GWAS across a SNP panel (shareable
+  summary stats).
+- **`mrwin_twosample_ivw(beta_gx, delta_gy, se_gy)`** — fixed-effect IVW with
+  real inverse-variance weights -> `gamma`, `se`, 95% CI, Cochran's Q.
+
+Validation against ground truth:
+
+- per-SNP SE: closed-form `se_log_theta` matches the **replication SD** of
+  log-theta (ratio ~1.0; also exact vs the dense influence reference, and the
+  C++ per-subject counts match brute force exactly — `tests/test-twosample.R`).
+- IVW: mean estimated SE vs empirical SD of `gamma_hat` ratio **0.98**, and 95%
+  CI **coverage 96%** of the oracle `gamma*` (R=80, N_out=10k). Cochran Q stays
+  null (no spurious heterogeneity).
+
+## Remaining next steps
+
+1. **Weak-IV-robust pooling**: the residual small-N bias is the only issue; report
+   instrument strength, consider winsorised / weighted-median IVW.
+2. **Pleiotropy robustness**: win-ratio MR-Egger / weighted-median (the package
    already has `mrwin_mr_egger`, `mrwin_sdpd`).
-4. **`mrwin_twosample()` API** + a `mrwin_win_gwas()` helper producing shareable
-   per-SNP win-odds summary statistics.
-5. Validate end-to-end against the oracle (consistency, coverage) as paper 01 did
-   for the one-sample estimator.
+3. Package the end-to-end workflow as a single `mrwin_twosample()` entry point and
+   write it up (Paper 03).
