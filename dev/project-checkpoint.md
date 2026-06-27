@@ -115,6 +115,23 @@ remain to a publishable + released package.
 - Verification environment: R 4.3.3 installed in the dev container; full
   testthat suite (79 groups, 0 failures) + Python differential tests green.
 
+### Paper-01 full Monte-Carlo grid — COMPLETE (2026-06-23)
+
+The headline validation grids the WP19 cells deferred are now run and recorded in
+`inst/spec/validation-findings.md` (drivers: `tools/validation-scripts/paper01_mc_grid.R`,
+`paper01_weakiv.R`, `paper01_sdpd_power.R`). Summary:
+- **Type-I** (Fieller): 0.050 (N=2000), 0.028 (N=4000) — calibrated-to-conservative.
+- **Power**: rises with N (0.10→0.28) and effect size (0.04→0.24 at N=4000);
+  honestly modest at N=4000 (composite win-ratio MR is data-hungry).
+- **Weak instrument**: honest coverage stays ~0.96–0.97 at *every* instrument
+  strength (the method flags `weak_instrument` and returns unbounded Fieller
+  intervals rather than falsely excluding the truth).
+- **Pleiotropy/SDPD**: type-I 0.047/0.050 (calibrated); ~null power vs
+  *score-proportional* `gamma_direct` pleiotropy (correct — that case is
+  InSIDE-violating and undetectable by any MR-Egger-type test); clean power curve
+  (0.05→1.00) vs InSIDE-satisfying per-SNP pleiotropy. Closes the
+  pleiotropy/weak-instrument items in the Post-Release Validation Plan below.
+
 ## Completed Commits
 
 | WP | Commit | Scope |
