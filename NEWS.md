@@ -1,10 +1,30 @@
 # mrwin (development version)
 
-Project organization and onboarding, in preparation for a multi-paper,
-multi-feature package. No change to the estimator, the compiled kernel, or any
-exported function's behaviour.
+## New features
+
+* **Two-sample / summary-data win-ratio MR.** `mrwin_win_snp()` estimates a
+  per-SNP win-odds coefficient (the log-win-odds slope on allele dosage) with a
+  closed-form influence-function standard error; `mrwin_win_gwas()` runs it across
+  a SNP panel (a "win-odds GWAS"); and `mrwin_twosample_ivw()` pools the per-SNP
+  `(beta_GX, delta_winodds)` pairs by inverse-variance weighting — the win-ratio
+  analogue of ordinary two-sample MR. The estimator is consistent for the causal
+  win-odds gradient and its standard error is calibrated (SE/SD ≈ 1, 96% CI
+  coverage; see `inst/spec/validation-findings.md`). A new unexported C++ helper
+  (`mrwin_subject_win_loss_cpp`) supplies the per-subject win/loss counts for the
+  subquadratic standard error.
+
+## Validation
+
+* **Paper-01 full Monte-Carlo grid** — type-I, power, weak-instrument, and
+  pleiotropy/SDPD, recorded in `inst/spec/validation-findings.md`. Type-I is
+  calibrated-to-conservative; weak-instrument coverage stays ~0.96 at every
+  instrument strength (the method flags weak instruments and returns unbounded
+  Fieller intervals rather than falsely excluding the truth); SDPD is calibrated
+  under the null with a clean power curve against InSIDE-satisfying pleiotropy.
 
 ## Documentation & structure
+
+Project organization and onboarding for a multi-paper, multi-feature package.
 
 * **Getting-started guide for clinicians & epidemiologists** — a bilingual
   (Tiếng Việt + English) vignette covering installation of R/RStudio and the

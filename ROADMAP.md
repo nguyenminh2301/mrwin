@@ -24,7 +24,7 @@ These have a reserved home in the API and the documentation site
 
 | status | feature | notes |
 |--------|---------|-------|
-| 🟡 | **Complete function reference** | roxygen2 docs for every export; `R CMD check` doc-clean |
+| ✅ | **Complete function reference** | every export documented; `R CMD check` doc-clean — verified (`undoc`/`codoc`/`checkDocFiles`/`checkRd`/`\value`/examples all OK; only WARNINGs are the expected env/vignette artifacts) |
 | 🟡 | **Two-sample / summary-data mode** | estimator shipped: `mrwin_win_snp`/`mrwin_win_gwas` (per-SNP win-odds + closed-form influence-function SE) + `mrwin_twosample_ivw` (inverse-variance pooling); consistent, SE calibrated (ratio 0.98), 96% CI coverage (`dev/findings-two-sample-winratio.md`); next: weak-IV-robust + pleiotropy pooling, single `mrwin_twosample()` entry point, Paper 03 |
 | ⬜ | **Multivariable & mediation** | multiple exposures; decompose direct vs mediated win effects |
 | ⬜ | **Plotting helpers** | forest plot of ISGs, dose–response curve, calibration plots |

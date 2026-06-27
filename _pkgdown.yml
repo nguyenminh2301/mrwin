@@ -117,6 +117,13 @@ reference:
   - tidy
   - has_keyword("methods")
 
+- title: "Two-sample / summary-data MR"
+  desc: "Per-SNP win-odds summary statistics (a win-odds GWAS) and inverse-variance pooling for win-ratio MR from summary data."
+  contents:
+  - mrwin_win_snp
+  - mrwin_win_gwas
+  - mrwin_twosample_ivw
+
 - title: "Benchmarking"
   contents:
   - mrwin_benchmark
@@ -125,10 +132,6 @@ reference:
 # ---------------------------------------------------------------------------
 # Reserved for upcoming feature families (see ROADMAP.md). Uncomment the block
 # and list the exported functions when each module lands.
-#
-# - title: "Two-sample / summary-data MR"
-#   contents:
-#   - mrwin_twosample
 #
 # - title: "Multivariable & mediation"
 #   contents:
