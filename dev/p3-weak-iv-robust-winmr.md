@@ -269,6 +269,65 @@ Reuse the validated `alpha_s` instrument-strength sweep and oracle `γ*/β*`:
 
 Each probe uses only the existing kernel, oracle, and per-subject C++ primitive.
 
+### Probe results — EXECUTED 2026-06-23 (`tools/validation-scripts/p3-weak-iv-robust-probe.R`)
+
+`beta*` (net-benefit gradient): interventional oracle **0.111** vs moment-ratio
+plim **0.117** — agree, confirming the moment `beta* = Cov(Z,w(O))/Cov(Z,X)` IS the
+causal net-benefit gradient (eq. 2).
+
+**8.1 — AR vs Wald coverage (N=4000, R=300, Z=PRS).**
+
+| alpha_s | AR cover | AR unbounded | AR med-width | Wald cover | Wald med-width |
+|---|---|---|---|---|---|
+| 0.10 | **0.947** | 0.73 | 1.27 | 1.000 | 1.48 |
+| 0.20 | **0.960** | 0.26 | 0.73 | 0.993 | 0.63 |
+| 0.30 | **0.943** | 0.01 | 0.49 | 0.967 | 0.41 |
+| 0.40 | **0.943** | 0.00 | 0.33 | 0.977 | 0.30 |
+
+AR is calibrated ~0.95 at **every** instrument strength (weak included, via the
+unbounded branch); Wald **over-covers throughout** (1.00 → 0.97) — the heavy-tailed,
+denominator-driven mis-calibration Paper 01 documented. Headline confirmed: the AR
+moment test removes the ratio fragility.
+
+**8.2 — degeneracy stress (naive chi2_1 AR coverage, R=400).**
+
+| alpha_s | cens | coverage |
+|---|---|---|
+| 0.05 | 0.05 | 0.955 |
+| 0.02 | 0.05 | 0.958 |
+| 0.05 | 0.40 | 0.960 |
+| 0.02 | 0.40 | 0.958 |
+| 0.05 | 1.00 | **0.940** |
+
+Degeneracy is **real but MILD**: even under extreme weak-instrument + very-heavy
+censoring (low decided-pair fraction) naive-AR only sags to 0.940. So §6's
+degeneracy-robust statistic is a **refinement for the tail, not a blocker** — the
+basic AR test is robust in practice. (This *simplifies* the paper: §6 becomes a
+completeness/extreme-regime section, not the critical path.)
+
+**8.3 — over-ID min-beta AR pleiotropy test (L=40 SNPs, N=2500, R=120, chi2_39).**
+
+| scenario | reject |
+|---|---|
+| null (no pleiotropy) | **0.033** (calibrated; median stat 39.4 ≈ df 39) |
+| InSIDE-violating (gamma_direct=0.3, ∝ instrument) | **0.042** (correctly ~null) |
+| InSIDE-satisfying (tau=0.06, 30% of SNPs) | **0.833** (power) |
+
+The identification-robust over-ID test is calibrated, correctly **blind** to
+instrument-proportional (InSIDE-violating) pleiotropy — absorbed into `beta-hat` —
+and **powerful** against InSIDE-satisfying pleiotropy: the AR echo of Paper 01's
+SDPD result, now weak-instrument-robust. (A normalization bug — an extra factor
+`n`, giving type-I = 1.000 — was caught by the probe's own type-I check and fixed:
+`Sigma = 4*Cov(g)`, not `/n`. Lesson H: a numerical path is not trusted until its
+calibration probe passes.)
+
+**Verdict.** All three headline claims of P3 are confirmed empirically. AR fixes
+the weak-instrument ratio fragility (uniform calibration where Wald is
+mis-calibrated); the U-statistic degeneracy is mild; the over-ID statistic delivers
+a calibrated, InSIDE-aware, weak-IV-robust pleiotropy test. The theory is
+de-risked; the genuine open math (the *uniform* degeneracy-robust statistic §6, the
+many-instrument refinement §9) is now scoped as refinement, not blocker.
+
 ---
 
 ## 9. Open technical questions (honest gaps)
