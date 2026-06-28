@@ -25,7 +25,7 @@ These have a reserved home in the API and the documentation site
 | status | feature | notes |
 |--------|---------|-------|
 | ✅ | **Complete function reference** | every export documented; `R CMD check` doc-clean — verified (`undoc`/`codoc`/`checkDocFiles`/`checkRd`/`\value`/examples all OK; only WARNINGs are the expected env/vignette artifacts) |
-| 🟡 | **Two-sample / summary-data mode** | estimator shipped: `mrwin_win_snp`/`mrwin_win_gwas` (per-SNP win-odds + closed-form influence-function SE) + `mrwin_twosample_ivw` (inverse-variance pooling); consistent, SE calibrated (ratio 0.98), 96% CI coverage (`dev/findings-two-sample-winratio.md`); next: weak-IV-robust + pleiotropy pooling, single `mrwin_twosample()` entry point, Paper 03 |
+| 🟡 | **Two-sample / summary-data mode** | estimator shipped: `mrwin_win_snp`/`mrwin_win_gwas` (per-SNP win-odds + closed-form influence-function SE) + `mrwin_twosample_ivw` (inverse-variance pooling); consistent, SE calibrated (ratio 0.98), 96% CI coverage (`dev/findings-two-sample-winratio.md`); next: weak-IV-robust + pleiotropy pooling, single `mrwin_twosample()` entry point, **Paper 02** (weak-IV-robust inference becomes Paper 03 — `dev/p3-weak-iv-robust-winmr.md`) |
 | ⬜ | **Multivariable & mediation** | multiple exposures; decompose direct vs mediated win effects |
 | ⬜ | **Plotting helpers** | forest plot of ISGs, dose–response curve, calibration plots |
 | ⬜ | **Cluster-robust / family-structure variance** | related individuals in biobanks |
@@ -40,7 +40,9 @@ public-facing summaries appear as documentation articles.
 | status | slug | working title |
 |--------|------|---------------|
 | 🟡 | `01-methods-scalable-cwr` | Scalable & correctly-calibrated causal win statistics for hierarchical composite endpoints in MR |
-| ⬜ | `02-…` | (reserved) |
+| 🟡 | `02-twosample-winratio-mr` | Two-sample / summary-data win-ratio MR via per-SNP win-odds summary statistics (estimator + closed-form SE shipped; `dev/findings-two-sample-winratio.md`) |
+| ⬜ | `03-weak-iv-robust-winmr` | Identification-robust (weak-instrument) inference for win-ratio MR (deep-dive: `dev/p3-weak-iv-robust-winmr.md`) |
+| 💡 | `04+` | Research frontier — collapsibility/OT, semiparametric efficiency, partial identification, win-mediation (see `dev/research-frontier-roadmap.md`) |
 
 ## How to propose or claim an item
 

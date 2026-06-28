@@ -2,7 +2,8 @@
 
 **Status:** feasible AND consistent. The estimator recovers the causal win-odds
 gradient; its only bias is ordinary weak-instrument finite-sample bias (non-
-collapsibility ruled out). Candidate for a Paper 03 / `mrwin_twosample` module.
+collapsibility ruled out). This is **Paper 02** / the `mrwin_twosample` module
+(weak-instrument-robust inference for it becomes Paper 03 — `dev/p3-weak-iv-robust-winmr.md`).
 **Reproduce:** `Rscript tools/twosample-feasibility.R` (feasibility),
 `Rscript tools/twosample-bias-source.R` (bias source: weak-IV vs non-collapsibility).
 
@@ -116,4 +117,5 @@ Validation against ground truth:
 2. **Pleiotropy robustness**: win-ratio MR-Egger / weighted-median (the package
    already has `mrwin_mr_egger`, `mrwin_sdpd`).
 3. Package the end-to-end workflow as a single `mrwin_twosample()` entry point and
-   write it up (Paper 03).
+   write it up (Paper 02); weak-instrument-robust inference is Paper 03
+   (`dev/p3-weak-iv-robust-winmr.md`).
