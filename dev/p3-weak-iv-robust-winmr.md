@@ -205,26 +205,77 @@ The linear-IV AR literature (Anderson–Rubin 1949; Staiger–Stock; Moreira's C
 **never meets this**: their moment is a sample mean, asymptotically Gaussian with a
 fixed variance, never degenerate. So the required theory is new.
 
-**Target theorem (the paper's heart).** A statistic `T_n(β0)` and critical value
-that are **uniformly size-correct over a neighborhood of the degeneracy**. Sketch of
-the construction:
+**The unified limit (derived).** Index identification strength by a drifting
+sequence `ζ_1 = ζ_1(n)` with `n ζ_1(n) → c² ∈ [0, ∞]`. Hoeffding-decompose
+`φ_β0 − θ = g(W_i) + g(W_j) + ψ̃(W_i,W_j)` (canonical, `E[ψ̃|W_i]=0`), with degenerate
+second moment `δ_2 = E[ψ̃²] = Σ_k λ_k²` (`λ_k` the eigenvalues of the operator
+`Af(w)=∫ψ̃(w,w')f dP`). Then **on the `nU_n` scale**, under H0,
 
-- Estimate both variance components: the Hájek `ζ̂_1(β0)` (O(n) projections) and the
-  degenerate `ζ̂_2(β0)` (the Hilbert–Schmidt norm / spectrum of the empirical
-  second-projection operator, via incomplete-U or random-projection sketching to stay
-  subquadratic).
-- Use a **self-normalized interpolating statistic** whose limit law is `χ²_1` when
-  `ζ_1` dominates and the weighted-χ² (8) when `ζ_1 → 0`, with a continuous
-  transition, e.g. a studentization that adds the `(2/n)·`trace term:
-  `T_n = nU_n(β0)^2 / (4ζ̂_1(β0) + (2/n) ζ̂_2(β0))`, calibrated by a
-  multiplier/permutation bootstrap on the *projected* kernel to get a single critical
-  value valid across the regime.
-- Prove `sup_{P ∈ neighborhood} | P(T_n > c_α) − α | → 0` (uniform/honest size),
-  by a drifting-sequence argument `ζ_1 = ζ_1(n) → 0` at every rate, the standard
-  device for uniform inference.
+```
+n U_n(β0)  →d  R(c) := N(0, 4c²) + Σ_k λ_k (Z_k² − 1),   Z_k iid N(0,1),       (8)
+```
 
-If achieved, this is the first **degeneracy-robust Anderson–Rubin test** — a
-contribution to U-statistic inference beyond MR. Falsifiable cleanly (see §8).
+the two terms independent — the Gaussian from the degree-1 (Hájek) part, the
+weighted-χ² from the degenerate part. Endpoints: `c=∞` ⇒ `R/2c → N(0,1)`, recovering
+the χ²_1 AR; `c=0` ⇒ `R = Σλ_k(Z_k²−1)`, a pure degenerate-U limit. The exact
+variance is `Var(U_n) = 4(n−2)ζ_1/(n(n−1)) + 2δ_2/(n(n−1))`, i.e.
+`n²Var(U_n) → 4c² + 2δ_2 = Var(R(c))`.
+
+**The right pivot.** `nU_n` is `O_p(√n)` when `ζ_1` is fixed but `O_p(1)` when
+`ζ_1 = O(1/n)`; only the *studentized* `S_n² = U_n²/Var(U_n)` is `O_p(1)` uniformly,
+with `S_n² →d R(c)²/Var(R(c))` — interpolating χ²_1 (c=∞) and the degenerate law (c=0).
+A single χ²_1 critical value is therefore **wrong** in the degenerate regime.
+
+**What the probe established** (`tools/validation-scripts/p3-degeneracy-robust-probe.R`,
+synthetic kernel `φ=ε(A_i+A_j)+A_iA_j`, `ζ_1=ε²`, rank-1 degenerate part; H0 size,
+target 0.05, n=300):
+
+| ζ_1 | naive χ²_1 AR | oracle (true c, λ) | plug-in (est. c, λ) |
+|---|---|---|---|
+| 1.00   | 0.059 | **0.050** | 0.059 |
+| 0.01   | 0.183 | **0.057** | 0.242 |
+| 0.0025 | 0.196 | **0.061** | 0.001 |
+| 0.00   | 0.181 | **0.059** | 0.000 |
+
+Three conclusions, each evidence-backed:
+
+1. **The limit (8) is correct.** The *oracle* test — reject iff `(nU_n)² >`
+   0.95-quantile of `R(c_true, λ_true)²` — holds ~0.05 across the **entire**
+   strong→degenerate continuum. The theory is right.
+2. **Naive AR really does fail under degeneracy** — size inflates to ~0.18–0.20
+   (≈4×) in the pure-degenerate synthetic. (In the realistic win-MR DGP the inflation
+   is mild, §8.2 coverage 0.94, because the win kernel is not purely degenerate.)
+3. **The hard obstruction is precisely the boundary nuisance `c² = nζ_1`.** It is
+   **not consistently estimable** there: `ζ_1` and its plug-in bias `δ_2/(n−1)` are
+   both `O(1/n)`, so `ζ̂_1^{bc} = \widehat{Var}(ĝ) − δ̂_2/(n−1)` is a difference of two
+   same-order noisy quantities. The plug-in test is consequently **unstable**
+   (0.242 → 0.000 across a tiny ζ_1 range), strictly worse than naive. The spectrum
+   `λ̂_k` *is* estimable (its eigenvalues are `O(1)`); only `c²` is not.
+
+**Resolution (the remaining math, now correctly scoped).** Because `c²` is not
+estimable under the null, plug-in calibration cannot work — the fix must be
+**robust-to-non-estimable-nuisance inference**, two viable routes:
+
+- *Andrews–Cheng least-favorable / sup-over-CI.* Build a `(1−α_1)` confidence
+  interval `[c²_lo, c²_hi]` for `c²` (it includes 0 at the boundary); take the
+  critical value `= max_{c²∈[c²_lo,c²_hi]}` of the `(1−α_2)` quantile of
+  `R(c,λ̂)²/Var(R(c,λ̂))`, with `α_1+α_2=α` (Bonferroni). Uniformly valid by the
+  drifting-sequence argument; needs only the estimable spectrum `λ̂` plus a CI for
+  `c²` (not a point estimate).
+- *Degenerate-U bootstrap* (Arcones–Giné): the ordinary nonparametric bootstrap is
+  inconsistent for degenerate U-statistics; the corrected (canonical-kernel)
+  multiplier bootstrap reproduces (8) and yields the critical value directly.
+
+Either gives the first **degeneracy-robust Anderson–Rubin test** — a contribution to
+U-statistic inference beyond MR. The oracle result certifies the target is reachable;
+the open work is purely the non-estimable-nuisance handling. Subquadratic spectrum:
+top-`r` `λ̂_k` via Nyström/randomized SVD on the centered kernel, tail as a trace
+correction.
+
+**Practical interim recommendation.** Since §8.2 shows the realistic-regime
+degradation is mild (size ≈0.06), ship the basic AR test (§2) with a
+**`weak_degenerate` flag** raised when `nζ̂_1` is small relative to the spectral
+mass `Σλ̂_k²`; reserve the full sup-over-CI statistic for the flagged extreme tail.
 
 ---
 
