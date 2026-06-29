@@ -69,11 +69,18 @@ confirms all estimators are correct.
   cost of within-family designs: lower precision, more finite-sample bias, larger N
   needed.
 
-**Still UNTESTED / proposed (do not claim):** **>2 sibs / trios** (then the
-within-family pairs are dependent → genuine family-clustering of the influence
-function, not the clean i.i.d. case above); the **two-sample within-sibship**
-summary-data form; multiple realistic perturbations (LD, sib–sib interaction, shared
-sib environment); and the **deep literature scan** vs scalar within-sibship MR
+**>2 sibs — DONE (`tools/.../within-family-multisib-clustered-ar.R`).** Aggregating the
+dependent C(s,2) within-family pairs to the family level `m_f` gives an
+i.i.d.-across-families moment, so `AR=(Σ_f m_f)²/(Σ_f m_f²)→χ²_1`. Proven **necessary
+AND sufficient**: the naive pair-independent AR under-covers as s grows (s=4: 0.85)
+while the family-clustered AR holds ~0.95 (s=2/3/4: 0.950/0.925/0.950); point bias
+stable (+0.013, the within-sibship weak-IV bias, not growing with s).
+
+**Still UNTESTED / proposed (do not claim):** **efficient/optimal weighting** of the
+within-family pairs (efficiency, not validity); **mixed family sizes**;
+**parent–offspring trios** (mid-parent contrast — a different structure); the
+**two-sample within-sibship** summary-data form; realism (LD, sib–sib interaction,
+shared sib environment); and the **deep literature scan** vs scalar within-sibship MR
 (Brumpton/Davies/Howe) before any "first" claim.
 
 **New algorithm / theory for the paper (Paper 04 candidate):**
