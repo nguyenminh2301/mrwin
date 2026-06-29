@@ -28,47 +28,49 @@ for win-MR.
 ## ⭐ Newly probed breakthrough (2026-06-23): within-family win-ratio MR
 
 **The structural identity.** A win statistic is a PAIRWISE comparison `h(O_i,O_j)`;
-the strongest MR design — within-family / sibling — is a PAIRWISE genetic contrast
-`Z_i − Z_j` between sibs. **They are the same object.** A sibling pair *is* a pair in
-the degree-2 U-statistic. So restricting the Paper-3 pairwise IV moment to sibling
-pairs makes the contrast obey Mendelian segregation, and `dZ` becomes **independent
-of population stratification, assortative mating, and dynastic (indirect parental)
-effects** — the confounders Papers 1–3 cannot control. This is the robustness apex of
-the chain, and it falls out *for free* from the pairwise structure.
+the within-family / sibling MR design is a PAIRWISE genetic contrast `Z_i − Z_j`
+between sibs. **They are the same degree-2 U-statistic object.** Restricting the
+Paper-3 pairwise IV moment to sibling pairs makes `dZ` obey Mendelian segregation.
+Estimator `β*_wf = Σ_{sib} h(O_i,O_j)(Z_i−Z_j) / Σ_{sib}(X_i−X_j)(Z_i−Z_j)`.
 
-**Estimator.** `β*_wf = Σ_{(i,j)∈sib} h(O_i,O_j)(Z_i−Z_j) / Σ_{(i,j)∈sib}(X_i−X_j)(Z_i−Z_j)`.
-The win kernel handles the hierarchical/censored outcome; the sib contrast handles
-confounding.
+**RIGOROUS re-check (2026-06-23, corrected scope; `tools/.../within-family-winmr-probe.R`).**
+The first probe compared within-family only to a *naive, PC-unadjusted* population
+estimator — a **partial strawman**, since real MR adjusts for ancestry principal
+components. Giving population MR its standard PC defence and adding a no-confounding
+control and a dynastic scenario (bias vs oracle):
 
-**Probe result — survived falsification** (`tools/validation-scripts/within-family-winmr-probe.R`;
-population stratification: stratum raises trait-raising alleles → systematic PRS
-shift, and worsens the outcome → a pure `Z↔stratum→Y` backdoor; stratum not in X):
+| scenario | naive-pop | PC-adj-pop | within-fam |
+|---|---|---|---|
+| none (control) | +0.01 | +0.01 | −0.01 |
+| population stratification | **−0.89** | **−0.14** | **+0.02** |
+| dynastic / indirect genetic | −1.03 | **−1.06** | **−0.01** |
 
-| estimator | gradient | bias vs oracle |
-|---|---|---|
-| interventional oracle | 0.099 | — |
-| **population** win-MR (all individuals) | **−0.794** | **−0.893** (sign-flipped by confounding) |
-| **within-family** win-MR (sib pairs) | **0.098** | **−0.001** (recovers the causal effect) |
+**Honest conclusion (scope corrected).** PC adjustment removes *most* of population
+stratification (−0.89 → −0.14), so within-family's advantage there is modest. The
+**genuine, unique value is DYNASTIC / indirect-genetic confounding — which PC
+adjustment cannot remove (−1.06) and within-family recovers exactly (−0.01)** — and,
+by the same Mendelian logic, ASSORTATIVE MATING. The breakthrough survives, but its
+headline is "robust to the confounders PCs *cannot* fix (dynastic, AM)", **not**
+"robust to stratification" (PCs largely handle that). The no-confounding control
+confirms all estimators are correct.
 
-Population win-MR is catastrophically biased; the within-family restriction recovers
-the truth.
+**Still UNTESTED (do not claim these yet):**
+- assortative mating (expected to behave like dynastic — not yet shown);
+- the **family-clustered AR inference** (coverage / type-I) — only the *point*
+  estimate has been checked, never the interval;
+- the new algorithms below are *proposed, not demonstrated*.
 
-**New algorithm / theory needed (Paper 04 candidate).**
-1. A **design-restricted (incomplete) U-statistic**: the pairwise sum runs over sib
-   pairs only — `O(N)` pairs, not `O(N²)`.
-2. **Family-clustered influence-function variance** and a **family-clustered
-   Anderson–Rubin** test (Paper 3 carries over with the clustering): pairs within a
-   family are dependent, families independent.
-3. Extension to **>2 sibs** (all within-family pairs, weighted), parent–offspring
-   trios, and the **two-sample within-sibship summary-data** form (within-sibship
-   win-odds GWAS → AR pooling).
-4. Formal robustness theorem: within-family win-MR identifies the causal win-odds
-   gradient under stratification + assortative mating + dynastic effects.
+**New algorithm / theory for the paper (Paper 04 candidate):**
+1. a **design-restricted (incomplete) U-statistic** over sib pairs (`O(N)` pairs);
+2. **family-clustered** influence-function variance + clustered Anderson–Rubin
+   (Paper 3 with clustering) — the untested inference piece;
+3. extension to **>2 sibs / trios / two-sample within-sibship** summary data;
+4. a robustness theorem scoped to dynastic + assortative mating (the PC-irreducible
+   confounders) — stratification is a secondary benefit, not the headline.
 
-Position vs the scalar within-sibship MR literature (Brumpton/Davies/Howe et al.):
-the novelty is the **win / pairwise-functional** outcome and the recognition that the
-statistic and the design are the same pairwise object. Deep-scan that literature
-before claiming first (see caveat).
+Position vs scalar within-sibship MR (Brumpton/Davies/Howe et al.): the novelty is
+the **win / pairwise-functional** outcome and the statistic-equals-design identity.
+**Deep-scan that literature before claiming first** (see caveat).
 
 ## Paper numbering (reconciled)
 
