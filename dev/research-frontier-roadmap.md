@@ -54,11 +54,27 @@ headline is "robust to the confounders PCs *cannot* fix (dynastic, AM)", **not**
 "robust to stratification" (PCs largely handle that). The no-confounding control
 confirms all estimators are correct.
 
-**Still UNTESTED (do not claim these yet):**
-- assortative mating (expected to behave like dynastic — not yet shown);
-- the **family-clustered AR inference** (coverage / type-I) — only the *point*
-  estimate has been checked, never the interval;
-- the new algorithms below are *proposed, not demonstrated*.
+**Now also tested (`tools/.../within-family-ar-inference.R`):**
+- **Assortative mating** — within-family recovers the causal gradient under AM (a
+  continuous family-level latent correlating both parents + a dynastic path, which PCs
+  cannot capture): point bias +0.005. **Robust to AM ✓.**
+- **Family-clustered AR inference** — with 2 sibs/family each family contributes ONE
+  independent moment `m_f(β)=(h_f−β·dX_f)·dZ_f`, so the within-family AR is a clean
+  i.i.d.-across-families test `AR(β)=(Σ_f m_f)²/(Σ_f m_f²)→χ²_1`. 95% CI coverage of
+  the causal gradient ≈ **0.925–0.950** across none/dyn/am — **calibrated ✓**.
+- **Honest caveat — within-sibship weak-instrument finite-sample bias.** A small point
+  bias (~+0.02) is present even with NO confounding (the within-family genetic variance
+  is small → a weak instrument), and it **shrinks with N** (F=3000→9000: bias
+  0.022→0.007, coverage 0.925→0.940), confirming consistency. This is the known power
+  cost of within-family designs: lower precision, more finite-sample bias, larger N
+  needed.
+
+**Still UNTESTED / proposed (do not claim):** **>2 sibs / trios** (then the
+within-family pairs are dependent → genuine family-clustering of the influence
+function, not the clean i.i.d. case above); the **two-sample within-sibship**
+summary-data form; multiple realistic perturbations (LD, sib–sib interaction, shared
+sib environment); and the **deep literature scan** vs scalar within-sibship MR
+(Brumpton/Davies/Howe) before any "first" claim.
 
 **New algorithm / theory for the paper (Paper 04 candidate):**
 1. a **design-restricted (incomplete) U-statistic** over sib pairs (`O(N)` pairs);
