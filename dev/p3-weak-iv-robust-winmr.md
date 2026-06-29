@@ -272,6 +272,35 @@ the open work is purely the non-estimable-nuisance handling. Subquadratic spectr
 top-`r` `λ̂_k` via Nyström/randomized SVD on the centered kernel, tail as a trace
 correction.
 
+**Sup-over-CI: implemented and probed (2026-06-23, `tools/.../p3-degeneracy-supci-probe.R`).**
+The least-favorable test was built and run. Key simplification: `q(c²) =`
+0.95-quantile of `R(c)²` is **monotone increasing** in `c²` (the Gaussian variance
+`4c²` grows), so the sup over the CI is attained at its **upper endpoint** `c²_hi`
+— no grid needed. The CI for `c²` must be built by **bootstrap**, not the analytic
+iid se: the empirical projections `ĝ_i` are *dependent* through the degenerate
+common mode, so the sample-variance se underestimates `sd(ĉ²)` by ~10× near the
+boundary (an analytic-se version over-rejected, 0.17 at `ζ_1=0.01`). Result (H0
+size, target 0.05; naive / oracle / sup-CI):
+
+| ζ_1 | naive | oracle | sup-CI |
+|---|---|---|---|
+| 1.00   | 0.062 | 0.049 | 0.016 |
+| 0.09   | 0.086 | 0.052 | 0.008 |
+| 0.01   | 0.186 | 0.054 | 0.000 |
+| ≤0.0025| ~0.19 | ~0.06 | 0.000 |
+
+**Verdict: the sup-CI test is uniformly VALID** (size ≤ 0.05 everywhere — it *fixes*
+naive AR's 0.18–0.20 over-rejection under degeneracy) **but CONSERVATIVE, and this
+is fundamental.** Near the boundary `c² = nζ_1` is *weakly identified* — its
+estimation error is `O(1)` relative to its value (`sd(ĉ²) ≈ 3.5` when `c² ≈ 3`) — so
+the valid upper limit `c²_hi` is necessarily large, inflating the critical value.
+Tuning (analytic vs bootstrap se, percentile vs `+z·se`, the `α_1/α_2` split) trades
+the over-rejection for conservativeness but cannot recover the oracle's exact size:
+the oracle *knows* `c²`; no data-driven test can match it where `c²` is
+unidentified. This is a genuine **validity–power frontier at the degenerate
+boundary**, itself a reportable result (you pay, in CI width, exactly when you
+cannot tell how strong the instrument is — the honest behaviour).
+
 **Practical interim recommendation.** Since §8.2 shows the realistic-regime
 degradation is mild (size ≈0.06), ship the basic AR test (§2) with a
 **`weak_degenerate` flag** raised when `nζ̂_1` is small relative to the spectral
