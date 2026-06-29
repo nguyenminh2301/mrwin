@@ -123,6 +123,7 @@ reference:
   - mrwin_win_snp
   - mrwin_win_gwas
   - mrwin_twosample_ivw
+  - mrwin_winmr_ar
 
 - title: "Benchmarking"
   contents:

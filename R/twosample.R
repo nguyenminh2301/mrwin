@@ -170,3 +170,74 @@ mrwin_twosample_ivw <- function(beta_gx, delta_gy, se_gy, se_gx = NULL) {
        Q = Q, Q_df = df,
        Q_p = if (df > 0L) stats::pchisq(Q, df, lower.tail = FALSE) else NA_real_)
 }
+
+#' Identification-robust (Anderson-Rubin) inference for two-sample win-ratio MR
+#'
+#' Weak-instrument-robust inference for the causal win-odds gradient from two-sample
+#' summary statistics, inverting the pairwise Anderson-Rubin moment
+#' `AR(b) = sum_l (delta_l - b * beta_gx_l)^2 / (se_gy_l^2 + b^2 se_gx_l^2)`, which is
+#' `chi^2_L` at the true gradient regardless of instrument strength (`L` = number of
+#' SNPs). The confidence set inverts the test (`{b : AR(b) <= qchisq(1-alpha, L)}`)
+#' and so stays valid under a weak instrument, returning an honest unbounded set
+#' rather than a falsely tight one (it never divides by `Cov(Z,X)`). With one SNP it
+#' reduces to the Fieller interval; with several it also yields an
+#' over-identification / pleiotropy test (`min_b AR(b) ~ chi^2_{L-1}`). The `delta_gy`
+#' are per-SNP win-odds coefficients from [mrwin_win_gwas()].
+#'
+#' @param beta_gx Per-SNP exposure associations.
+#' @param delta_gy Per-SNP win-odds coefficients (e.g. `mrwin_win_gwas()$delta`).
+#' @param se_gy Standard errors of `delta_gy`.
+#' @param se_gx Optional standard errors of `beta_gx` (default: exposure treated as
+#'   fixed, the usual two-sample convention).
+#' @param alpha Test level (default 0.05, i.e. a 95% confidence set).
+#' @param grid Optional numeric vector of gradient values to scan; by default a grid
+#'   spanning ~12 IVW standard errors around the IVW estimate.
+#' @param n_grid Grid size when `grid` is not supplied (default 4000).
+#' @return A list: `gamma` (AR point estimate = argmin AR), `ci` (length-2 bounds of
+#'   the accepted set), `bounded` (FALSE = weak-instrument: the set touches the grid
+#'   edge or is disjoint), `contiguous`, `n_snp`, and the over-identification test
+#'   `Q` = min AR, `Q_df` = L-1, `Q_p` (pleiotropy / invalid-instrument diagnostic).
+#' @seealso [mrwin_win_gwas()], [mrwin_twosample_ivw()]
+#' @export
+mrwin_winmr_ar <- function(beta_gx, delta_gy, se_gy, se_gx = NULL,
+                           alpha = 0.05, grid = NULL, n_grid = 4000L) {
+  bx <- as.numeric(beta_gx); dy <- as.numeric(delta_gy); sgy <- as.numeric(se_gy)
+  ok <- is.finite(bx) & is.finite(dy) & is.finite(sgy) & sgy > 0
+  if (is.null(se_gx)) {
+    sgx <- rep(0, length(bx))
+  } else {
+    sgx <- as.numeric(se_gx); ok <- ok & is.finite(sgx) & sgx >= 0
+  }
+  bx <- bx[ok]; dy <- dy[ok]; sgy <- sgy[ok]; sgx <- sgx[ok]
+  L <- length(bx)
+  if (L < 1L) stop("No usable SNPs (need finite beta_gx, delta_gy, se_gy > 0).", call. = FALSE)
+  AR <- function(b) sum((dy - b * bx)^2 / (sgy^2 + b^2 * sgx^2))
+
+  if (is.null(grid)) {
+    ivw_w <- bx^2 / sgy^2
+    ivw <- sum(ivw_w * (dy / bx)) / sum(ivw_w)
+    span <- 12 * sqrt(1 / sum(bx^2 / sgy^2))
+    if (!is.finite(span) || span <= 0) span <- 1
+    grid <- seq(ivw - max(span, 1), ivw + max(span, 1), length.out = n_grid)
+  } else {
+    grid <- as.numeric(grid)
+  }
+  arv <- vapply(grid, AR, numeric(1))
+  b0 <- grid[which.min(arv)]
+  step <- if (length(grid) > 1L) diff(grid)[1] else 1
+  bhat <- stats::optimize(AR, c(b0 - step, b0 + step))$minimum
+  Q <- AR(bhat)
+  crit <- stats::qchisq(1 - alpha, L)
+  acc <- arv <= crit
+  bounded <- FALSE; contiguous <- FALSE; ci <- c(NA_real_, NA_real_)
+  if (any(acc)) {
+    idx <- which(acc)
+    ci <- c(grid[min(idx)], grid[max(idx)])
+    contiguous <- all(acc[min(idx):max(idx)])           # no gap in the accepted set
+    bounded <- contiguous && min(idx) > 1L && max(idx) < length(grid)
+  }
+  list(gamma = bhat, ci = ci, ci_level = 1 - alpha, bounded = bounded,
+       contiguous = contiguous, weak = !bounded, n_snp = L,
+       Q = Q, Q_df = L - 1L,
+       Q_p = if (L > 1L) stats::pchisq(Q, L - 1L, lower.tail = FALSE) else NA_real_)
+}

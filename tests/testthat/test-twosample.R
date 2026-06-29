@@ -66,6 +66,44 @@ test_that("mrwin_win_gwas returns one row per SNP with finite estimates", {
   expect_true(all(wg$se > 0))
 })
 
+test_that("mrwin_winmr_ar: one SNP reduces to the Fieller set, and the AR set covers the IVW point", {
+  # single SNP: AR(b) = (delta - b*beta)^2 / se_gy^2 <= qchisq(.95,1) is the Fieller set
+  bx <- 0.4; dy <- 0.12; sgy <- 0.05
+  r <- mrwin_winmr_ar(bx, dy, sgy, n_grid = 20000L)
+  expect_equal(r$gamma, dy / bx, tolerance = 1e-3)          # argmin AR = Wald ratio
+  # Fieller endpoints solve (dy - b*bx)^2 = qchisq(.95,1) * sgy^2
+  half <- sqrt(stats::qchisq(0.95, 1)) * sgy / bx
+  expect_equal(r$ci[1], dy/bx - half, tolerance = 5e-3)
+  expect_equal(r$ci[2], dy/bx + half, tolerance = 5e-3)
+  expect_true(r$bounded)
+})
+
+test_that("mrwin_winmr_ar: recovers the gradient with strong instruments; weak -> much wider / unbounded", {
+  set.seed(1)
+  L <- 12
+  bx <- rnorm(L, 0, 0.4); dy <- 0.3 * bx + rnorm(L, 0, 0.02); sgy <- rep(0.03, L)
+  r <- mrwin_winmr_ar(bx, dy, sgy)
+  expect_true(abs(r$gamma - 0.3) < 0.1)                      # recovers the gradient
+  expect_equal(r$Q_df, L - 1L)
+  expect_true(is.finite(r$Q_p))
+  w_strong <- diff(r$ci)
+  # weak first stage: |beta_gx| small relative to its SE -> wide/unbounded AR set
+  bxw <- rnorm(L, 0, 0.03); sgx <- rep(0.1, L); dyw <- rnorm(L, 0, 0.05)
+  rw <- mrwin_winmr_ar(bxw, dyw, rep(0.05, L), se_gx = sgx)
+  expect_true(!rw$bounded || diff(rw$ci) > 5 * w_strong)     # honest weak-IV behaviour
+})
+
+test_that("mrwin_winmr_ar runs end-to-end on win-GWAS output", {
+  cfg <- mrwin_config(n_outcome = 1500, m_snps = 8, seed = 5)
+  dat <- mrwin_simulate(cfg, seed = 5)
+  wg <- mrwin_win_gwas(dat$time, dat$status, dat$G, max_subjects = 400L, seed = 1)
+  bgx <- apply(dat$G, 2, function(d) stats::cov(dat$X, d) / stats::var(d))
+  r <- mrwin_winmr_ar(bgx, wg$delta, wg$se)
+  expect_true(is.finite(r$gamma))
+  expect_equal(r$n_snp, ncol(dat$G))
+  expect_true(is.finite(r$Q))
+})
+
 test_that("mrwin_twosample_ivw reduces to the Wald ratio for one SNP and weights by precision", {
   # single SNP: gamma = delta/beta, se = se_gy/|beta|
   one <- mrwin_twosample_ivw(beta_gx = 0.4, delta_gy = 0.12, se_gy = 0.05)
