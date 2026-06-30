@@ -158,6 +158,39 @@ efficiently); a two-sample **within-trio** (transmitted/non-transmitted) summary
 4. a robustness theorem scoped to dynastic + assortative mating (the PC-irreducible
    confounders) — stratification is a secondary benefit, not the headline.
 
+**Manuscript QC pass (2026-06-30, user-requested).** A first full draft of the Paper 04
+manuscript (`papers/04-within-family-winmr/`) was reviewed against the project's own
+academic-integrity standard and found **not submission-ready**: several validated findings
+(the AM clustered-AR N-ladder, the trio consistency ladder, the trio calibrated-inference
+table, both efficiency analyses) existed only as prose with no table; only 3 of the
+programme's 5 validated findings had a figure; the bibliography (10 entries) under-cited
+the within-family-genetics literature (no Kong 2018 "genetic nurture", no Selzam 2019
+within/between-family PRS, no Young 2022 parental-genotype imputation, no Border 2022
+assortative-mating genetics, no classic MR methods refs); the Discussion was two short
+paragraphs; section titles were narrativized ("a question that dissolves") rather than
+plain; and — the most serious finding — several claims were asserted without proof (the
+identification conditions were never stated explicitly; the trio complete-U identity
+showed only the numerator reduction, not the denominator; the mixed-family-size efficiency
+"closed form" conflated an asymptotic variance-ratio floor with an empirical finite-sample
+SD ratio, and the FAMEQ penalty's derivation was an unexplained shorthand rather than a
+shown derivation).
+
+**Fixed, not patched.** Re-derived and verified every piece of math by hand before
+rewriting (the trio identity's antisymmetry algebra, the Cauchy–Schwarz relative-efficiency
+bound and its equality condition, the FAMEQ penalty in closed form, and why the
+family-clustered AR needs no Hájek-projection/degenerate-U argument unlike the population
+two-sample case — added as an explicit contrast). Added explicit within-family relevance/
+exogeneity/exclusion assumptions, a Mendelian-segregation lemma with proof, and four formal
+Propositions with proofs. Re-ran every validated script live rather than transcribing
+historical numbers (all reproduced within Monte Carlo noise of the committed findings) and
+added 5 new tables + 2 new figures (sibship-size coverage; trio robustness+consistency
+panel) so every numerical claim has a table or figure, not prose-only. Added 8 new verified
+references (PubMed/arXiv-checked) and retitled every section to plain academic phrasing.
+Substantially expanded the Discussion (sibship-vs-trio data-availability tradeoff, applied
+positioning, limitations including birth-order/sibling-interaction confounding the design
+does NOT handle). See `papers/04-within-family-winmr/winmr-withinfamily.tex` (18pp, compiles
+clean, 0 warnings) and the corresponding `tools/paper04-figures.R` (now 5 figure blocks).
+
 Position vs scalar within-sibship MR (Brumpton/Davies/Howe et al.): the novelty is
 the **win / pairwise-functional** outcome and the statistic-equals-design identity.
 **Deep-scan that literature before claiming first** (see caveat).

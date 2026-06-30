@@ -8,8 +8,9 @@
 #
 # By default writes vector PDFs to papers/04-within-family-winmr/figures/ (gitignored
 # until submission). Override with MRWIN_FIG_DIR=some/dir. Select a subset of figures
-# (useful for staged runs) with MRWIN_FIG_WHICH="1,2,3" (1=confounder bars, 2=C^2
-# portrait, 3=weak-IV ladder; default = all). Seeds are fixed for bit-reproducibility.
+# (useful for staged runs) with MRWIN_FIG_WHICH="1,2,3,4,5" (1=confounder bars, 2=C^2
+# portrait, 3=weak-IV ladder, 4=sibship-size coverage, 5=trio robustness+consistency
+# panel; default = all). Seeds are fixed for bit-reproducibility.
 #
 # Each block REUSES the exact validated data-generating processes from the committed
 # probes (lesson G: read/reuse, do not refork validated machinery):
@@ -19,11 +20,16 @@
 #   fig 2 <- tools/figures/c2-portrait.R (PNG prototype), re-targeted to a vector PDF.
 #   fig 3 <- the F-ladder of tools/validation-scripts/within-family-twosample-winmr.R
 #            (part B), re-run live and plotted with MC-error bars.
+#   fig 4 <- tools/validation-scripts/within-family-multisib-clustered-ar.R (s=2,3,4
+#            naive vs. family-clustered AR coverage), re-run live, plotted with
+#            binomial SE bars.
+#   fig 5 <- tools/validation-scripts/within-family-trio-winmr.R parts (A) robustness
+#            and (B) consistency, re-run live and plotted side by side.
 suppressMessages(library(mrwin))
 outdir <- Sys.getenv("MRWIN_FIG_DIR", unset = file.path("papers", "04-within-family-winmr", "figures"))
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 pdf_open <- function(f, w = 7, h = 5) pdf(file.path(outdir, f), width = w, height = h)
-which_figs <- Sys.getenv("MRWIN_FIG_WHICH", unset = "1,2,3")
+which_figs <- Sys.getenv("MRWIN_FIG_WHICH", unset = "1,2,3,4,5")
 which_figs <- as.integer(strsplit(which_figs, ",")[[1]])
 ncores <- max(1L, min(4L, parallel::detectCores()))
 cfg <- mrwin_config()
@@ -244,5 +250,122 @@ legend("bottomright", bty="n", pch=c(19,17), col=c("#2A6FB0","#C0392B"),
   legend=c("Anderson-Rubin (Paper 03)","IVW Wald"))
 dev.off()
 cat("[fig3] wrote fig-weakiv-ladder.pdf\n")
+}
+# ============================================================================
+# FIGURE 4: sibship-size coverage -- naive (pair-independent) vs. family-clustered
+# AR coverage as a function of sibship size s=2,3,4. Re-runs
+# within-family-multisib-clustered-ar.R live; binomial SE bars.
+# ============================================================================
+if (4L %in% which_figs) {
+genS4 <- function(Fn,seed,s,gdyn=1.2){set.seed(seed);M<-30;base<-runif(M,.15,.35);betas<-rnorm(M,0,.15)
+ cc<-col(matrix(0,Fn,M)); Gf<-matrix(rbinom(Fn*M,2,base[cc]),Fn,M); Gm<-matrix(rbinom(Fn*M,2,base[cc]),Fn,M)
+ pp<-scale(as.numeric(((Gf+Gm)/2)%*%betas))[,1]; sib<-vector("list",s); o1<-NULL
+ for(k in 1:s){Gs<-matrix(transmit(Gf),Fn,M)+matrix(transmit(Gm),Fn,M); Z<-as.numeric(Gs%*%betas)
+  u<-rnorm(Fn); X<-cfg$alpha_s*Z+cfg$alpha_u*u+rnorm(Fn); ex<-gdyn*pp
+  w<-rgamma(Fn,1/cfg$theta_f,scale=cfg$theta_f); cn<-pmin(rexp(Fn,cfg$censoring_rate),cfg$max_follow_up); uf<-matrix(runif(Fn*3),Fn,3)
+  oc<-outcome(X,u,w,ex,cn,uf); sib[[k]]<-list(Z=Z,X=X,time=oc$time,status=oc$status); if(k==1) o1<-list(u=u,w=w,ex=ex,cn=cn,uf=uf,X=X)}
+ list(sib=sib,o1=o1)}
+oracle4 <- function(d,eps=0.25){A<-d$o1;np<-length(A$X)
+ Bp<-outcome(A$X+eps,A$u,A$w,A$ex,A$cn,A$uf); Bm<-outcome(A$X-eps,A$u,A$w,A$ex,A$cn,A$uf)
+ v<-mrwin_fast_pair_win_loss(Bp$time,Bp$status,Bm$time,Bm$status)
+ (as.numeric(v[["wins"]])-as.numeric(v[["losses"]]))/(as.numeric(np)^2)/(2*eps)}
+estim4 <- function(d,bs){s<-length(d$sib);Fn<-length(d$sib[[1]]$Z);np<-s*(s-1)/2
+ am<-matrix(0,Fn,np);bm<-matrix(0,Fn,np);c0<-0
+ for(i in 1:(s-1)) for(j in (i+1):s){c0<-c0+1;si<-d$sib[[i]];sj<-d$sib[[j]]
+   h<-hpair(si$time,si$status,sj$time,sj$status); dZ<-si$Z-sj$Z; dX<-si$X-sj$X
+   am[,c0]<-h*dZ; bm[,c0]<-dX*dZ}
+ Af<-rowSums(am);Bf<-rowSums(bm); N<-sum(Af)-bs*sum(Bf)
+ clus<-N^2/sum((Af-bs*Bf)^2); naive<-N^2/sum((am-bs*bm)^2)
+ c(as.numeric(clus<=3.841), as.numeric(naive<=3.841))}
+Fn4 <- 3000L; R4 <- 80L
+cat(sprintf("[fig4] sibship-size coverage: F=%d, R=%d\n", Fn4, R4))
+sizes4 <- 2:4; clus4 <- naive4 <- numeric(length(sizes4))
+for (si in seq_along(sizes4)) {
+  s <- sizes4[si]
+  res <- do.call(rbind, parallel::mclapply(1:R4, function(r) {
+    d <- genS4(Fn4, 5000L+r, s); o <- oracle4(d); estim4(d, o)
+  }, mc.cores=ncores))
+  clus4[si] <- mean(res[,1]); naive4[si] <- mean(res[,2])
+  cat(sprintf("  s=%d  clustered=%.3f  naive=%.3f\n", s, clus4[si], naive4[si]))
+}
+se4 <- function(p) sqrt(p*(1-p)/R4)
+pdf_open("fig-sibship-coverage.pdf", w = 6, h = 5)
+par(mar=c(4.5,4.6,3,1))
+plot(sizes4, clus4, type="b", pch=19, col="#2A6FB0", ylim=c(0.75,1.02), xaxt="n",
+  xlab="sibship size s", ylab="95% CI coverage of true gradient",
+  main="Naive vs. family-clustered AR coverage by sibship size")
+axis(1, at=sizes4)
+arrows(sizes4, clus4-se4(clus4), sizes4, clus4+se4(clus4), angle=90, code=3, length=0.05, col="#2A6FB0")
+lines(sizes4, naive4, type="b", pch=17, col="#C0392B")
+arrows(sizes4, naive4-se4(naive4), sizes4, naive4+se4(naive4), angle=90, code=3, length=0.05, col="#C0392B")
+abline(h=0.95, col="grey50", lty=2)
+legend("bottomleft", bty="n", pch=c(19,17), col=c("#2A6FB0","#C0392B"),
+  legend=c("family-clustered AR","naive (pair-independent) AR"))
+dev.off()
+cat("[fig4] wrote fig-sibship-coverage.pdf\n")
+}
+
+# ============================================================================
+# FIGURE 5: parent-offspring trio robustness + consistency, side by side.
+# Re-runs within-family-trio-winmr.R parts (A) and (B) live.
+# ============================================================================
+if (5L %in% which_figs) {
+genTrio5 <- function(Fn,seed,mode,gdyn=1.2,amc=0.12,fdiff=0.12,strat=1.0){set.seed(seed);M<-30
+ base<-runif(M,.15,.35); betas<-rnorm(M,0,.15)
+ amf<-if(mode=="am") rnorm(Fn) else rep(0,Fn)
+ sub<-if(mode=="strat") rep(c(0,1),length.out=Fn) else rep(0,Fn)
+ pp<-matrix(base,Fn,M,byrow=TRUE)+outer(amf,amc*sign(betas))+outer(sub,fdiff*sign(betas))
+ pp<-pmin(pmax(pp,.02),.95)
+ Gf<-matrix(rbinom(Fn*M,2,pp),Fn,M); Gm<-matrix(rbinom(Fn*M,2,pp),Fn,M)
+ Zf<-as.numeric(Gf%*%betas); Zm<-as.numeric(Gm%*%betas); mp<-(Zf+Zm)/2
+ Go<-matrix(transmit(Gf),Fn,M)+matrix(transmit(Gm),Fn,M); Zo<-as.numeric(Go%*%betas); g<-Zo-mp
+ u<-rnorm(Fn); X<-cfg$alpha_s*Zo+cfg$alpha_u*u+rnorm(Fn)
+ ex<-(if(mode%in%c("dyn","am")) gdyn*scale(mp)[,1] else 0)+(if(mode=="strat") strat*(sub-mean(sub)) else 0)
+ w<-rgamma(Fn,1/cfg$theta_f,scale=cfg$theta_f); cn<-pmin(rexp(Fn,cfg$censoring_rate),cfg$max_follow_up); uf<-matrix(runif(Fn*3),Fn,3)
+ oc<-outcome(X,u,w,ex,cn,uf)
+ list(Zo=Zo,g=g,X=X,u=u,w=w,ex=ex,cn=cn,uf=uf,time=oc$time,status=oc$status)}
+oracle5 <- function(d,eps=0.25){np<-length(d$X)
+ Bp<-outcome(d$X+eps,d$u,d$w,d$ex,d$cn,d$uf); Bm<-outcome(d$X-eps,d$u,d$w,d$ex,d$cn,d$uf)
+ v<-mrwin_fast_pair_win_loss(Bp$time,Bp$status,Bm$time,Bm$status)
+ (as.numeric(v[["wins"]])-as.numeric(v[["losses"]]))/(as.numeric(np)^2)/(2*eps)}
+wsc5 <- function(d){c<-subj(d$time,d$status,d$time,d$status,rep(1,nrow(d$time))); (c[,1]-c[,2])/(nrow(d$time)-1)}
+est5 <- function(d,iv) as.numeric(cov(iv,wsc5(d))/cov(iv,d$X))
+
+cat("[fig5] trio robustness (F=3000, R=80)\n")
+modes5 <- c("none","dyn","am","strat"); R5a <- 80L; biasA <- seA <- numeric(length(modes5))
+for (mi in seq_along(modes5)) {
+  mode <- modes5[mi]
+  res <- do.call(rbind, parallel::mclapply(1:R5a, function(r) {
+    d <- genTrio5(3000L, 3000L+r, mode); o <- oracle5(d); c(o=o, bg=est5(d, d$g))
+  }, mc.cores=ncores))
+  bb <- res[,"bg"]-res[,"o"]; biasA[mi] <- mean(bb); seA[mi] <- sd(bb)/sqrt(R5a)
+  cat(sprintf("  %-6s bias=%+.4f (SE %.4f)\n", mode, biasA[mi], seA[mi]))
+}
+cat("[fig5] trio consistency ladder (mode=dyn)\n")
+Fgrid5 <- c(1500L,3000L,6000L); R5b <- 60L; biasB <- seB <- numeric(length(Fgrid5))
+for (fi in seq_along(Fgrid5)) {
+  Fn5 <- Fgrid5[fi]
+  res <- do.call(rbind, parallel::mclapply(1:R5b, function(r) {
+    d <- genTrio5(Fn5, 3000L+r, "dyn"); o <- oracle5(d); c(o=o, bg=est5(d, d$g))
+  }, mc.cores=ncores))
+  bb <- res[,"bg"]-res[,"o"]; biasB[fi] <- mean(bb); seB[fi] <- sd(bb)/sqrt(R5b)
+  cat(sprintf("  F=%-6d bias=%+.4f (SE %.4f)\n", Fn5, biasB[fi], seB[fi]))
+}
+pdf_open("fig-trio-panel.pdf", w = 11, h = 5)
+layout(matrix(1:2,1,2)); par(mar=c(5.5,4.6,3,1))
+bp5 <- barplot(biasA, names.arg=c("none","dynastic","assort.\nmating","stratification"),
+  col="#2A6FB0", ylim=range(c(0,biasA-2*seA,biasA+2*seA)),
+  ylab="trio (mid-parent residual) bias vs. oracle",
+  main="(a) Robustness across confounding scenarios", cex.main=0.95, cex.names=0.85, las=1)
+arrows(bp5, biasA-seA, bp5, biasA+seA, angle=90, code=3, length=0.05)
+abline(h=0, col="grey50", lty=2)
+par(mar=c(5.5,4.6,3,1))
+plot(Fgrid5, biasB, type="b", pch=19, col="#2A6FB0", log="x",
+  xlab="number of trios F", ylab="trio bias vs. oracle (dynastic confounding)",
+  ylim=range(c(0,biasB-2*seB,biasB+2*seB)), main="(b) Convergence-in-N ladder", cex.main=0.95)
+arrows(Fgrid5, biasB-seB, Fgrid5, biasB+seB, angle=90, code=3, length=0.05)
+abline(h=0, col="grey50", lty=2)
+dev.off()
+cat("[fig5] wrote fig-trio-panel.pdf\n")
 }
 cat("paper04-figures.R done.\n")
