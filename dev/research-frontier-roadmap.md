@@ -128,10 +128,27 @@ pairs (vs the sibship's restricted within-family-pairs U-statistic). Key algebra
   under-estimates in confounded scenarios (ratio ~0.90, the omitted higher-order ζ₂ term),
   coverage holds at nominal.
 
-**Still UNTESTED / proposed (do not claim):** the **two-sample within-sibship / within-trio**
-summary-data form (chaining Paper 02's IVW into the family design); realism (LD, sib–sib
-interaction, shared sib environment); **mixed sibship+trio cohorts** (combine the restricted-U
-and complete-U moments efficiently).
+**Two-sample / summary-data within-family form — DONE (`tools/.../within-family-twosample-winmr.R`).**
+The programme capstone: chains Papers 02 (IVW) + 03 (AR) into the family design. The family
+structure changes ONLY how the per-SNP summary stats are computed — `β_GX,l^wf` = within-family
+(sib-centered) exposure-on-dosage slope (what within-sibship GWAS already produce); `δ_l^wf` =
+within-family slope of the marginal **win-score phenotype** `w(O_i)=E_j h(O_i,O_j)` on dosage —
+then the EXISTING `mrwin_twosample_ivw` / `mrwin_winmr_ar` pool them. Deployable on within-sibship
+GWAS summary stats (Howe 2022).
+- **Removes dynastic/AM confounding**: naive (pop-centered) IVW is catastrophically biased
+  (dyn −0.61, am −0.90); within-family is not.
+- **But within-family instruments are intrinsically WEAK** (mean per-SNP F-stat 1.6–4.0 at
+  5k–24k subjects), so the within-fam IVW POINT is attenuated and its Wald CI under-covers
+  (0.82–0.90) — the textbook weak-IV failure of IVW. The **AR (Paper 03) is calibrated
+  (0.91–0.98)** and is the recommended inference; over-ID Q type-I conservative (0.00–0.013).
+- **Consistency**: F-ladder (none) — as F grows the per-SNP F-stat grows (1.58→4.02) and the IVW
+  bias shrinks (−0.067→−0.040); AR coverage 0.96→1.00 (valid, conservative as the set widens
+  honestly under weak IV). **Headline: report the AR confidence set, not the IVW point.** This is
+  exactly why the programme needs AR — weak instruments are intrinsic to within-family designs.
+
+**Still UNTESTED / proposed (do not claim):** realism (LD, sib–sib interaction, shared sib
+environment); **mixed sibship+trio cohorts** (combine the restricted-U and complete-U moments
+efficiently); a two-sample **within-trio** (transmitted/non-transmitted) summary form.
 
 **New algorithm / theory for the paper (Paper 04 candidate):**
 1. a **design-restricted (incomplete) U-statistic** over sib pairs (`O(N)` pairs);
