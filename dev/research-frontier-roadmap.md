@@ -108,9 +108,30 @@ PC-irreducible dynastic/AM confounders the causal-win-ratio designs cannot). Cav
 two paywalled adjacencies (Mann–Whitney causal `insr.12326`; Biometrika net benefit) read at
 abstract level only; finish the probabilistic-index deep-scan (Thas/De Neve) before submission.
 
-**Still UNTESTED / proposed (do not claim):** **parent–offspring trios** (mid-parent
-contrast — a different structure); the **two-sample within-sibship** summary-data form;
-realism (LD, sib–sib interaction, shared sib environment).
+**Parent–offspring trios — DONE (`tools/.../within-family-trio-winmr.R`).** A genuinely
+DIFFERENT structure: the Mendelian instrument is the per-offspring **mid-parent residual**
+`g_o = Z_o − (Z_f+Z_m)/2` (mean-zero in every family/subpopulation, since `E[Z_o|parents]`
+= mid-parent PRS → clean of dynastic/AM/stratification). Cleaning the instrument at the
+**individual** level makes the win comparison a **COMPLETE** U-statistic over all offspring
+pairs (vs the sibship's restricted within-family-pairs U-statistic). Key algebra
+(antisymmetric `h`): `Σ_{a<b} h(O_a,O_b)(g_a−g_b) = Σ_a g_a W_a`, so
+`β̂_trio = Cov(g,w(O))/Cov(g,X)` in `O(N²K)` via the per-subject win-loss kernel.
+- **Robust** (bias vs oracle, F=3000): none +0.007, **dyn +0.002**, **am +0.001**, **strat
+  +0.009**; the naive offspring-PRS complete-U is catastrophically confounded (dyn −1.03,
+  am −0.72, strat −0.35). (PCs would handle strat but NOT dyn/am — same PC-irreducible scope
+  as the sibship design.)
+- **Consistent** (convergence-in-N ladder, dyn): bias +0.013→+0.011→+0.007 for
+  F=1500→3000→6000 (within-trio weak-IV finite-sample bias → 0).
+- **Calibrated inference**: a closed-form **complete-U influence-function SE** — needs the
+  g-weighted win-score `r(O_a)=Σ_b g_b h_ab` (a second kernel call with `weights=g`), giving
+  `ψ_num,a = g_a w(O_a) − r(O_a)`. Wald-CI coverage 0.944–0.978; the IF SE slightly
+  under-estimates in confounded scenarios (ratio ~0.90, the omitted higher-order ζ₂ term),
+  coverage holds at nominal.
+
+**Still UNTESTED / proposed (do not claim):** the **two-sample within-sibship / within-trio**
+summary-data form (chaining Paper 02's IVW into the family design); realism (LD, sib–sib
+interaction, shared sib environment); **mixed sibship+trio cohorts** (combine the restricted-U
+and complete-U moments efficiently).
 
 **New algorithm / theory for the paper (Paper 04 candidate):**
 1. a **design-restricted (incomplete) U-statistic** over sib pairs (`O(N)` pairs);
