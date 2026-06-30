@@ -120,14 +120,27 @@ Then plot the **binned reduced form** `Ê[h | ΔZ]` (running mean ± MC band) as
   decomposition. So one new figure type serves Papers 02–04.
 - Prototype: `tools/figures/c2-portrait.R` (public package + simulator only).
 
-## 6. SECOND new figure — the Identification Phase Diagram (Paper 03)
+## 6. SECOND new figure — the Identification Phase Diagram (Paper 03)  [PROTOTYPED]
 
-A 2-D map: x = instrument strength (concentration parameter `μ²` or mean per-SNP F-stat),
-y = degeneracy (`ζ₂ / (n·ζ₁)`, distance to the U-statistic boundary). Colour each cell by the
-**state of the AR set** (bounded / unbounded half-line / disjoint / empty) and overlay
-**coverage contours** (the 0.95 isocline). It shows, at a glance, the region where the Wald CI
-under-covers and the AR remains valid — the "uniform validity across the continuum" theorem as a
-phase portrait. Source: the P3 degeneracy probes (`tools/.../p3-degeneracy-*-probe.R`).
+A 2-D map over two independent axes of difficulty: **x = instrument strength** (per-SNP
+exposure F-statistic, the weak-IV axis) × **y = degeneracy** (`ζ₁ = ε²` of the win
+U-statistic; `ε→0` = degenerate, where the moment's limit leaves Gaussian for a χ²-mixture).
+Each cell = Monte-Carlo coverage of the true gradient. Two panels — **basic AR vs IVW Wald** —
+make the contrast direct, reusing the validated degeneracy kernel `φ=ε(Aᵢ+Aⱼ)+AᵢAⱼ` from
+`tools/validation-scripts/p3-degeneracy-supci-probe.R` (closed-form `O(n)` projection + `ζ̂₁`).
+
+**Prototype: `tools/figures/identification-phase-diagram.R` (6×6 grid, L=6, n=150, R=600).**
+Outcome — three phases visible:
+- **weak-IV edge** (F=1–5): Wald coverage collapses (0.24–0.57) while basic AR holds (≈0.90–0.98)
+  → AR's weak-instrument robustness, the headline Paper-03 result, read straight off the F=1
+  column (AR ≈0.96 vs Wald ≈0.27).
+- **strong & non-degenerate** (right, ε≳0.3): both ≈0.95.
+- **near-degenerate `ζ̂₁`-crossover** (high F, ε≈0.1–0.3): *both* basic AR and Wald dip
+  (AR 0.61–0.76) — `ζ₁` is not consistently estimable across the boundary, so the plug-in se is
+  mis-calibrated → this is exactly the region the **Andrews–Cheng sup-AR (§6)** is built to fix.
+Honest scope note: the weak-IV axis is the clean, dominant signal; the degeneracy effect is a
+subtler finite-`n` crossover (worst in the mid-`ε` band, not at `ε→0`, because `ζ̂₁`'s bias
+correction is hardest there) — consistent with the single-moment over-rejection in the probe.
 
 ## Implementation notes
 - Base R graphics + cairo PNG/PDF (ggplot2 is not installed in the dev container); reproducible,
