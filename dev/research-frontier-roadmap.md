@@ -76,12 +76,27 @@ AND sufficient**: the naive pair-independent AR under-covers as s grows (s=4: 0.
 while the family-clustered AR holds ~0.95 (s=2/3/4: 0.950/0.925/0.950); point bias
 stable (+0.013, the within-sibship weak-IV bias, not growing with s).
 
-**Still UNTESTED / proposed (do not claim):** **efficient/optimal weighting** of the
-within-family pairs (efficiency, not validity); **mixed family sizes**;
-**parent–offspring trios** (mid-parent contrast — a different structure); the
-**two-sample within-sibship** summary-data form; realism (LD, sib–sib interaction,
-shared sib environment); and the **deep literature scan** vs scalar within-sibship MR
-(Brumpton/Davies/Howe) before any "first" claim.
+**Efficiency — DONE, the question dissolves (two probes).**
+- *Within a family* (`tools/.../within-family-efficient-weighting.R`): full sibs are
+  EXCHANGEABLE → the pair-moment covariance `Σ_g` is compound-symmetric and every pair
+  loads equally on β → **optimal weights ARE equal**. CUE/optimal weighting gives no gain
+  (s=2/3/4: sd_eq≈sd_eff to 3 digits); estimating the weight only adds finite-sample noise.
+- *Between mixed-size families* (`tools/.../within-family-mixedsize-weighting.R`): pooling
+  raw within-family pairs (`β̂=ΣA_f/ΣB_f`, each family weight 1) is **ALREADY efficient**
+  even with mixed sizes — optimal stratified weighting `w_s∝b_s/v_s` buys nothing
+  (rel-eff sd(PAIR)/sd(EFF)=**0.997**). Closed form: rel-eff
+  `=[Σ C(s,2)g_s·Σ C(s,2)/g_s]/(Σ C(s,2))²`, `g_s=ν+2(s−2)c` (ν=per-pair var,
+  c=cov of two pairs sharing a sib); =1 iff c=0, and the data say rel-eff≈1, i.e.
+  **c≪ν empirically** (the per-pair win moment's idiosyncratic variance dominates the
+  one-shared-sib covariance). The ONE mistake is normalizing per family (FAMEQ,
+  `w=1/C(s,2)`): predicted sd penalty `sqrt((1/6)/(1/10))=1.29`, observed **1.285**.
+  **⇒ Equal-pair-weight, family-clustered AR is BOTH the simplest and the efficient
+  estimator; do not down-weight large families, do not normalize them.**
+
+**Still UNTESTED / proposed (do not claim):** **parent–offspring trios** (mid-parent
+contrast — a different structure); the **two-sample within-sibship** summary-data form;
+realism (LD, sib–sib interaction, shared sib environment); and the **deep literature
+scan** vs scalar within-sibship MR (Brumpton/Davies/Howe) before any "first" claim.
 
 **New algorithm / theory for the paper (Paper 04 candidate):**
 1. a **design-restricted (incomplete) U-statistic** over sib pairs (`O(N)` pairs);
