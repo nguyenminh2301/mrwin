@@ -93,10 +93,24 @@ stable (+0.013, the within-sibship weak-IV bias, not growing with s).
   **⇒ Equal-pair-weight, family-clustered AR is BOTH the simplest and the efficient
   estimator; do not down-weight large families, do not normalize them.**
 
+**Deep literature scan — DONE (`dev/findings-paper04-litscan.md`).** Retrieval-based scan
+(scite + PubMed) over the win×{MR, IV, causal, family, sibling, twin} grid. **The three-way
+intersection {win statistic} × {MR/genetic IV} × {within-family} is empty.** Each bordering
+literature is occupied but distinct: within-family MR is **scalar-only** (Davies 2019
+`10.1093/hmg/ddz204`; Brumpton 2020 `10.1038/s41467-020-17117-4`; Howe 2022
+`10.1038/s41588-022-01062-7`); causal win ratio exists **only under no-unmeasured-confounding,
+never IV/MR** — incl. the *clustered* "dependent subjects" estimator (arXiv 2212.06676),
+whose clustering is a nuisance to balance, **not** a genetic sibling design; GPC/win
+statistics (Buyse) are descriptive; and no one does IV/AR inference on a U-statistic outcome
+moment. **Position, do not claim a bare "first":** extend within-family MR from scalar to
+pairwise/win outcomes; identify under a within-family genetic instrument (targets the
+PC-irreducible dynastic/AM confounders the causal-win-ratio designs cannot). Caveat carried:
+two paywalled adjacencies (Mann–Whitney causal `insr.12326`; Biometrika net benefit) read at
+abstract level only; finish the probabilistic-index deep-scan (Thas/De Neve) before submission.
+
 **Still UNTESTED / proposed (do not claim):** **parent–offspring trios** (mid-parent
 contrast — a different structure); the **two-sample within-sibship** summary-data form;
-realism (LD, sib–sib interaction, shared sib environment); and the **deep literature
-scan** vs scalar within-sibship MR (Brumpton/Davies/Howe) before any "first" claim.
+realism (LD, sib–sib interaction, shared sib environment).
 
 **New algorithm / theory for the paper (Paper 04 candidate):**
 1. a **design-restricted (incomplete) U-statistic** over sib pairs (`O(N)` pairs);
