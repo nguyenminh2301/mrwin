@@ -191,6 +191,37 @@ positioning, limitations including birth-order/sibling-interaction confounding t
 does NOT handle). See `papers/04-within-family-winmr/winmr-withinfamily.tex` (18pp, compiles
 clean, 0 warnings) and the corresponding `tools/paper04-figures.R` (now 5 figure blocks).
 
+**Second QC pass (2026-07-01, user-requested): assumptions depth + full simulation
+write-up.** User flagged the assumptions list as still thin and the Simulation section as
+too sparse for a paper with NO real-data application (the simulation IS the entire evidence
+base, so it must be written like it). Added: assumption **(A4) local structural
+homogeneity** (the condition, already implicit in Paper 03's population moment, that lets
+β* be read as a single causal slope rather than an instrument-weighted average under
+heterogeneity — not needed for identification, but needed for interpretation) plus five
+**auxiliary design assumptions (B1-B5)**: no sibling interference (SUTVA), family
+independence (i.i.d. across families), full-sib exchangeability (used only by the efficiency
+proof), no LD among instrument variants, non-informative censoring — each now tied by name
+to the specific Discussion limitation it bears on, not left generic. Rewrote §8 into 7
+subsections: genetic architecture, hierarchical outcome + censoring, confounding-injection
+parameters (exact values per script, including where scripts disagree -- gdyn 1.2 vs 1.4,
+amc 0.10 vs 0.12 -- and WHY: developed incrementally, each independently oracle-validated,
+not post-hoc reconciled), the interventional oracle, estimator implementation, replication
+design (which comparisons redraw the genetic architecture per-rep vs hold it fixed, and why),
+and a new "why these patterns arise" mechanistic subsection. That subsection derives AND
+numerically verifies (200 reps, new script `tools/validation-scripts/within-family-
+instrument-variance.R`) a previously-unstated mechanism: Var(within-family sib-difference
+instrument) = Var(population instrument) EXACTLY (ratio 1.000) -- the instrument itself
+isn't weaker -- but the DESIGN is, via halved effective N (F family-contrasts vs 2F
+individuals) x doubled first-stage residual noise (differencing two independent idiosyncratic
+terms), compounding to a verified ~4x reduction in first-stage F-stat (121.0 -> 30.4, ratio
+3.99). Flagged explicitly as a derivation specific to this paper, not a literature quotation.
+Also gives mechanistic (not just descriptive) explanations for: why PCs fix stratification but
+not dynastic/AM (broad correlated-allele-frequency signal vs a parental-genotype-to-
+environment pathway PCs can't see), why naive pair-independent AR degrades with sibship size
+(shared-sibling pairs have Cov>0, same c as the efficiency proposition -- ties Sections 4 and 6
+together), and why the naive trio estimator flips sign (ordinary omitted-variable-bias
+reversal). Recompiles clean (23pp, 0 warnings, 0 overfull boxes).
+
 Position vs scalar within-sibship MR (Brumpton/Davies/Howe et al.): the novelty is
 the **win / pairwise-functional** outcome and the statistic-equals-design identity.
 **Deep-scan that literature before claiming first** (see caveat).
