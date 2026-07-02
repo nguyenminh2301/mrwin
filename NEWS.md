@@ -2,6 +2,18 @@
 
 ## New features
 
+* **One-sample identification-robust (Anderson-Rubin) inference for win-ratio
+  MR.** `mrwin_ar_onesample()` inverts the pairwise Anderson-Rubin moment on
+  individual-level one-sample data, with a closed-form (quadratic-inversion)
+  confidence set and a bootstrap degeneracy diagnostic; `mrwin_ar_onesample_overid()`
+  gives the multi-variant over-identification / pleiotropy test; and
+  `mrwin_ar_onesample_supci_test()` gives the least-favorable (Andrews-Cheng)
+  degeneracy-robust point-null test for the flagged, extreme-tail case. These
+  package the one-sample theory that Paper 03 validates (Table 1's AR-vs-Wald
+  coverage; the degeneracy-robust construction of Section 6), which previously
+  existed only as ad hoc probe-script closures with no exported, tested, or
+  documented function -- a claim/code gap this closes.
+
 * **Two-sample / summary-data win-ratio MR.** `mrwin_win_snp()` estimates a
   per-SNP win-odds coefficient (the log-win-odds slope on allele dosage) with a
   closed-form influence-function standard error; `mrwin_win_gwas()` runs it across

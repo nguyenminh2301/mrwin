@@ -434,3 +434,63 @@ per-subject C++ + oracle); the near-term deliverable (§7) is implementable now;
 **strictly generalizes** Paper 01 (Fieller) and Paper 02 (IVW); and it carries one
 **genuinely novel theorem** (§6, degeneracy-robust AR) that contributes to
 U-statistic inference beyond MR. Bounded scope, decisive probes, high payoff.
+
+## 11. QC pass (2026-07-02): claim/code mismatch closed; many-weak-instrument answered
+
+A user-requested review found the manuscript described machinery it did not ship: the
+one-sample AR test (Table 8.1), the one-sample over-ID test (§8.3), and the
+degeneracy-robust sup-CI (§6/§8.2) existed **only as ad hoc closures inside probe
+scripts** — never exported, tested, or documented as package functions — while the
+abstract claimed "all methods... are implemented in `mrwin`." The review also found:
+the two-sample AR's own validated coverage (0.90-0.92, `p3-twosample-ar-coverage.R`)
+was never reported despite the abstract's blanket "~0.95 at every instrument
+strength" claim; §9's open questions (Staiger-Stock/Moreira/Kleibergen positioning,
+many-weak-instruments, ties/censoring-degeneracy interaction) never surfaced in the
+paper itself; formal identification assumptions were compressed into one sentence
+with no lemma/proposition treatment; the paper had 1 table and 0 figures despite 4
+major contributions; and 3 references named in these dev notes (Staiger-Stock,
+Moreira, Kleibergen) plus the established win-statistics literature (Mao-Wang,
+Dong et al., already recorded in `dev/research-frontier-roadmap.md`) were never added
+to the bib.
+
+**Fixed, not patched:**
+- **New package functions** (`R/onesample_ar.R`): `mrwin_ar_onesample()` (closed-form
+  one-sample AR + bootstrap degeneracy flag), `mrwin_ar_onesample_overid()`
+  (one-sample over-ID/pleiotropy test), `mrwin_ar_onesample_supci_test()`
+  (Andrews-Cheng least-favorable degeneracy-robust point-null test). Core algebra
+  ported from the validated probe closures and differentially verified bit-exact
+  (tolerance 1e-6 to 1e-8) against them (`tests/testthat/test-onesample-ar.R`, 21
+  tests, full suite 954/954 green). The sup-CI construction was additionally
+  validated on the REAL win-kernel DGP (not just the synthetic toy kernel). now
+  correctly matching the abstract's "all methods... implemented" claim.
+- **Answered §9's many-weak-instrument question, decisively, and it's bad news
+  uncorrected**: type-I error for the over-ID test is calibrated at `L/n=0.016`
+  (0.02), mildly inflated at `L/n=0.04` (0.09), and catastrophic beyond that — 0.71
+  at `L/n=0.2`, **1.00 (always rejects) at `L/n=0.5`**
+  (`tools/validation-scripts/p3-manyweak-instrument-probe.R`). This is not a corner
+  case (real GWAS instruments routinely have L in the hundreds). No correction is
+  implemented (a Kleibergen-style L-correction for this U-statistic setting is
+  future work); `mrwin_ar_onesample_overid()` now warns at `L/n>0.02` and refuses to
+  compute at `L/n>0.15`, verified to fire exactly there.
+- Added formal (C1)-(C4) assumptions (relevance/exogeneity/exclusion/local-structural
+  -homogeneity) with an Identification proposition + proof, and explicitly linked
+  (C2)'s fragility to the within-family (Paper 04) extension.
+- Added the two-sample AR coverage table (0.90-0.92) and reconciled the abstract to
+  state both one- and two-sample calibration precisely rather than one blanket number.
+- Added Figure 1 (the Identification Phase Diagram, previously a PNG-only prototype
+  in `tools/figures/identification-phase-diagram.R`, now `tools/paper03-figures.R`
+  generating a vector PDF) plus the degenerate-boundary, sup-CI, and over-ID tables
+  (previously only in these dev notes' prose, never in the paper itself).
+  Verified DOIs and added Staiger-Stock (`10.2307/2171753`), Moreira
+  (`10.1111/1468-0262.00438`), Kleibergen (`10.1111/1468-0262.00353`), Mao & Wang
+  (`10.1111/biom.13382`), Dong et al. (`10.1080/10543406.2020.1757692`); added the
+  previously-missing DOIs for Andrews-Cheng and Arcones-Giné. Caught and corrected
+  a hallucinated author-name guess for Dong et al. (verified via PubMed before it
+  reached the bib) — a reminder that even a "just add the citation" step needs the
+  same tool-verification discipline as a headline claim.
+- Expanded Discussion: many-weak-instrument limitation (new, above), two-sample
+  under-coverage caution, ties/censoring-degeneracy open question, explicit
+  positioning against Staiger-Stock/Moreira/Kleibergen.
+
+Manuscript recompiles clean (11pp, 0 warnings, 15/15 bib entries cited and
+resolved). See `papers/03-weak-iv-robust-winmr/winmr-ar.tex`.
