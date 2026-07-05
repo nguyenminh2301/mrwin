@@ -1,30 +1,33 @@
 # The transport-velocity structure of causal win statistics — a unifying result and a super-plan
 
-Status: super-plan EXECUTED (2026-07-04, follow-up round 2026-07-05) — §§8–13 below
+Status: super-plan EXECUTED (2026-07-04, follow-up round 2026-07-05) — §§7–14 below
 are the results of carrying out §6's cross-cutting probes and P1(a)/P1(b), plus a
 second round pursuing the two open structural fixes flagged in the first pass. Two
 are decisive new positive results (Claims 6–7 closing probe #4 and P1(b)
-rigorously), one is a positive-but-partial result (P1(a), §9), and two started as
-honestly-reported NEGATIVE/mixed results (probes #2 and #3, §§11–12) — the round-2
+rigorously), one is a positive-but-partial result (P1(a), §8), and two started as
+honestly-reported NEGATIVE/mixed results (probes #2 and #3, §§10–12) — the round-2
 follow-ups then made real, if incomplete, further progress on both: probe #2's
 naive interval-level correction is now independently validated via a proper
 AR-style construction (not just an empirical coincidence), and probe #3's second
 screening attempt (`n·ζ1_min`) is a measurable improvement over the first, though
 still not clean enough to ship. Per the project's "report faithfully, correct the
 record loudly" standard, not every probe in §6 panned out cleanly, and this file
-says so explicitly rather than only keeping the wins. P4 and P5 were not attempted
-(§13): scoped honestly as open, not silently dropped.
+says so explicitly rather than only keeping the wins. A round-2 follow-up also
+attempted P4 (§12): a working Kantorovich-LP tool was built, but the original
+"D as identification budget" conjecture was tested directly and retracted. P5
+(§13) was not attempted: scoped honestly as open, not silently dropped.
 
 Companion to `dev/research-frontier-roadmap.md`. All numbered claims are validated
 against the interventional oracle or a public simulation; reproducibility scripts:
 `p5-collapsible-transport-scalar.R` (scalar theory, Claims 1–3),
 `p5-collapsible-transport-hierarchical.R` (hierarchical lift + unification, Claims
 4–5), `p1-analytic-vard-typeI-censoring.R` + `p1-ph-model-censoring-closedform.R`
-(Claim 6, §8), `p1a-tier-decomposition-lexicographic.R` (§9),
-`p5-impossibility-shape-cocycle.R` (Claim 7, §10),
+(Claim 6, §7), `p1a-tier-decomposition-lexicographic.R` (§8),
+`p5-impossibility-shape-cocycle.R` (Claim 7, §9),
 `p2-tau-portable-winmr-twosample.R` + `p2-delta-method-tau-se.R` +
-`p2-ar-style-tau-test.R` (§11), `p3-dthreshold-degeneracy-screen.R` +
-`p3-worstcase-zeta1min-screen.R` (§12). No confidential data.
+`p2-ar-style-tau-test.R` (§10), `p3-dthreshold-degeneracy-screen.R` +
+`p3-worstcase-zeta1min-screen.R` (§11),
+`p4-kantorovich-partial-id-censored.R` (§12). No confidential data.
 
 ---
 
@@ -41,15 +44,15 @@ underlying structural effect exactly and is invariant to the outcome-noise law; 
 (ii) — the unification — the *same* overlap functional that squashes the win effect
 (the P1/non-collapsibility problem) is the *same* functional whose vanishing is
 Paper 03's **degenerate U-statistic boundary, in the outcome-only special case**
-(§12 sharpens this: for Paper 03's *actual, instrument-crossed* diagnostic, the
+(§11 sharpens this: for Paper 03's *actual, instrument-crossed* diagnostic, the
 connection to `D` alone is weak — a scope correction, not a retraction, of the
 outcome-only claim). Non-collapsibility and weak-identification-degeneracy are two
 faces of one object, decidability `D`, in the setting where that object is
 outcome-only; this connects P1 (keystone, previously "open") and Paper 03's theory
 into a single scalar functional, and it remains the mathematical spine of the
-programme's super-plan (§6), whose execution (§§8–13) produced two rigorous closed
-new results (Claims 6–7), one honestly-partial result (§9), and two
-mechanistically-explained negative results (§§11–12) — a mixed but genuinely
+programme's super-plan (§6), whose execution (§§7–13) produced two rigorous closed
+new results (Claims 6–7), one honestly-partial result (§8), and two
+mechanistically-explained negative results (§§10–12) — a mixed but genuinely
 informative outcome, not a uniform success, and reported as such throughout.
 
 ---
@@ -190,7 +193,7 @@ variation across the sweep falls from **0.642 (raw g) → 0.120 (g/D) → 0.032
 
 **Claim 5 (THE UNIFICATION; validated).** The outcome-side first-projection variance
 `Var(w(O_i))` — the quantity whose vanishing is Paper 03's degenerate-U-statistic
-boundary (heavy-censoring / low-decided-fraction route, §8.2/§9 of that paper) —
+boundary (heavy-censoring / low-decided-fraction route, §7.2/§8 of that paper) —
 tracks the *same* decidability overlap:
 
 - `Spearman(D, Var(w)) = 1.0000` across the censoring sweep (perfect monotone).
@@ -223,12 +226,12 @@ single connected theory. Sequenced by dependency and by decisiveness:
 P1: the collapsible target is the transport velocity `v_x`, the win statistic is its
 `f²`-weighted average, and `τ=B'(0)/(4∫f²)` is the collapsible correction (Thm 1,
 Claims 2–3). Update after execution: **(b) is DONE** — the impossibility theorem is
-now rigorous over a continuous shape family, not a 2-point check (Claim 7, §10).
+now rigorous over a continuous shape family, not a 2-point check (Claim 7, §9).
 **(a) is PARTIALLY DONE** — the K=1 lexicographic/censored case now has an EXACT
-closed form (Claim 6, §8, two instances), and the general K=3 frailty-correlated
-case has a validated-but-incomplete tier-wise decomposition (§9, CV 0.31, a ~30%
+closed form (Claim 6, §7, two instances), and the general K=3 frailty-correlated
+case has a validated-but-incomplete tier-wise decomposition (§8, CV 0.31, a ~30%
 residual not yet explained — the fully general closed form remains open). **(c) is
-the weakest link**: §11 shows `τ` is a validated *target and interval* concept in
+the weakest link**: §10 shows `τ` is a validated *target and interval* concept in
 the real MR pipeline but explicitly **not yet a reliable point estimator** under
 weak instruments, and the natural delta-method route to "efficient estimation" was
 tried and found to fail for a specific, identified reason (weak-IV non-regularity)
@@ -240,7 +243,7 @@ the proposed reformulation of its degeneracy flag is NEGATIVE, tested and report
 Claim 5 gives the mechanism behind Paper 03's degenerate boundary for the
 **outcome-only** quantity `Var(w) ∝ D`. §6 optimistically proposed reformulating the
 `degenerate` flag (which is instrument-crossed, `ζ₁(β̂)`, not outcome-only) as a
-`D`-threshold; §12 tested this directly against 420 simulated cells and found it
+`D`-threshold; §11 tested this directly against 420 simulated cells and found it
 **does not work** (`Spearman(D,degenerate)=−0.50`, no safe threshold exists) because
 weak-instrument point-estimate volatility dominates the actual flag's behavior in a
 way the outcome-only `D` cannot see. No code changed in `R/onesample_ar.R` as a
@@ -268,12 +271,12 @@ gives the exact 3-way split with a non-collapsibility interaction term that vani
 iff `∫f²` is mediator-invariant — linking back to P1.
 
 ### Cross-cutting new probes (cheap, high-value, do next) — STATUS AFTER EXECUTION:
-1. **Global collapsibility obstruction** — **DONE, closed rigorously.** §10/Claim 7:
+1. **Global collapsibility obstruction** — **DONE, closed rigorously.** §9/Claim 7:
    continuous EPD shape family, `ρ(κ)` non-constant on a 9-point grid, formula
    validated to `1e-6`, impossibility demonstrated directly (raw `β*` ranges 1.70×
    at fixed `σ` for the same `α`; `β*/ρ(κ)` recovers the target exactly at every
    `κ`).
-2. **`τ` as an MR estimand** — **MIXED, done honestly.** §11: population/oracle-level
+2. **`τ` as an MR estimand** — **MIXED, done honestly.** §10: population/oracle-level
    portability strongly confirmed (CV 0.850→0.136); estimated point-estimate
    portability does NOT improve under weak instruments (a ratio-instability
    mechanism, identified); CI-level portability partially improves but a
@@ -281,22 +284,25 @@ iff `∫f²` is mediator-invariant — linking back to P1.
    reason (weak-IV non-regularity). Net: `τ` is validated as a target/interval
    concept, not (yet) as a deployable point estimator.
 3. **`D`-thresholded degeneracy flag for Paper 03** — **NEGATIVE, done honestly.**
-   §12: tested directly against the actual bootstrap diagnostic across 420
+   §11: tested directly against the actual bootstrap diagnostic across 420
    simulated cells; `Spearman(D,degenerate)` only `−0.50`, no usable threshold
    found (even lax thresholds pass ~50-60% false-safes); the diagnostic is
    dominated by weak-instrument point-estimate volatility, not decidability
    alone. No code changed; Claim 5's scope corrected to be precise about what it
    does and does not cover.
-4. **Analytic `Var(w)=cD`** — **DONE, exceeded scope.** §8/Claim 6: not just the
+4. **Analytic `Var(w)=cD`** — **DONE, exceeded scope.** §7/Claim 6: not just the
    exponent, but an EXACT closed form for Type-I censoring (`D=p(2-p)`,
    `Var(w)=p(p²-3p+3)/3`, `Var(w)/D→1/2` as `D→0`), PLUS a second exact closed
    form for the win *gradient* itself under a proportional-hazards causal model
    (`B'(0)=−α·D(p)`), cross-checked against the classical two-exponential
    concordance formula independently.
 
-P1(a) (§9) was also attempted beyond the original probe list: a partial,
+P1(a) (§8) was also attempted beyond the original probe list: a partial,
 honestly-quantified result (tier-wise decomposition holds to CV 0.31, not the
-<5% precision of the clean K=1 cases). P4 and P5 (§13) were not attempted.
+<5% precision of the clean K=1 cases). A round-2 follow-up attempted P4 (§12):
+built a validated Kantorovich-LP sharp-bounds tool, but retracted the original
+"D as identification budget" width conjecture after testing it directly. P5
+(§13) was not attempted.
 
 **Why this is the right spine.** Every frontier paper reduces to a question about the
 *same* two functionals (`v`, `∫f²`/`D`); P1 and P3 are now provably the same
@@ -307,7 +313,7 @@ transport as its geometry and decidability as its single scalar invariant.
 
 ---
 
-## 8. Claim 6 (NEW, decisive) — exact closed form for the K=1 win gradient under proportional hazards + Type-I censoring
+## 7. Claim 6 (NEW, decisive) — exact closed form for the K=1 win gradient under proportional hazards + Type-I censoring
 
 Probe #4 asked for the exponent in `Var(w) ∝ D` (found empirically ≈1 in §5) in
 closed form. Two independent exact derivations, both for `T ~ Exponential`, Type-I
@@ -360,7 +366,7 @@ cross-cutting probe #4.
 
 ---
 
-## 9. P1(a), partial result — does the tier-wise structure lift to the real K=3 frailty-correlated composite?
+## 8. P1(a), partial result — does the tier-wise structure lift to the real K=3 frailty-correlated composite?
 
 The K=1 closed forms above are clean because there is no cross-tier correlation.
 The programme's real outcome has `K=3` tiers with **cascading censoring** (a
@@ -394,7 +400,7 @@ comparison across a 4-point censoring ladder (12 tier×censoring cells):
 Raw `contrib_k` itself spans **over two orders of magnitude** across the same
 grid (0.0005 to 0.098). The decidability-weighted ratio compresses that to a
 **CV of 0.31** — a real, substantial, non-trivial stabilization — but it is *not*
-the near-perfect (`<5%` rel. err) precision of the clean K=1 closed forms in §8.
+the near-perfect (`<5%` rel. err) precision of the clean K=1 closed forms in §7.
 **Honest reading**: the tier-wise lift substantially holds (most of the raw
 variation is explained by `R_k·D_k^cond`), but a genuine `~30%` residual remains,
 plausibly a frailty-correlation correction term (a selection effect: "reaching
@@ -408,7 +414,7 @@ it is from closing the gap, rather than claiming it closes.
 
 ---
 
-## 10. Claim 7 (NEW, decisive) — P1(b), the impossibility theorem, made rigorous via a continuous shape family
+## 9. Claim 7 (NEW, decisive) — P1(b), the impossibility theorem, made rigorous via a continuous shape family
 
 §3's impossibility argument was checked at exactly two points (Gaussian, Laplace).
 Probe #1 asked for a continuous-family version. Using the **exponential power
@@ -445,8 +451,8 @@ integration domain was widened from `25σa` to `60σa`+ — `κ<1` EPD tails dec
 slower than Laplace/Gaussian and were being silently truncated. This was a pure
 numerical-truncation artifact, not a theorem breakdown; the production script now
 uses a `100σa` domain and the result is clean at every `κ`. (A second,
-independent bug of the same flavor recurred twice more this session — see §11's
-delta-method script and the closed-form verification in §8: `NB(x+ε,x−ε)` is
+independent bug of the same flavor recurred twice more this session — see §10's
+delta-method script and the closed-form verification in §7: `NB(x+ε,x−ε)` is
 *odd* in `ε`, so `B'(0) = NB(ε)/ε`, not `NB(ε)/(2ε)`; this factor-of-2 trap is now
 called out explicitly to avoid a fourth recurrence.)
 
@@ -454,7 +460,7 @@ This closes cross-cutting probe #1 / P1(b) rigorously.
 
 ---
 
-## 11. Probe #2 — τ as an MR estimand in the two-sample within-family pipeline: a MIXED result, reported honestly
+## 10. Probe #2 — τ as an MR estimand in the two-sample within-family pipeline: a MIXED result, reported honestly
 
 Chains §5's population-level finding into the actual estimation pipeline
 (Papers 02+03+04): does `τ_hat := γ_hat_AR / D_hat` restore cross-cohort
@@ -541,7 +547,7 @@ Monte-Carlo-noise level) — this is real progress: it is now an **independently
 validated fact, not a lucky coincidence**, that the naive plug-in interval is a
 legitimate approximation to a properly-derived joint test. The delta-method
 approach is **decisively ruled out in both regimes** (0.70–0.95, consistently
-below nominal), confirming §11's diagnosis was about the ratio/Wald linearization
+below nominal), confirming §10's diagnosis was about the ratio/Wald linearization
 specifically, not an artifact of the weak-instrument setting alone. A genuinely
 new, valuable by-product: the **bounded-set rate** (2–7% weak vs. 55–75% strong)
 is an honest, free diagnostic of how often `τ` is actually pinned down by the
@@ -561,7 +567,7 @@ mechanistically-explained limitation.
 
 ---
 
-## 12. Probe #3 — a D-thresholded degeneracy screen for Paper 03: a NEGATIVE result, and a scope correction to Claim 5
+## 11. Probe #3 — a D-thresholded degeneracy screen for Paper 03: a NEGATIVE result, and a scope correction to Claim 5
 
 §5's Claim 5 showed `Spearman(D, Var(w))=1.0000` for the **pure outcome-margin**
 win-score variance (weights=1, no instrument). §6 optimistically proposed
@@ -638,46 +644,120 @@ here.
 
 ---
 
-## 13. P4 and P5 — explicitly out of scope this round
+## 12. P4 — a working Kantorovich-LP tool, and the "identification budget" conjecture retracted
 
-Both were listed in §6 as ambitious extensions (P4: sharp partial identification
-via a Kantorovich-LP formulation with `D` as an "identification budget"; P5:
-win-mediation via a transport-velocity vector-field decomposition). Neither was
-attempted. Both require substantial new machinery (an ambiguity-set/LP-duality
-argument for P4; a cross-world potential-outcomes formalization for P5) that
-could not be brought to the same validated standard as §§8–12 within this
-session's scope — per the project's "no claim before its test passes" rule, a
-rushed, unvalidated sketch of either would be worse than an honest "not
-attempted." Both remain open, and are good candidates for a dedicated future
-session with their own probe-first validation loop.
+P4 (sharp partial identification via a Kantorovich-LP formulation with `D` as an
+"identification budget") was attempted in a round-2 follow-up
+(`tools/validation-scripts/p4-kantorovich-partial-id-censored.R`), with a
+genuinely useful tool built and a clean negative result on the original
+conjecture — recorded in full because the *process* of getting it right
+(catching two of my own errors before trusting the result) is as instructive as
+the answer.
+
+**The question**: given ONLY the two arms' marginal laws (no rank-invariance /
+comonotonic-coupling assumption — the assumption Theorem 1's whole apparatus
+otherwise relies on), what is the sharp range of the win probability consistent
+with *any* coupling? This is literally a Kantorovich transportation problem:
+maximize/minimize `E[1(win)]` over joint distributions with the two given
+marginals.
+
+**Error #1, caught before use.** A first hand-derivation assumed `1(y1>y2)` is a
+globally submodular cost, which would make the comonotonic coupling the sharp
+minimizer and the countermonotonic coupling the sharp maximizer for *any*
+marginals (a classical Monge–Kantorovich shortcut). Direct verification refuted
+this: a 4-point configuration (`y2<y1<y2'<y1'`) violates the submodularity
+inequality that held in a *different* configuration (`y1<y2<y1'<y2'`) — the cost
+is submodular in some regions and not others, so the shortcut does not apply
+globally. Retracted before it reached a conclusion.
+
+**Fix: solve the actual discretized transportation LP** (`lpSolve::lp.transport`,
+a dev-only script dependency, not added to the package `DESCRIPTION`).
+Validated first on a hand-solvable 2-point case (equal Bernoulli(0.5) marginals:
+LP gives sharp `[0, 0.5]`, matching hand calculation exactly, with the min/max
+transport plans literally the diagonal/anti-diagonal matrices). Applied to two
+shifted Gaussians (`μ1=0.5,μ2=-0.5`, equal `σ`): **error #2, also caught** — the
+LP's default `integers=1:(nc*nr)` forces an *integer* transport plan, infeasible
+for fractional probability masses (caught via the solver's own `status` code,
+not a silently wrong answer); fixed with `integers=NULL`. Once fixed: sharp
+max = `1.00000` (achieved exactly by the comonotonic/shared-quantile coupling —
+sensible, since a pure location shift makes comonotonic coupling deterministic,
+`Y1=Y2+shift`), sharp min ≈ `0.3875` (converging cleanly as the discretization
+refines from 20 to 160 bins) — achieved by *neither* simple extremal coupling,
+a genuinely different optimal transport plan. So even the "comonotonic /
+countermonotonic are always the two extremes" folklore is model-dependent, not
+universal — confirmed by direct computation, not assumed.
+
+**The censored case, and the conjecture test.** Extended the (now-validated) LP
+to the K=1 Type-I-censoring win rule from Claim 6 (continuum of event times plus
+one atom at the censoring point per arm, with the exact win/lose/tie rule).
+Swept the administrative cutoff `c` (hence `p`, hence `D=p(2-p)`) at a fixed
+causal hazard-ratio effect, computing the LP-sharp `[min,max]` for `P(win)` at
+each `D`. **Result: the original "`width ∝ (1-D)`" conjecture from §6 is NOT
+confirmed — the relationship runs the opposite way.** Width shrinks toward `0`
+as censoring grows heavier (`D` shrinks): `width=0.049` at `D=0.12` vs.
+`width=0.899` at `D≈1` (log-log slope of width vs. `(1-D)` is `-0.06`, i.e.
+essentially flat/inverted, not the conjectured slope of `+1`). **Mechanism**:
+winning requires the *opponent* to have an observed (non-censored) event; under
+heavy censoring almost nobody has one, so `P(win)` is squashed toward `0` for
+*every* coupling simultaneously (both the min and the max), which narrows the
+absolute width mechanically — this is a *different* phenomenon from "the
+coupling is well pinned down," and conflating the two was the flaw in the
+original conjecture. A useful validated sanity check survived, though: the
+comonotonic (shared-uniform, `mrwin`-simulator-style) coupling's win probability
+exactly matches the LP's minimum at every censoring level tested (`0.00000` at
+every row, since a uniformly-higher-hazard arm A can never outlive B under a
+same-uniform coupling with proportional hazards) — the *opposite* corner from
+the Gaussian location-shift case above, again underscoring that no universal
+rule connects comonotonicity to a fixed Fréchet extreme; it depends on how the
+marginals are related.
+
+**Bottom line for P4**: a genuinely working, validated Kantorovich-LP sharp-
+bounds calculator now exists as reproducible infrastructure, and the
+super-plan's original speculative "`D` as identification budget" framing is
+**retracted in its literal form** — a real, if deflating, result, reported
+per lesson F rather than quietly dropped. A more careful reformulation (e.g. a
+normalized/relative width, or bounding the net-benefit contrast rather than raw
+`P(win)`, or accounting for the fact that `D` itself has its own Fréchet-type
+ambiguity under an unconstrained coupling of the censoring indicators) remains
+open.
+
+## 13. P5 — explicitly out of scope this round
+
+P5 (win-mediation via a transport-velocity vector-field decomposition) was not
+attempted: it requires a cross-world potential-outcomes formalization that could
+not be brought to the same validated standard as the rest of this file within
+the session's scope. Per the project's "no claim before its test passes" rule,
+a rushed, unvalidated sketch would be worse than an honest "not attempted." It
+remains open, and is a good candidate for a dedicated future session with its
+own probe-first validation loop.
 
 ---
 
 ## 14. Honest scope and caveats (updated)
 
 - Thm 1 (★) is exact for scalar continuous outcomes. The K=1 hierarchical case is
-  now **exact** in two instances (Claim 6, §8: Type-I censoring, both with and
+  now **exact** in two instances (Claim 6, §7: Type-I censoring, both with and
   without a causal PH effect). The general K=3 frailty-correlated case is
   **partially** characterized: the tier-wise decidability-weighted decomposition
-  substantially holds (CV 0.31, §9) but a real ~30% residual (vs. <5% in the
+  substantially holds (CV 0.31, §8) but a real ~30% residual (vs. <5% in the
   clean K=1 cases) is not yet explained — plausibly a frailty-correlation
   correction term. P1(a)'s fully general closed form remains open.
 - The impossibility result (no scale-free collapsible win effect) is now a
-  **rigorous, continuous-shape-family theorem** (Claim 7, §10), not just a
+  **rigorous, continuous-shape-family theorem** (Claim 7, §9), not just a
   2-point check — closed.
 - The collapsible correction `τ` is validated as a **portability fix at the
-  population/oracle level and at the confidence-interval level** (§11a, c) in the
+  population/oracle level and at the confidence-interval level** (§10a, c) in the
   real two-sample within-family MR pipeline — and the interval-level claim is now
   **independently corroborated** by a properly-derived AR-style joint test for
-  `τ` (§11 follow-up), not just an empirically-observed coincidence. It is still
+  `τ` (§10 follow-up), not just an empirically-observed coincidence. It is still
   **not** validated as a reliable **point estimator** under weak instruments
-  (§11b); a delta-method fix for the interval was tried and **fails** for a
+  (§10b); a delta-method fix for the interval was tried and **fails** for a
   mechanistically identified reason (the delta method inherits weak-IV's
   non-regularity), and the rigorous AR-style fix, while validating the interval,
   gives no *tighter* interval than the naive plug-in and so does not solve the
   point-estimator problem either. This remains the biggest open gap in the
   programme's use of `τ` as a deployable MR estimand.
-- The D-thresholded degeneracy screen proposed in §6 **does not work** (§12): it
+- The D-thresholded degeneracy screen proposed in §6 **does not work** (§11): it
   was tested directly, decisively, and found to fail because Paper 03's actual
   diagnostic is dominated by weak-instrument point-estimate volatility that the
   outcome-only decidability functional does not capture. A follow-up attempt
@@ -687,11 +767,20 @@ session with their own probe-first validation loop.
   **No package code was changed** as a result of either attempt. Claim 5 itself
   (the outcome-only `Var(w)` vs. `D` relationship) stands, but its scope is now
   stated precisely rather than optimistically.
-- P4 and P5 (§13) were not attempted; explicitly open, not silently dropped.
+- P4 (§12) was attempted in round 2: a validated, reusable Kantorovich-LP tool
+  for sharp (assumption-free) partial identification now exists, but the
+  original "`D` as identification budget" width conjecture was tested directly
+  and **retracted** — the relationship runs the opposite way in the tested
+  instance, for an identified mechanistic reason (heavy censoring squashes
+  `P(win)` for every coupling, not just narrows the coupling ambiguity). Two of
+  my own errors (a false submodularity shortcut; an LP integer-constraint
+  default) were caught via direct verification before being trusted — recorded
+  as part of the finding, not edited out. P5 (§13) was not attempted; both
+  remain explicitly open, not silently dropped.
 - All numbers here are simulation results (against the interventional oracle,
   an independent classical formula, or exact leave-one-out computation) with
   Monte-Carlo / numeric error reported or noted; no real data. Two recurring
   factor-of-2 finite-difference bugs (dividing by `2ε` instead of `ε` for an
-  odd function `B(ε)`) and one numerical-truncation trap (§10's integration-limit
+  odd function `B(ε)`) and one numerical-truncation trap (§9's integration-limit
   issue) were caught by convergence checks before being reported as findings —
   each is called out explicitly above so the next session does not re-trip them.
