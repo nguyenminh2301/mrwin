@@ -1,13 +1,19 @@
 # The transport-velocity structure of causal win statistics — a unifying result and a super-plan
 
-Status: super-plan EXECUTED (2026-07-04) — §§8–13 below are the results of carrying
-out §6's cross-cutting probes and P1(a)/P1(b). Two are decisive new positive results
-(Claims 6–7 closing probe #4 and P1(b) rigorously), one is a positive-but-partial
-result (P1(a), §9), and two are honestly-reported NEGATIVE/mixed results (probes #2
-and #3, §§11–12) with the failure mechanism identified in each case, per the
-project's "report faithfully, correct the record loudly" standard — not every probe
-in §6 panned out, and this file says so explicitly rather than only keeping the wins.
-P4 and P5 were not attempted (§13): scoped honestly as open, not silently dropped.
+Status: super-plan EXECUTED (2026-07-04, follow-up round 2026-07-05) — §§8–13 below
+are the results of carrying out §6's cross-cutting probes and P1(a)/P1(b), plus a
+second round pursuing the two open structural fixes flagged in the first pass. Two
+are decisive new positive results (Claims 6–7 closing probe #4 and P1(b)
+rigorously), one is a positive-but-partial result (P1(a), §9), and two started as
+honestly-reported NEGATIVE/mixed results (probes #2 and #3, §§11–12) — the round-2
+follow-ups then made real, if incomplete, further progress on both: probe #2's
+naive interval-level correction is now independently validated via a proper
+AR-style construction (not just an empirical coincidence), and probe #3's second
+screening attempt (`n·ζ1_min`) is a measurable improvement over the first, though
+still not clean enough to ship. Per the project's "report faithfully, correct the
+record loudly" standard, not every probe in §6 panned out cleanly, and this file
+says so explicitly rather than only keeping the wins. P4 and P5 were not attempted
+(§13): scoped honestly as open, not silently dropped.
 
 Companion to `dev/research-frontier-roadmap.md`. All numbered claims are validated
 against the interventional oracle or a public simulation; reproducibility scripts:
@@ -16,8 +22,9 @@ against the interventional oracle or a public simulation; reproducibility script
 4–5), `p1-analytic-vard-typeI-censoring.R` + `p1-ph-model-censoring-closedform.R`
 (Claim 6, §8), `p1a-tier-decomposition-lexicographic.R` (§9),
 `p5-impossibility-shape-cocycle.R` (Claim 7, §10),
-`p2-tau-portable-winmr-twosample.R` (§11), `p2-delta-method-tau-se.R` (§11),
-`p3-dthreshold-degeneracy-screen.R` (§12). No confidential data.
+`p2-tau-portable-winmr-twosample.R` + `p2-delta-method-tau-se.R` +
+`p2-ar-style-tau-test.R` (§11), `p3-dthreshold-degeneracy-screen.R` +
+`p3-worstcase-zeta1min-screen.R` (§12). No confidential data.
 
 ---
 
@@ -511,11 +518,46 @@ weak/noisy quantity, analogous to how `mrwin_ar_onesample` itself never divides
 by `Cov(Z,X)`. This is a concretely scoped, well-motivated open problem for
 future work, not attempted further here given the budget.
 
+**Follow-up: the structural fix was built and tested (§ update, 2026-07-05).**
+`tools/validation-scripts/p2-ar-style-tau-test.R` builds the AR-type joint test
+called for above: instead of forming `tau_hat` as a free ratio, it tests
+candidate values `tau0` directly via the moment `M(tau0) := a − b·tau0·D`,
+linearized at *fixed* `tau0` (never dividing by anything) as
+`IF_M_i(tau0) = gh_i − tau0·(D̂·gx_i + b̂·IF_D_i)` — a per-subject vector linear
+in `tau0`, so its variance `c0'−2·tau0·c1'+tau0²·c2'` is an exact quadratic and
+the confidence set inverts via the *same* closed-form quadratic machinery
+`mrwin_ar_onesample` already uses for `γ` (just relabelling `b→b·D`, `gx→u`).
+Tested at both a weak (`α_s=0.15`, N=3000) and a much stronger (`α_s=0.8`,
+N=8000) one-sample instrument, against both prior methods:
+
+| instrument | bounded-set rate | AR-τ cov(τ*) | naive cov(τ*) | delta cov(τ*) |
+|---|---|---|---|---|
+| weak (α_s=0.15) | 2–7% | 0.980–1.000 | 0.973–1.000 | 0.787–0.947 |
+| strong (α_s=0.8) | 55–75% | 0.950–0.990 | 0.950–0.990 | 0.700–0.840 |
+
+**Reading**: the rigorously-derived AR-τ set and the naive `ar$ci/D_hat` plug-in
+give **essentially identical** coverage in both regimes (differences at the
+Monte-Carlo-noise level) — this is real progress: it is now an **independently
+validated fact, not a lucky coincidence**, that the naive plug-in interval is a
+legitimate approximation to a properly-derived joint test. The delta-method
+approach is **decisively ruled out in both regimes** (0.70–0.95, consistently
+below nominal), confirming §11's diagnosis was about the ratio/Wald linearization
+specifically, not an artifact of the weak-instrument setting alone. A genuinely
+new, valuable by-product: the **bounded-set rate** (2–7% weak vs. 55–75% strong)
+is an honest, free diagnostic of how often `τ` is actually pinned down by the
+data at all — neither prior method exposed this. **What this does *not* do**:
+it does not produce a *tighter* valid interval than the naive plug-in — the two
+are statistically equivalent in the tested regimes — so it does not resolve
+(b)'s point-estimator instability; it resolves the *epistemic* question of
+whether (c)'s naive interval could be trusted, answering yes.
+
 **Bottom line for probe #2**: the transport-collapsibility correction is a real,
 validated fix for cross-cohort portability *at the level of the causal target and
-of confidence intervals*, but does **not** (yet) give a reliable corrected point
-estimator under the weak instruments intrinsic to within-family MR — an honest,
-mechanistically-explained limitation, not a fixed method.
+of confidence intervals* — and the interval-level claim is now on solid,
+independently-derived footing, not just an empirically-observed coincidence —
+but it does **not** (yet) give a reliable corrected point estimator under the
+weak instruments intrinsic to within-family MR. That remains the honest,
+mechanistically-explained limitation.
 
 ---
 
@@ -551,12 +593,48 @@ minimizer, a phenomenon `D_hat` alone cannot see.
 practical drop-in replacement for the shipped `mrwin_ar_onesample` degeneracy
 diagnostic, because that diagnostic's actual driver is instrument-crossed and
 dominated by weak-IV point-estimate volatility that the outcome-only `D`
-functional cannot capture. **No change was made to `R/onesample_ar.R`** as a
-result of this probe — shipping an unvalidated screen would trade a slow-but-
-correct diagnostic for a fast-but-wrong one, which the evidence above explicitly
-rules out. A cheap screen that *does* work would need to jointly account for
-instrument strength (e.g. an `n·D`-scale quantity combined with an F-statistic-
-like term) — an open problem, not solved here.
+functional cannot capture.
+
+**Second attempt, following the "joint account for instrument strength" lead
+above (2026-07-05): `n·ζ1_min`, a mathematically-guaranteed lower bound.**
+`ζ1(β) := c0 − 2β·c1 + β²·c2` is an upward parabola in `β` (`c2=Var(gx_i)≥0`);
+its minimum over **all** `β` — `ζ1_min := c0 − c1²/c2` — satisfies
+`ζ1(β̂) ≥ ζ1_min` **by construction, for any realized `β̂`**, so a large
+`n·ζ1_min` should rule out degeneracy *regardless* of where weak-instrument
+noise pushes the point estimate — precisely targeting the failure mode that
+broke the `D_hat` screen, and free (already inside `.mrwin_ar1_blocks()`'s
+`c0,c1,c2`, no bootstrap). Tested on the same 840-cell grid
+(`tools/validation-scripts/p3-worstcase-zeta1min-screen.R`): **better, but still
+not clean.** `Spearman(n·ζ1_min, degenerate) = −0.54` (essentially the same
+strength as `D_hat`'s `−0.50`) — the deterministic-inequality argument is true
+but does not, by itself, translate into a strong empirical screen, because the
+ground-truth `degenerate` flag is a **bootstrap CI's lower bound vs. a fixed
+constant (1)**, not a test on the point estimate `ζ1(β̂)` or its lower bound
+`ζ1_min` directly — near that boundary, sampling noise in the bootstrap itself
+(not just in `β̂`) decides the flag, which a point-estimate screen structurally
+cannot see. Concretely: among rows the ground truth flagged `degenerate`, the
+observed `n·ζ1_min` ranged up to `1.08`; among rows it did *not* flag, `n·ζ1_min`
+ranged as low as `0.008` — the two ranges overlap substantially. At the most
+useful threshold tested (`τ=1.0`): only `14.3%` of rows clear it, and `4.2%`
+of those (5/120) were still degenerate — a real, order-of-magnitude
+improvement over `D_hat`'s `43–61%` false-safe rate at any threshold, but a
+`~4%` false-safe rate is still not something to ship as "skip the check safely"
+for a scientific-inference diagnostic. Thresholds above `~1.5` never trigger at
+all in this grid (0% coverage) — the screen has no room to be both selective
+and safe within the tested regime.
+
+**Bottom line for probe #3**: two independent screening ideas were tried and
+both fall short of a safe, useful pre-screen; the second (`n·ζ1_min`) is a
+measurable improvement (near-zero vs. majority false-safe rate) and is the
+better candidate for any future attempt, but neither justifies a code change.
+**No change was made to `R/onesample_ar.R`** as a result of either probe —
+shipping an unvalidated screen would trade a slow-but-correct diagnostic for a
+fast-but-wrong one, which the evidence above explicitly rules out. A screen that
+*fully* works would likely need to model the bootstrap's own sampling
+distribution near the `c²=1` boundary analytically (e.g. an asymptotic
+approximation to the bootstrap CI's lower bound as a function of `n·ζ1_min` and
+`n`), rather than thresholding a point estimate — an open problem, not solved
+here.
 
 ---
 
@@ -588,21 +666,27 @@ session with their own probe-first validation loop.
   **rigorous, continuous-shape-family theorem** (Claim 7, §10), not just a
   2-point check — closed.
 - The collapsible correction `τ` is validated as a **portability fix at the
-  population/oracle level and (partially) at the confidence-interval level**
-  (§11a, c) in the real two-sample within-family MR pipeline, but is **not**
-  validated as a reliable **point estimator** under weak instruments (§11b), and
-  a natural delta-method fix for the interval's residual miscalibration **fails**
-  for a mechanistically identified reason (§11, the delta method inherits weak-
-  IV's non-regularity) — this is the biggest open gap in the programme's use of
-  `τ` as a deployable MR estimand, and the report says so plainly rather than
-  papering over it.
+  population/oracle level and at the confidence-interval level** (§11a, c) in the
+  real two-sample within-family MR pipeline — and the interval-level claim is now
+  **independently corroborated** by a properly-derived AR-style joint test for
+  `τ` (§11 follow-up), not just an empirically-observed coincidence. It is still
+  **not** validated as a reliable **point estimator** under weak instruments
+  (§11b); a delta-method fix for the interval was tried and **fails** for a
+  mechanistically identified reason (the delta method inherits weak-IV's
+  non-regularity), and the rigorous AR-style fix, while validating the interval,
+  gives no *tighter* interval than the naive plug-in and so does not solve the
+  point-estimator problem either. This remains the biggest open gap in the
+  programme's use of `τ` as a deployable MR estimand.
 - The D-thresholded degeneracy screen proposed in §6 **does not work** (§12): it
   was tested directly, decisively, and found to fail because Paper 03's actual
   diagnostic is dominated by weak-instrument point-estimate volatility that the
-  outcome-only decidability functional does not capture. No package code was
-  changed as a result. Claim 5 itself (the outcome-only `Var(w)` vs. `D`
-  relationship) stands, but its scope is now stated precisely rather than
-  optimistically.
+  outcome-only decidability functional does not capture. A follow-up attempt
+  (`n·ζ1_min`, a mathematically-guaranteed lower bound on the actual bootstrapped
+  quantity) is a real, order-of-magnitude improvement (4% vs. 43-61% false-safe
+  rate) but still not clean enough to trust as a blanket skip-the-bootstrap rule.
+  **No package code was changed** as a result of either attempt. Claim 5 itself
+  (the outcome-only `Var(w)` vs. `D` relationship) stands, but its scope is now
+  stated precisely rather than optimistically.
 - P4 and P5 (§13) were not attempted; explicitly open, not silently dropped.
 - All numbers here are simulation results (against the interventional oracle,
   an independent classical formula, or exact leave-one-out computation) with
