@@ -29,7 +29,30 @@
   SX <- sum(X); SZ <- sum(Z); SXZ <- sum(X * Z)
   gx <- ((n - 1) * X * Z - X * (SZ - Z) - Z * (SX - X) + (SXZ - X * Z)) / (n - 1)
   list(a = a, b = b, c0 = stats::var(gh), c1 = stats::cov(gh, gx), c2 = stats::var(gx),
-       n = n, s_i = s_i)
+       n = n, s_i = s_i, gh = gh, gx = gx)
+}
+
+# Analytic lower confidence bound for c^2 = n*zeta1(beta), the quantity
+# `mrwin_ar_onesample`'s degeneracy diagnostic bootstraps.
+#
+# The bootstrap holds `beta` FIXED inside the resampling loop, so the resampled
+# quantity is exactly Var_i(g_i) with g_i = gh_i - beta*gx_i -- no delta-method
+# term for beta_hat's own randomness is required. The influence function of a
+# variance functional is IF(g) = (g - mu)^2 - sigma^2, giving
+#   Var(zeta1_hat) = (m4 - m2^2)/n  =>  SE(c^2) = sqrt(n*(m4 - m2^2))
+# with m2, m4 the 2nd and 4th central moments of g_i. The bound is taken on the
+# normal scale, which validation showed is very slightly conservative (median
+# ratio to the bootstrap bound 0.983, i.e. it errs toward flagging degenerate --
+# the safe direction for a validity diagnostic) and had the fewest false-safe
+# calls. See ?mrwin_ar_onesample for the validation numbers and the caveat that
+# g_i are U-statistic projections rather than iid draws.
+.mrwin_ar1_c2_analytic <- function(m, beta, alpha1) {
+  g <- m$gh - beta * m$gx
+  gc <- g - mean(g)
+  m2 <- mean(gc^2); m4 <- mean(gc^4)
+  c2_hat <- max(m$n * stats::var(g), 0)
+  se_c2 <- sqrt(max(m$n * (m4 - m2^2), 0))
+  c(c2_hat, c2_hat - stats::qnorm(1 - alpha1) * se_c2, se_c2)
 }
 .mrwin_ar1_stat <- function(m, beta) {
   m$n * (m$a - m$b * beta)^2 / (4 * (m$c0 - 2 * beta * m$c1 + beta^2 * m$c2))
@@ -49,11 +72,13 @@
 #' A degeneracy diagnostic is also reported: the pairwise moment can become a
 #' degenerate U-statistic when its first (Hajek) projection variance
 #' `zeta1(beta_hat)` is small, in which case the naive chi-squared critical value
-#' over-rejects (see [mrwin_ar_onesample_supci_test()]). This function estimates
-#' a percentile-bootstrap confidence interval for the concentration parameter
+#' over-rejects (see [mrwin_ar_onesample_supci_test()]). This function computes a
+#' lower confidence bound for the concentration parameter
 #' `c^2 = n*zeta1(beta_hat)` (a point estimate alone is unreliable near the
-#' boundary) and flags `degenerate = TRUE` when that interval's lower bound is
-#' not clearly bounded away from zero.
+#' boundary) and flags `degenerate = TRUE` when that bound is not clearly
+#' bounded away from zero. The bound is obtained either by percentile bootstrap
+#' (default) or in closed form (`degeneracy_method = "analytic"`, ~100x faster);
+#' see the Degeneracy diagnostic section for the derivation and validation.
 #'
 #' @param time,status N x K matrices of event times and 0/1 status, in priority
 #'   order (column 1 = highest priority), as elsewhere in the package.
@@ -65,20 +90,51 @@
 #' @param boot_reps Number of bootstrap resamples for the degeneracy diagnostic
 #'   (default 200); each resample re-runs the O(N log N / N^2) per-subject
 #'   kernel, so this is the dominant cost when `degeneracy_check = TRUE`.
-#' @param alpha1 One-sided level for the bootstrap CI on `c^2` (default 0.025;
-#'   the CI's lower endpoint, not the point estimate, drives the flag).
-#' @param seed Optional RNG seed for the bootstrap (reproducibility).
+#' @param alpha1 One-sided level for the bound on `c^2` (default 0.025; the
+#'   lower endpoint, not the point estimate, drives the flag).
+#' @param seed Optional RNG seed for the bootstrap (reproducibility). Ignored
+#'   when `degeneracy_method = "analytic"`, which is deterministic.
+#' @param degeneracy_method How to compute the lower bound on `c^2`:
+#'   `"bootstrap"` (default) resamples `boot_reps` times; `"analytic"` uses the
+#'   closed-form standard error described in the Degeneracy diagnostic section,
+#'   at about 1/100th of the cost.
 #' @return A list: `gamma` (point estimate = `a/b`), `ci` (length-2 bounds, may be
 #'   `c(-Inf, Inf)`), `ci_level`, `bounded`, `empty` (TRUE if no `b` satisfies the
 #'   test -- a numerical edge case, not expected in practice), `degenerate`
 #'   (logical, `NA` if `degeneracy_check = FALSE`), `c2_hat`, `c2_boot_ci`
-#'   (length-2 bootstrap CI for `c^2 = n*zeta1(gamma)`), `n`.
+#'   (length-2 bound for `c^2 = n*zeta1(gamma)`; with
+#'   `degeneracy_method = "analytic"` only the lower endpoint is computed and the
+#'   upper is `NA`), `c2_se` (the analytic standard error, `NA` under the
+#'   bootstrap), `degeneracy_method`, `n`.
+#' @section Degeneracy diagnostic -- the two methods:
+#' Because the resampling loop holds `gamma` **fixed**, the bootstrapped
+#' quantity is exactly `Var_i(g_i)` with `g_i = gh_i - gamma*gx_i`, so no
+#' delta-method term for `gamma_hat`'s own randomness is needed and a closed-form
+#' standard error follows from the influence function of a variance,
+#' `IF(g) = (g - mu)^2 - sigma^2`:
+#' \deqn{SE(c^2) = \sqrt{n (m_4 - m_2^2)}}
+#' with `m_2`, `m_4` the second and fourth central moments of `g_i`. The
+#' `"analytic"` bound is `c2_hat - qnorm(1-alpha1)*SE`.
+#' Validated against the 200-replication bootstrap over 840 simulated cells
+#' (`tools/validation-scripts/p3-analytic-c2-bound.R`; N in {800, 2500} x 7
+#' censoring rates x weak/strong instruments): the two bounds correlate at
+#' 0.9999 (Pearson and Spearman), the analytic bound is very slightly
+#' conservative (median ratio 0.983, erring toward flagging degenerate -- the
+#' safe direction), the resulting `degenerate` flags **agree on 99.64% of
+#' cells** (1 false-safe call in 840, 0.3% of its "safe" calls), and it is about
+#' **101x faster**. Caveat: `g_i` are U-statistic projections rather than iid
+#' draws, which the bootstrap captures exactly and the influence-function
+#' approximation does not; the agreement above is the empirical evidence that
+#' this gap is immaterial in the tested regimes, not a proof that it always is.
+#' The bootstrap remains the default for that reason.
 #' @seealso [mrwin_ar_onesample_overid()], [mrwin_ar_onesample_supci_test()],
 #'   [mrwin_winmr_ar()] (the two-sample / summary-data analogue)
 #' @export
 mrwin_ar_onesample <- function(time, status, X, Z, alpha = 0.05,
                                 degeneracy_check = TRUE, boot_reps = 200L,
-                                alpha1 = 0.025, seed = NULL) {
+                                alpha1 = 0.025, seed = NULL,
+                                degeneracy_method = c("bootstrap", "analytic")) {
+  degeneracy_method <- match.arg(degeneracy_method)
   time <- as.matrix(time); status <- as.matrix(status)
   X <- as.numeric(X); Z <- as.numeric(Z); n <- length(X)
   if (nrow(time) != n || nrow(status) != n || length(Z) != n) {
@@ -109,8 +165,14 @@ mrwin_ar_onesample <- function(time, status, X, Z, alpha = 0.05,
     # the two-ray complement, i.e. unbounded -- report as unbounded, honestly.
   }
   c2_hat <- max(m$n * (m$c0 - 2 * gamma * m$c1 + gamma^2 * m$c2), 0)
-  degenerate <- NA; c2_boot_ci <- c(NA_real_, NA_real_)
-  if (isTRUE(degeneracy_check)) {
+  degenerate <- NA; c2_boot_ci <- c(NA_real_, NA_real_); c2_se <- NA_real_
+  if (isTRUE(degeneracy_check) && degeneracy_method == "analytic") {
+    an <- .mrwin_ar1_c2_analytic(m, gamma, alpha1)
+    c2_se <- an[3]
+    # one-sided: only the lower endpoint drives the flag, so the upper is left NA
+    c2_boot_ci <- c(an[2], NA_real_)
+    degenerate <- an[2] < 1
+  } else if (isTRUE(degeneracy_check)) {
     if (!is.null(seed)) {
       old <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv) else NULL
       set.seed(seed)
@@ -130,7 +192,9 @@ mrwin_ar_onesample <- function(time, status, X, Z, alpha = 0.05,
     }
   }
   list(gamma = gamma, ci = ci, ci_level = 1 - alpha, bounded = bounded, empty = empty,
-       degenerate = degenerate, c2_hat = c2_hat, c2_boot_ci = c2_boot_ci, n = n)
+       degenerate = degenerate, c2_hat = c2_hat, c2_boot_ci = c2_boot_ci,
+       c2_se = c2_se, degeneracy_method = if (isTRUE(degeneracy_check)) degeneracy_method else NA_character_,
+       n = n)
 }
 
 #' One-sample over-identification (pleiotropy) test for multi-variant win-ratio MR

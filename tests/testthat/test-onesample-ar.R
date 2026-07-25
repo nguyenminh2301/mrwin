@@ -56,6 +56,44 @@ test_that("mrwin_ar_onesample degeneracy bootstrap returns a sane c^2 CI and a l
   expect_true(r$c2_hat >= 0)
 })
 
+test_that("analytic degeneracy bound matches its closed form and is deterministic", {
+  cfg <- mrwin_config(n_outcome = 1500, m_snps = 1, seed = 3)
+  sim <- mrwin_simulate(cfg, seed = 3)
+  Z <- as.numeric(sim$G[, 1])
+  r <- mrwin_ar_onesample(sim$time, sim$status, sim$X, Z, degeneracy_method = "analytic")
+
+  # closed form recomputed independently here: SE(c^2) = sqrt(n*(m4 - m2^2))
+  m <- .mrwin_ar1_blocks(as.matrix(sim$time), as.matrix(sim$status), sim$X, Z)
+  g <- m$gh - (m$a / m$b) * m$gx
+  gc <- g - mean(g)
+  se_ref <- sqrt(m$n * (mean(gc^4) - mean(gc^2)^2))
+  lo_ref <- max(m$n * stats::var(g), 0) - stats::qnorm(0.975) * se_ref
+
+  expect_equal(r$c2_se, se_ref, tolerance = 1e-10)
+  expect_equal(r$c2_boot_ci[1], lo_ref, tolerance = 1e-10)
+  expect_true(is.na(r$c2_boot_ci[2]))              # one-sided by construction
+  expect_identical(r$degenerate, lo_ref < 1)
+  expect_identical(r$degeneracy_method, "analytic")
+
+  # deterministic: no dependence on the RNG stream, unlike the bootstrap
+  set.seed(1); r1 <- mrwin_ar_onesample(sim$time, sim$status, sim$X, Z, degeneracy_method = "analytic")
+  set.seed(2); r2 <- mrwin_ar_onesample(sim$time, sim$status, sim$X, Z, degeneracy_method = "analytic")
+  expect_identical(r1$c2_boot_ci[1], r2$c2_boot_ci[1])
+})
+
+test_that("analytic and bootstrap degeneracy bounds agree closely on the same data", {
+  cfg <- mrwin_config(n_outcome = 1500, m_snps = 1, seed = 3)
+  sim <- mrwin_simulate(cfg, seed = 3)
+  Z <- as.numeric(sim$G[, 1])
+  ab <- mrwin_ar_onesample(sim$time, sim$status, sim$X, Z, boot_reps = 300L, seed = 11)
+  an <- mrwin_ar_onesample(sim$time, sim$status, sim$X, Z, degeneracy_method = "analytic")
+  expect_identical(an$degenerate, ab$degenerate)   # same decision on this dataset
+  # bounds agree to within bootstrap Monte-Carlo error (validated at 0.9999
+  # correlation over 840 cells; here a single dataset, so allow a loose 15%)
+  expect_equal(an$c2_boot_ci[1], ab$c2_boot_ci[1], tolerance = 0.15)
+  expect_true(is.na(ab$c2_se))                     # SE only defined for the analytic path
+})
+
 test_that("mrwin_ar_onesample_overid matches the validated reference over-ID statistic exactly", {
   cfg <- mrwin_config(n_outcome = 2500, m_snps = 15, seed = 21)
   sim <- mrwin_simulate(cfg, seed = 21)

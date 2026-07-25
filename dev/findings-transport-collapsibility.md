@@ -1,10 +1,12 @@
 # The transport-velocity structure of causal win statistics
 
-**Status** (2026-07-04, round-2 follow-ups 2026-07-05). Core theory §§1–5 closed and
+**Status** (2026-07-04, round-2/3 follow-ups 2026-07-05). Core theory §§1–5 closed and
 validated. Super-plan §6 executed: §§7–13 report the results — 3 rigorous new results
-(Claims 6–7, §9), 1 honestly-partial (§8), 3 mixed/negative with the mechanism
-identified in each case (§§10–12). P4 (§12) has a working tool but its headline
-conjecture was retracted; work continues. P5 (§13) not attempted.
+(Claims 6–7, §9), 1 honestly-partial (§8), and mixed/negative findings with the
+mechanism identified in each case (§§10–12). **One package change resulted**: a
+closed-form degeneracy diagnostic ~101× faster than the bootstrap it replaces, at
+99.64% flag agreement (§11 attempt 3, shipped). P4 (§12) has a validated tool but its
+headline conjecture was retracted; work continues. P5 (§13) not attempted.
 
 Companion to `dev/research-frontier-roadmap.md`. Every number is validated against
 the interventional oracle, an independent analytic formula, or exact computation;
@@ -427,26 +429,52 @@ thresholds above ~1.5 never trigger, and the degenerate/non-degenerate `n·ζ1_m
 ranges overlap substantially (up to 1.08 among degenerate rows; as low as 0.008 among
 non-degenerate).
 
-**Attempt 3 — reframe: replace the bootstrap, don't screen it**
-(`p3-analytic-c2-bound.R`). The framing above was wrong: the flag is
+**Attempt 3 — reframe: replace the bootstrap, don't screen it. SUCCEEDS.**
+(`p3-analytic-c2-bound.R`.) The framing of attempts 1–2 was wrong: the flag is
 `c2_boot_ci[1] < 1`, i.e. a **lower confidence bound** on `c² = n·ζ1(γ)`. So compute
-*the bound itself*, not a correlate. Reading `R/onesample_ar.R` shows the bootstrap
-holds `gamma` **fixed** inside the resampling loop, so the bootstrapped quantity is
-exactly `Var_i(g_i)` at fixed `γ`, `g_i := gh_i − γ·gx_i` — no delta-method term for
-`β̂`'s randomness is needed, which makes an analytic SE available:
+*the bound itself*, not a correlate of the flag. Reading `R/onesample_ar.R` shows the
+bootstrap holds `gamma` **fixed** inside the resampling loop, so the bootstrapped
+quantity is exactly `Var_i(g_i)` at fixed `γ`, `g_i := gh_i − γ·gx_i` — no
+delta-method term for `β̂`'s randomness is needed, which makes an analytic SE available
+from the influence function of a variance, `IF(g) = (g−μ)² − σ²`:
 ```
 Var(ζ1_hat) = (m4 − m2²)/n   ⟹   SE(c²) = sqrt(n·(m4 − m2²))
 ```
-(`m2`,`m4` = 2nd/4th central moments of `g_i`), giving a normal bound `c²−z·SE` and a
-lognormal bound `c²·exp(−z·SE/c²)` (variances are right-skewed). **Known caveat this
-tests**: `g_i` are *not* iid — they are U-statistic projections the bootstrap captures
-fully and the iid influence function does not; whether the gap matters is exactly the
-measured question, and the decision-relevant metric is **flag agreement**, not bound
-correlation. *Results pending — see §14.*
+(`m2`,`m4` = 2nd/4th central moments of `g_i`), giving a normal bound `c² − z·SE` and
+a lognormal bound `c²·exp(−z·SE/c²)`. Over the same 840-cell grid:
 
-**No change has been made to `R/onesample_ar.R`** from any attempt. Claim 5 stands
+| metric | normal bound | lognormal bound |
+|---|---|---|
+| Pearson cor with bootstrap bound | 0.9999 | 0.9999 |
+| Spearman cor | — | 0.9999 |
+| median(analytic / bootstrap) | 0.983 | 1.005 |
+| **flag agreement** | **0.9964** | **0.9964** |
+| false-SAFE calls (of 840) | **1** (0.3%) | 2 (0.7%) |
+| speedup | **~101×** | ~101× |
+
+The **normal** bound is preferred: it is very slightly conservative (median ratio
+0.983 < 1, erring toward *flagging* degenerate — the safe direction for a validity
+diagnostic) and had the fewest false-safe calls.
+
+**SHIPPED.** `mrwin_ar_onesample()` gains `degeneracy_method = c("bootstrap",
+"analytic")`. The bootstrap stays the **default** — the honest reason being the caveat
+below, not indecision — with `"analytic"` available for ~1/100th of the cost.
+`.mrwin_ar1_blocks()` now also returns the per-subject `gh`/`gx` vectors the closed
+form needs; new helper `.mrwin_ar1_c2_analytic()`; two new tests (closed form
+recomputed independently, determinism, and agreement with a 300-rep bootstrap on the
+same data); `man/` and `NEWS.md` updated. Full suite green.
+
+**Caveat, stated in the shipped docs too**: `g_i` are U-statistic projections, not iid
+draws — the bootstrap captures that dependence exactly, the influence-function
+approximation does not. The 99.64% agreement is *empirical evidence that the gap is
+immaterial in the tested regimes*, not a proof that it always is. Hence bootstrap
+remains the default.
+
+**Bottom line for probe #3**: two proxy-screen attempts failed; the third succeeded by
+changing the question from "predict the flag" to "compute the bound". Claim 5 stands
 **exactly as stated** — for the pure outcome-margin `Var(w(O))` — but its scope is now
-precise: it does not extend to the instrument-crossed shipped diagnostic.
+precise: it does not extend to the instrument-crossed shipped diagnostic, and the
+practical win came from a different route entirely.
 
 ---
 
@@ -514,16 +542,23 @@ unvalidated sketch would be worse than an honest "not attempted." Open.
 - **The impossibility result** is now a rigorous continuous-shape-family theorem (§9)
   — closed.
 - **`τ`** is validated as a portability fix at the population/oracle level and at the
-  confidence-interval level (§10a,c) — the interval claim independently corroborated by
-  a properly derived AR-style test — but **not** as a reliable point estimator under
-  weak instruments (§10b). Delta-method fails for an identified reason; the rigorous
-  AR-style fix validates the interval but gives no tighter one. **The two-sample
-  multi-SNP AR-τ test (§10, attempt 3) is running; results not yet in.** This is the
-  biggest open gap in deploying `τ` as an MR estimand.
-- **The `D`-thresholded degeneracy screen does not work** (§11); `n·ζ1_min` is an
-  order-of-magnitude improvement but still not shippable; **the analytic-`c²`-bound
-  reframe (§11, attempt 3) is running; results not yet in.** No package code has been
-  changed by any attempt.
+  confidence-interval level (§10a,c), but **not** as a reliable point estimator under
+  weak instruments (§10b). Three interval methods were tested across three arenas: the
+  delta method fails for an identified reason, and the rigorously-derived AR-τ
+  constructions (one-sample scalar, and two-sample multi-SNP) are statistically
+  **equivalent-but-wider** than the naive plug-in everywhere. **The naive `ar$ci/D̂` is
+  the practical recommendation** — validated as sufficient, not merely unrefuted. Two
+  honest limits remain: the point estimator (§10b), and bounded-set rates of only
+  10–33%, meaning most of the time `τ` is not identified at all. One premature
+  "AR-τ wins" reading was caught and corrected as a counting artifact (§10).
+- **The `D`-thresholded degeneracy screen does not work** (§11 attempt 1); `n·ζ1_min`
+  is an order-of-magnitude improvement but still not shippable (attempt 2). **Attempt 3
+  succeeded and is SHIPPED**: reframing from "predict the flag" to "compute the bound"
+  gives a closed-form SE agreeing with the 200-rep bootstrap on **99.64%** of 840 cells
+  at **~101× speedup**, now available as
+  `mrwin_ar_onesample(degeneracy_method = "analytic")` with the bootstrap retained as
+  default (the iid-approximation caveat is documented in the function's own help).
+  This is the only package-code change arising from the whole super-plan.
 - **P4** (§12): validated LP tool exists; the headline conjecture is **retracted**;
   reformulations open. **P5** (§13) not attempted.
 - All numbers are simulation/numeric results with MC or numeric error reported. Three

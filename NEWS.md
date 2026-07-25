@@ -2,6 +2,21 @@
 
 ## New features
 
+* **Closed-form degeneracy diagnostic for `mrwin_ar_onesample()` (~100x
+  faster).** New argument `degeneracy_method = c("bootstrap", "analytic")`.
+  Because the resampling loop holds `gamma` fixed, the bootstrapped quantity is
+  exactly `Var_i(gh_i - gamma*gx_i)`, so its standard error follows in closed
+  form from the influence function of a variance:
+  `SE(c^2) = sqrt(n*(m4 - m2^2))`. Validated against the 200-replication
+  bootstrap over 840 simulated cells (N in {800, 2500} x 7 censoring rates x
+  weak/strong instruments): bounds correlate at 0.9999, the `degenerate` flags
+  agree on **99.64%** of cells (1 false-safe call in 840), and the analytic
+  path is about **101x faster**. The bootstrap remains the default because
+  `g_i` are U-statistic projections rather than iid draws — a gap the bootstrap
+  captures exactly and the influence-function approximation does not; see
+  `?mrwin_ar_onesample` and
+  `tools/validation-scripts/p3-analytic-c2-bound.R`.
+
 * **One-sample identification-robust (Anderson-Rubin) inference for win-ratio
   MR.** `mrwin_ar_onesample()` inverts the pairwise Anderson-Rubin moment on
   individual-level one-sample data, with a closed-form (quadratic-inversion)
