@@ -5,8 +5,10 @@ validated. Super-plan §6 executed: §§7–13 report the results — 3 rigorous
 (Claims 6–7, §9), 1 honestly-partial (§8), and mixed/negative findings with the
 mechanism identified in each case (§§10–12). **One package change resulted**: a
 closed-form degeneracy diagnostic ~101× faster than the bootstrap it replaces, at
-99.64% flag agreement (§11 attempt 3, shipped). P4 (§12) has a validated tool but its
-headline conjecture was retracted; work continues. P5 (§13) not attempted.
+99.64% flag agreement (§11 attempt 3, shipped). P4 (§12) corrected its estimand and
+now carries a substantive result — the win ratio bounds the cross-world probability of
+individual benefit only very weakly, quantified, with both sharp endpoints in closed
+form and the LP validated against the classical Makarov bound. P5 (§13) not attempted.
 
 Companion to `dev/research-frontier-roadmap.md`. Every number is validated against
 the interventional oracle, an independent analytic formula, or exact computation;
@@ -23,7 +25,7 @@ Monte-Carlo / numeric error is reported. No confidential data, no real data.
 | 9 | `p5-impossibility-shape-cocycle.R` |
 | 10 | `p2-tau-portable-winmr-twosample.R`, `p2-delta-method-tau-se.R`, `p2-ar-style-tau-test.R`, `p2-twosample-multisnp-ar-tau.R` |
 | 11 | `p3-dthreshold-degeneracy-screen.R`, `p3-worstcase-zeta1min-screen.R`, `p3-analytic-c2-bound.R` |
-| 12 | `p4-kantorovich-partial-id-censored.R` |
+| 12 | `p4-kantorovich-partial-id-censored.R`, `p4-crossworld-benefit-bounds.R` |
 
 ---
 
@@ -478,49 +480,89 @@ practical win came from a different route entirely.
 
 ---
 
-## 12. P4 — a working Kantorovich-LP tool; the "identification budget" conjecture retracted
+## 12. P4 — sharp partial identification: the estimand corrected, and what the win ratio cannot tell you
 
-**Question**: given ONLY the two arms' marginals (no rank-invariance/comonotonic
-assumption), what is the sharp range of the win probability over *all* couplings? This
-is literally a Kantorovich transportation problem.
+**Attempt 1 bounded the wrong thing** (`p4-kantorovich-partial-id-censored.R`).
+It computed sharp bounds on `P(win)` over couplings **of the two arms** — but in win
+statistics the arms are *independent subjects by design*
+(`NB(x,x') = P(Y_i(x) ≻ Y_j(x'))`, `i≠j`), so that coupling is known, not ambiguous,
+and `NB` is **point-identified** from the marginals. Bounding it answered a question
+nobody asks, which is why the "width ∝ (1−D)" conjecture came out inverted and was
+retracted. Two self-caught errors along the way are still worth recording: a false
+**submodularity shortcut** (`1(y1>y2)` is submodular in some configurations, not
+others — `y2<y1<y2'<y1'` violates what `y1<y2<y1'<y2'` satisfies), and `lp.transport`'s
+**integer-plan default**, infeasible for fractional masses (caught via the solver's
+`status` code, fixed with `integers=NULL`).
 
-**Error #1, caught before use.** A hand derivation assumed `1(y1>y2)` is globally
-submodular, which would make comonotonic/countermonotonic couplings the universal
-sharp extremes. Refuted directly: the configuration `y2<y1<y2'<y1'` violates the
-submodularity inequality that holds for `y1<y2<y1'<y2'` — submodular in some regions,
-not others, so the Monge shortcut does not apply. Retracted before it reached a
-conclusion.
+**Attempt 2 — the real partial-identification problem** (`p4-crossworld-benefit-bounds.R`).
+The win ratio compares *different* patients but is habitually read as if it described
+the *same* patient under two treatments. The **cross-world probability of individual
+benefit** `P_ben := P(Y_i(x+ε) ≻ Y_i(x−ε))` — same `i` — is a different quantity, and
+it is **not identified**: it depends on a counterfactual coupling no experiment
+reveals. Its sharp set is exactly a Fréchet–Kantorovich problem, i.e. the (now
+validated) LP pointed at the right target. Model matches Claim 6 (§7) exactly.
 
-**Fix: solve the actual discretised LP** (`lpSolve`, dev-script only — *not* added to
-package `DESCRIPTION`). Validated first on a hand-solvable 2-point case (equal
-Bernoulli(0.5) marginals → sharp `[0, 0.5]`, matching hand calculation, with min/max
-plans literally the diagonal/anti-diagonal). **Error #2, also caught**: `lp.transport`
-defaults to `integers=1:(nc*nr)`, forcing an *integer* plan — infeasible for fractional
-probability masses; caught via the solver's own `status` code (not a silently wrong
-answer), fixed with `integers=NULL`. Post-fix, two shifted Gaussians (`μ1=0.5,μ2=−0.5`,
-equal σ): sharp max `1.00000` (achieved by the comonotonic coupling — a pure location
-shift makes it deterministic), sharp min `≈0.3875` (converging cleanly over 20→160
-bins), achieved by **neither** simple extremal coupling. So even the
-"comonotonic/countermonotonic are the two extremes" folklore is model-dependent.
+**Validation against a known answer.** Identical marginals (`α=0`, uncensored) must
+give a maximally uninformative set. Confirmed: sharp `NB ∈ [−0.9857, +0.9857]`
+(discretisation limit `±(n−1)/n = ±0.9929`) while the win statistic reads exactly
+`0.0000`. The classical "probability of benefit is unidentified" result, reproduced.
 
-**The conjecture test.** Extending the validated LP to the K=1 Type-I censoring win
-rule (continuum + one atom per arm) and sweeping `c` (hence `p`, hence `D=p(2−p)`) at
-fixed causal effect: the **`width ∝ (1−D)` conjecture from §6 is NOT confirmed — the
-relationship runs the opposite way**. Width *shrinks* as censoring grows: `0.049` at
-`D=0.12` vs `0.899` at `D≈1` (log-log slope of width vs `(1−D)` is `−0.06`, not `+1`).
-**Mechanism**: winning requires the *opponent* to have an observed event, so heavy
-censoring squashes `P(win)` toward 0 for *every* coupling simultaneously, narrowing the
-absolute width mechanically — a different phenomenon from "the coupling is pinned
-down", and conflating the two was the flaw. A validated check survived: the comonotonic
-(mrwin-simulator-style) coupling matches the LP's **minimum** at every censoring level
-here — the *opposite* corner from the Gaussian location-shift case, again confirming no
-universal rule ties comonotonicity to a fixed Fréchet extreme.
+**Main finding.** The win statistic sits far inside the cross-world sharp set:
 
-**Status: continuing.** The LP tool is validated, reusable infrastructure. The literal
-conjecture is retracted. Open reformulations worth testing: a *normalised/relative*
-width; bounding the **net-benefit contrast** rather than raw `P(win)`; and accounting
-for the fact that `D` itself has Fréchet-type ambiguity under an unconstrained coupling
-of the censoring indicators.
+| c | D | win-stat NB | comonotonic | sharp set | width | width/D |
+|---|---|---|---|---|---|---|
+| 0.15 | 0.260 | −0.050 | −0.164 | [−0.164, +0.064] | 0.229 | 0.880 |
+| 0.80 | 0.803 | −0.158 | −0.621 | [−0.621, +0.336] | 0.957 | 1.193 |
+| 1.50 | 0.954 | −0.189 | −0.843 | [−0.843, +0.557] | 1.400 | 1.468 |
+| 8.00 | 1.000 | −0.198 | −1.000 | [−1.000, +0.700] | 1.700 | 1.700 |
+
+At `c=8` the win statistic reports `NB = −0.198` (modest net harm), while the data are
+consistent with **anything from "every patient harmed" (−1.000) to "70% net benefit"
+(+0.700)**. *The win ratio pins down almost nothing about individual benefit.* This is
+a concrete, quantified statement of a gap the win-statistics literature routinely
+blurs, and it is the substantive P4 result.
+
+**Two closed forms, one confirmed and one cross-checked.**
+- **Sharp lower endpoint `= −P(T_A ≤ c) = −p_A`**, confirmed to 3–4 d.p. at every `c`
+  (e.g. `−0.84000` vs `−0.83992`; `−0.97500` vs `−0.97438`). *Mechanism*: under
+  proportional hazards `qexp(u,λ_A) < qexp(u,λ_B)` for **every** `u`, so under the
+  comonotonic (rank-invariance) coupling arm A's latent time is always smaller — A can
+  never win and loses exactly when its own event is observed. Comonotonic therefore
+  **attains the LP minimum**, making rank invariance the most *pessimistic* admissible
+  reading, not a neutral one.
+- **Sharp upper endpoint** matches the classical **Makarov / Frank–Nelsen–Schweizer**
+  bound `sup P(A>B) = min(1, inf_t[1 − F_A(t) + F_B(t)])` in the uncensored limit: LP
+  gives `0.70000` (nbin=200) → `0.70500` (nbin=400) against analytic `0.70764`, the
+  error **halving as `nbin` doubles**. An independent derivation route reaching the
+  same number — validating the entire LP pipeline (lesson E).
+- **Countermonotonic does *not* attain the upper endpoint** (`−0.140` vs `0.700`) — a
+  second, independent refutation of the "comonotonic/countermonotonic are the two
+  extremes" folklore.
+
+**`D`'s role, refined (reformulation #1).** Raw width vs `D` has log-log slope
+**+1.469** (R²=0.977) — width *grows* with `D`, again the opposite of the original
+"budget" conjecture, but now on the correct estimand and with a clear mechanism:
+censoring creates **ties**, and a tied pair can be claimed as neither benefit nor harm,
+so heavy censoring mechanically narrows the achievable `NB` range. Normalising by `D`
+helps substantially but does not close it: CV falls **0.560 → 0.264**, yet `width/D`
+still drifts 0.88→1.70. So **`D` partially, not fully, governs identification width**
+— an honest partial result, not the clean invariant §6 hoped for.
+
+**Reformulation #3 refuted — a clean negative.** Enforcing one *shared* administrative
+cutoff (physically correct: same patient, same follow-up, so `δ_A`,`δ_B` are determined
+by the latent-time coupling) versus coupling observed `(X,δ)` pairs freely gives
+**tightening of 0.000 to −0.003** — i.e. **none**, within discretisation noise, at
+every `c` tested. The physically-correct constraint carries no extra identifying
+information here. I expected it to tighten; it does not.
+
+**Discretisation verified**: width stable at 1.383, 1.400, 1.400, 1.395 for
+`nbin = 60, 100, 140, 200`.
+
+**Status: substantive result obtained; the original conjecture stays retracted.** Open
+next: bound `τ` (the collapsible effect) rather than `NB`; add IV/instrument
+constraints to shrink the set (the original "IV-stratified marginals" framing); and
+test whether a *bounded-effect* or monotone-treatment-response restriction buys back
+useful width — the standard partial-identification levers, none yet applied here.
 
 ---
 
@@ -559,8 +601,17 @@ unvalidated sketch would be worse than an honest "not attempted." Open.
   `mrwin_ar_onesample(degeneracy_method = "analytic")` with the bootstrap retained as
   default (the iid-approximation caveat is documented in the function's own help).
   This is the only package-code change arising from the whole super-plan.
-- **P4** (§12): validated LP tool exists; the headline conjecture is **retracted**;
-  reformulations open. **P5** (§13) not attempted.
+- **P4** (§12): attempt 1's estimand was wrong (`NB` is point-identified by design) and
+  its conjecture stays **retracted**. Attempt 2 targets the **cross-world** probability
+  of individual benefit and delivers a substantive result: the win statistic lies far
+  inside a very wide sharp set (at `c=8`, `NB=−0.198` against a set of
+  `[−1.000,+0.700]`), the lower endpoint equals `−P(T_A≤c)` in closed form with
+  comonotonic coupling attaining it, and the upper endpoint matches the classical
+  **Makarov** bound (independent cross-check, error halving as the grid doubles). `D`
+  governs width only **partially** (CV 0.560→0.264 under `D`-normalisation, but
+  `width ∝ D^1.47`, not `D^1`), and the physically-motivated **shared-cutoff constraint
+  buys nothing** (tightening ≈0). Bounding `τ` rather than `NB`, and adding IV or
+  monotonicity restrictions, are the open levers. **P5** (§13) not attempted.
 - All numbers are simulation/numeric results with MC or numeric error reported. Three
   self-caught error classes are recorded rather than edited out: two factor-of-2
   finite-difference bugs (`B'(0)=NB(ε)/ε`, not `/(2ε)`), one integration-truncation
