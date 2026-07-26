@@ -1,6 +1,6 @@
 # mrwin: 계층적 복합 평가변수를 위한 인과 승리 통계량
 
-[English](README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
+[English](../README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 ## 이 패키지가 하는 일
 
@@ -468,12 +468,12 @@ SDPD는 직접 다면발현을 검정합니다.
   구현되고 검증되었으나, 외부 검사 결과 이는 십분위보다 잡음이 많고 `D` 민감도를
   줄이지 못하는 것으로 나타났습니다(도구-표준화 기울기는 비율이며, 더 미세한
   평활화는 그 분모를 축소시킵니다). 권장되는 방법은 연속 재매개변수화가 아니라
-  `D`에 걸친 민감도 분석을 동반한 이산 추정량입니다(`inst/spec/wp15-continuous-isg.md`
+  `D`에 걸친 민감도 분석을 동반한 이산 추정량입니다(`dev/wp15-continuous-isg.md`
   참조).
 
 ### 성능 및 추론 백엔드(선택적)
 
-기본 백엔드는 변경되지 않았으나, 2단계 작업(`inst/spec/acceleration-roadmap.md`)은
+기본 백엔드는 변경되지 않았으나, 2단계 작업(`dev/acceleration-roadmap.md`)은
 `mrwin_controls()`를 통해 검증된 선택적 대안을 추가했습니다:
 
 - `backend = "fast"` — 준2차의, 컴파일된(Rcpp) win/loss 커널(`K`개 우선순위

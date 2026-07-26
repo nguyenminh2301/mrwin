@@ -10,6 +10,21 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// mrwin_subject_win_loss_cpp
+NumericMatrix mrwin_subject_win_loss_cpp(NumericMatrix time_s, IntegerMatrix status_s, NumericMatrix time_o, IntegerMatrix status_o, NumericVector weights_o);
+RcppExport SEXP _mrwin_mrwin_subject_win_loss_cpp(SEXP time_sSEXP, SEXP status_sSEXP, SEXP time_oSEXP, SEXP status_oSEXP, SEXP weights_oSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type time_s(time_sSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type status_s(status_sSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type time_o(time_oSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type status_o(status_oSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type weights_o(weights_oSEXP);
+    rcpp_result_gen = Rcpp::wrap(mrwin_subject_win_loss_cpp(time_s, status_s, time_o, status_o, weights_o));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mrwin_fast_pair_cpp
 NumericVector mrwin_fast_pair_cpp(NumericMatrix time_high, IntegerMatrix status_high, NumericMatrix time_low, IntegerMatrix status_low, NumericVector weights_high, NumericVector weights_low);
 RcppExport SEXP _mrwin_mrwin_fast_pair_cpp(SEXP time_highSEXP, SEXP status_highSEXP, SEXP time_lowSEXP, SEXP status_lowSEXP, SEXP weights_highSEXP, SEXP weights_lowSEXP) {
@@ -28,6 +43,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_mrwin_mrwin_subject_win_loss_cpp", (DL_FUNC) &_mrwin_mrwin_subject_win_loss_cpp, 5},
     {"_mrwin_mrwin_fast_pair_cpp", (DL_FUNC) &_mrwin_mrwin_fast_pair_cpp, 6},
     {NULL, NULL, 0}
 };

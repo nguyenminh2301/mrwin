@@ -1,0 +1,145 @@
+url: https://nguyenminh2301.github.io/mrwin/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#2c5f8a"
+    base_font: {google: "Inter"}
+    code_font: {google: "JetBrains Mono"}
+
+development:
+  mode: auto
+
+home:
+  title: mrwin • Scalable causal win statistics
+  description: >
+    Causal win-statistic methods for hierarchically ranked composite endpoints
+    in Mendelian randomization — biobank-scale, correctly calibrated, and
+    extensible across a programme of methods papers.
+
+navbar:
+  structure:
+    left:  [intro, articles, reference, news]
+    right: [roadmap, search, github]
+  components:
+    articles:
+      text: Guides
+      menu:
+        - text: "Getting started (clinicians & epidemiologists)"
+          href: articles/getting-started.html
+        - text: "Methods: scalable causal win statistics"
+          href: articles/mrwin.html
+    roadmap:
+      icon: fa-map-signs
+      text: Roadmap
+      href: https://github.com/nguyenminh2301/mrwin/blob/main/ROADMAP.md
+
+# Reference grouped by theme. As the package grows across papers, add a new
+# `title:` block per feature family; reserved placeholders for planned modules
+# are listed (commented) at the end so the structure is ready to extend.
+reference:
+- title: "Start here"
+  desc: "The one-call entry point and the objects you feed it."
+  contents:
+  - mrwin
+  - mrwin_endpoint
+  - mrwin_gwas
+  - mrwin_config
+  - mrwin_controls
+
+- title: "Estimation"
+  desc: "Polygenic-score strata, the dose-standardized estimator, GLS pooling."
+  contents:
+  - mrwin_estimate
+  - mrwin_prs_strata
+  - mrwin_doubly_ranked_strata
+  - mrwin_gls_pool
+
+- title: "Hierarchical win/loss kernel"
+  desc: "The fixed, antisymmetric comparison kernel and its pairwise/stratum forms."
+  contents:
+  - mrwin_kernel
+  - mrwin_pair_kernel
+  - mrwin_precompute_pair_kernels
+  - mrwin_pair_win_loss
+  - mrwin_pair_log_cwr
+  - mrwin_stratum_win_loss
+  - mrwin_stratum_log_cwr
+
+- title: "Biobank-scale backends"
+  desc: "Subquadratic compiled kernel and sparse pipeline for large cohorts."
+  contents:
+  - mrwin_fast_pair_win_loss
+  - mrwin_fast_adjacent_win_loss
+  - mrwin_sparse_adjacent_win_loss
+  - mrwin_sparse_estimate
+  - mrwin_sparse_bootstrap
+  - mrwin_verify_sparse_dense_parity
+
+- title: "Inference & confidence intervals"
+  desc: "Multiplier bootstrap, analytic influence-function variance, Fieller."
+  contents:
+  - mrwin_multiplier_bootstrap
+  - mrwin_analytic_bootstrap
+  - mrwin_analytic_covariance
+  - mrwin_analytic_inference
+  - mrwin_gwas_resample_covariance
+  - mrwin_pleiotropy_bounded_ci
+
+- title: "Pleiotropy & sensitivity diagnostics"
+  desc: "Step-down pleiotropy diagnostic and per-SNP MR-Egger style checks."
+  contents:
+  - mrwin_sdpd
+  - mrwin_mr_egger
+  - mrwin_cox_per_snp
+  - mrwin_aalen_per_snp
+
+- title: "Covariate adjustment"
+  contents:
+  - mrwin_propensity_weights
+
+- title: "Simulation"
+  desc: "Generate cohorts and run scenario grids to study calibration."
+  contents:
+  - mrwin_simulate
+  - mrwin_scenarios
+  - mrwin_run_simulation_grid
+  - mrwin_simulation_summary
+
+- title: "Data preparation"
+  contents:
+  - mrwin_validate_data
+
+- title: "Reporting & output"
+  desc: "Human-readable reports and tidy/print/summary/plot methods."
+  contents:
+  - mrwin_report
+  - tidy
+  - has_keyword("methods")
+
+- title: "Two-sample / summary-data MR"
+  desc: "Per-SNP win-odds summary statistics (a win-odds GWAS) and inverse-variance pooling for win-ratio MR from summary data."
+  contents:
+  - mrwin_win_snp
+  - mrwin_win_gwas
+  - mrwin_twosample_ivw
+  - mrwin_winmr_ar
+
+- title: "Benchmarking"
+  contents:
+  - mrwin_benchmark
+  - mrwin_per_component_benchmark
+
+# ---------------------------------------------------------------------------
+# Reserved for upcoming feature families (see ROADMAP.md). Uncomment the block
+# and list the exported functions when each module lands.
+#
+# - title: "Multivariable & mediation"
+#   contents:
+#   - mrwin_mvmr
+# ---------------------------------------------------------------------------
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with

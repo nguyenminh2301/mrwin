@@ -1,6 +1,6 @@
 # mrwin: Causal Win Statistics for Hierarchical Composite Endpoints
 
-[English](README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
+[English](README.md) | [Tiếng Việt](translations/README.vi.md) | [中文](translations/README.zh.md) | [日本語](translations/README.ja.md) | [한국어](translations/README.ko.md) | [Français](translations/README.fr.md) | [Deutsch](translations/README.de.md)
 
 ## What This Package Does
 
@@ -262,11 +262,27 @@ the entire disease course from recurrence through death.
 
 ## Installation
 
+**New to R?** If you are a clinician or epidemiologist who has never used R,
+follow the step-by-step, no-jargon guide — installing R + RStudio, installing
+this package, and running your first analysis on your own computer:
+**[Getting started](vignettes/getting-started.Rmd)** (bilingual: Tiếng Việt +
+English). The short version, once R is installed:
+
 ```r
-# From GitHub (development version)
-# install.packages("devtools")
-devtools::install_github("nguyenminh2301/mrwin")
+# 1. Install the 'remotes' helper (only the first time)
+install.packages("remotes")
+
+# 2. Install mrwin from GitHub
+remotes::install_github("nguyenminh2301/mrwin")
+
+# 3. Load it
+library(mrwin)
 ```
+
+`mrwin` has a compiled component, so on Windows you also need
+[Rtools](https://cran.r-project.org/bin/windows/Rtools/) and on macOS the Xcode
+command-line tools (`xcode-select --install`). The Getting started guide walks
+through this.
 
 ---
 
@@ -497,12 +513,12 @@ strata. The SDPD tests for direct pleiotropy.
   not reduce `D`-sensitivity (the instrument-standardized gradient is a ratio,
   and finer smoothing shrinks its denominator). The recommended practice is the
   discrete estimator with a sensitivity analysis over `D`, not a continuous
-  reparameterization (see `inst/spec/wp15-continuous-isg.md`).
+  reparameterization (see `dev/wp15-continuous-isg.md`).
 
 ### Performance and inference backends (opt-in)
 
 The default backend is unchanged, but the Phase II work
-(`inst/spec/acceleration-roadmap.md`) added validated, opt-in alternatives via
+(`dev/acceleration-roadmap.md`) added validated, opt-in alternatives via
 `mrwin_controls()`:
 
 - `backend = "fast"` — a subquadratic, compiled (Rcpp) win/loss kernel

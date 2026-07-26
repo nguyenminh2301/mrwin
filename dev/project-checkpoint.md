@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-10.
 
-This file tracks current implementation state. The roadmap remains canonical for work-package definitions: `inst/spec/work-package-roadmap.md`.
+This file tracks current implementation state. The roadmap remains canonical for work-package definitions: `dev/work-package-roadmap.md`.
 
 ## Current State
 
@@ -19,8 +19,8 @@ This file tracks current implementation state. The roadmap remains canonical for
 ## Phase II Pointer
 
 The second program of work is canonically defined in
-`inst/spec/acceleration-roadmap.md`, with per-work-package specs in
-`inst/spec/wp13-fast-kernel.md` … `inst/spec/wp19-scalability-validation.md`.
+`dev/acceleration-roadmap.md`, with per-work-package specs in
+`dev/wp13-fast-kernel.md` … `dev/wp19-scalability-validation.md`.
 Phase II addresses the one structural gap Phase I left open: the win/loss pair
 sweep is `Θ(N²/D)` per bootstrap iteration, which is infeasible at biobank
 scale. Phase II replaces it with a subquadratic algorithm, removes the arbitrary
@@ -115,6 +115,23 @@ remain to a publishable + released package.
 - Verification environment: R 4.3.3 installed in the dev container; full
   testthat suite (79 groups, 0 failures) + Python differential tests green.
 
+### Paper-01 full Monte-Carlo grid — COMPLETE (2026-06-23)
+
+The headline validation grids the WP19 cells deferred are now run and recorded in
+`inst/spec/validation-findings.md` (drivers: `tools/validation-scripts/paper01_mc_grid.R`,
+`paper01_weakiv.R`, `paper01_sdpd_power.R`). Summary:
+- **Type-I** (Fieller): 0.050 (N=2000), 0.028 (N=4000) — calibrated-to-conservative.
+- **Power**: rises with N (0.10→0.28) and effect size (0.04→0.24 at N=4000);
+  honestly modest at N=4000 (composite win-ratio MR is data-hungry).
+- **Weak instrument**: honest coverage stays ~0.96–0.97 at *every* instrument
+  strength (the method flags `weak_instrument` and returns unbounded Fieller
+  intervals rather than falsely excluding the truth).
+- **Pleiotropy/SDPD**: type-I 0.047/0.050 (calibrated); ~null power vs
+  *score-proportional* `gamma_direct` pleiotropy (correct — that case is
+  InSIDE-violating and undetectable by any MR-Egger-type test); clean power curve
+  (0.05→1.00) vs InSIDE-satisfying per-SNP pleiotropy. Closes the
+  pleiotropy/weak-instrument items in the Post-Release Validation Plan below.
+
 ## Completed Commits
 
 | WP | Commit | Scope |
@@ -193,7 +210,7 @@ These are the remaining items after WP12 (deferred to post-release):
 1. CI pipeline created: GitHub Actions with R CMD check on 3 OS x 2 R versions (release + devel).
 2. Coverage workflow: covr integration with codecov upload.
 3. Python tests: CI runs smoke, kernel, and replication tests on 3 OS x 2 Python versions.
-4. Release checklist: `inst/spec/release-checklist.md` with 10 gate categories.
+4. Release checklist: `dev/release-checklist.md` with 10 gate categories.
 5. `R CMD check --as-cran` passes (2 expected WARNINGs for vignettes, 3 standard NOTEs).
 6. covr added to Suggests for coverage tracking.
 

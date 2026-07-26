@@ -1,0 +1,222 @@
+---
+title: "Getting started · Bắt đầu (cho nhà lâm sàng & dịch tễ học)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started (clinicians & epidemiologists)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+> **Song ngữ / Bilingual.** Mỗi phần có tiếng Việt trước, English sau.
+> This guide is for readers with **no programming background** — clinicians and
+> epidemiologists who want to install and run `mrwin` on their own computer.
+
+---
+
+## Gói này dùng để làm gì? · What is this for?
+
+**🇻🇳** `mrwin` trả lời một câu hỏi: *một phơi nhiễm (ví dụ huyết áp, mỡ máu) —
+được dự đoán bằng yếu tố di truyền — đẩy bệnh nhân về phía kết cục tốt hơn hay
+xấu hơn, khi các kết cục được xếp hạng theo mức độ nặng (tử vong > nhập viện >
+biến cố nhẹ)?* Nó dùng di truyền làm "thí nghiệm tự nhiên" (Mendelian
+randomization) để tránh nhiễu, và dùng *thống kê thắng/thua* (win statistics) để
+tôn trọng thứ tự ưu tiên lâm sàng của các kết cục.
+
+**🇬🇧** `mrwin` answers one question: *does a genetically predicted exposure push
+patients toward better or worse outcomes, when those outcomes are ranked by
+clinical severity (death > hospitalization > minor event)?* It uses genetics as
+a natural experiment (Mendelian randomization) to avoid confounding, and *win
+statistics* to respect the clinical priority order of the outcomes.
+
+---
+
+## Bước 0 — Cài R và RStudio · Step 0 — Install R and RStudio
+
+**🇻🇳** `mrwin` chạy trong **R**. Bạn nên cài thêm **RStudio**, một giao diện dễ
+dùng cho R.
+
+1. Cài R: vào <https://cran.r-project.org>, chọn hệ điều hành (Windows / macOS /
+   Linux), tải và cài như một phần mềm bình thường.
+2. Cài RStudio Desktop (miễn phí):
+   <https://posit.co/download/rstudio-desktop/>.
+3. Mở RStudio. Ô lớn bên trái là **Console** — bạn gõ lệnh vào đó.
+
+**🇬🇧** `mrwin` runs inside **R**. Also install **RStudio**, a friendly interface.
+
+1. Install R from <https://cran.r-project.org> (pick your OS, install normally).
+2. Install the free RStudio Desktop:
+   <https://posit.co/download/rstudio-desktop/>.
+3. Open RStudio. The large pane on the left is the **Console** — type commands there.
+
+---
+
+## Bước 1 — Công cụ biên dịch · Step 1 — Build tools
+
+**🇻🇳** `mrwin` có phần mã C++ cần được biên dịch, nên cần một công cụ kèm theo
+**một lần duy nhất**:
+
+- **Windows:** cài **Rtools** đúng phiên bản R của bạn:
+  <https://cran.r-project.org/bin/windows/Rtools/>.
+- **macOS:** mở ứng dụng *Terminal* và chạy `xcode-select --install`.
+- **Linux (Ubuntu/Debian):** chạy `sudo apt-get install build-essential`.
+
+**🇬🇧** `mrwin` has a compiled C++ component, so you need build tools **once**:
+
+- **Windows:** install **Rtools** matching your R version (link above).
+- **macOS:** run `xcode-select --install` in the *Terminal* app.
+- **Linux (Ubuntu/Debian):** `sudo apt-get install build-essential`.
+
+---
+
+## Bước 2 — Cài gói mrwin · Step 2 — Install mrwin
+
+**🇻🇳 / 🇬🇧** Trong Console của RStudio, gõ / In the RStudio Console, type:
+
+```{r install, eval = FALSE}
+# Chỉ lần đầu / first time only:
+install.packages("remotes")
+
+# Cài mrwin từ GitHub / install mrwin from GitHub:
+remotes::install_github("nguyenminh2301/mrwin")
+```
+
+**🇻🇳** Nếu được hỏi "update packages?", chọn cập nhật là an toàn. Cài xong, nạp gói:
+**🇬🇧** If asked to update packages, updating is safe. Then load it:
+
+```{r load}
+library(mrwin)
+```
+
+---
+
+## Bước 3 — Phân tích đầu tiên · Step 3 — Your first analysis
+
+**🇻🇳** Bạn chưa cần dữ liệu thật. Gói có sẵn bộ mô phỏng (một đoàn hệ tim–thận
+giả lập). Sao chép cả khối dưới đây vào Console:
+
+**🇬🇧** You don't need real data yet — the package can simulate a (cardiorenal)
+cohort. Copy this whole block into the Console:
+
+```{r first-analysis}
+# 1. Mô phỏng một đoàn hệ / simulate a cohort (8000 người / subjects)
+cfg <- mrwin_config(n_outcome = 8000, m_snps = 40, seed = 1)
+dat <- mrwin_simulate(cfg)
+
+# 2. Ước lượng / fit the model
+fit <- mrwin(
+  # ba kết cục xếp theo độ nặng / three outcomes ranked by severity:
+  endpoint = mrwin_endpoint(dat$time, dat$status, c("death", "hf", "renal")),
+  genotype = dat$G,                 # ma trận biến thể di truyền / genotype matrix
+  exposure = dat$X,                 # phơi nhiễm / the exposure
+  gwas     = mrwin_gwas(dat$true_betas, rep(0.01, 40)),  # trọng số GWAS / weights
+  controls = mrwin_controls(n_strata = 5, bootstrap = 200,
+                            seed = 2, backend = "fast")
+)
+
+# 3. Xem kết quả / look at the result
+fit
+```
+
+---
+
+## Bước 4 — Đọc kết quả · Step 4 — Reading the output
+
+**🇻🇳** Những dòng quan trọng:
+
+- **`DS-CWR`** — *tỉ số thắng nhân quả chuẩn-hóa-liều*. Đây là kết quả chính.
+  - `> 1`: phơi nhiễm gắn với **hồ sơ kết cục TỐT hơn** (bảo vệ).
+  - `< 1`: gắn với **kết cục XẤU hơn** (có hại).
+  - `= 1`: không có liên hệ.
+- **`95% CI (Fieller)`** — khoảng tin cậy. Nếu khoảng **chứa 1**, kết quả *không*
+  có ý nghĩa thống kê. Nếu công cụ di truyền yếu, khoảng có thể "unbounded" — đó
+  là tín hiệu trung thực rằng dữ liệu chưa đủ mạnh để kết luận.
+- **`Q` ( p )** — kiểm định tính nhất quán giữa các tầng; `p` nhỏ gợi ý đa hiệu
+  (pleiotropy) hoặc vi phạm giả định.
+- **`Warnings`** — ví dụ `weak_instrument` nhắc bạn diễn giải thận trọng.
+
+`summary(fit)` cho bản tường thuật chi tiết; `tidy(fit)` cho một bảng để đưa vào
+báo cáo.
+
+**🇬🇧** The lines that matter:
+
+- **`DS-CWR`** — the *dose-standardized causal win ratio*, the headline result.
+  `> 1` = exposure linked to a **better** outcome profile (protective); `< 1` =
+  **worse** (harmful); `= 1` = no association.
+- **`95% CI (Fieller)`** — confidence interval. If it **contains 1**, the result
+  is not statistically significant. With a weak genetic instrument it can be
+  "unbounded" — an honest signal that the data cannot yet support a conclusion.
+- **`Q` ( p )** — a consistency test across strata; a small `p` suggests
+  pleiotropy or an assumption violation.
+- **`Warnings`** — e.g. `weak_instrument` tells you to interpret cautiously.
+
+Use `summary(fit)` for a detailed narrative and `tidy(fit)` for a one-row table:
+
+```{r tidy}
+summary(fit)
+```
+
+---
+
+## Bước 5 — Dùng dữ liệu của bạn · Step 5 — Using your own data
+
+**🇻🇳** Để phân tích đoàn hệ thật, bạn cần bốn thành phần (mỗi hàng là một người):
+
+| thành phần | là gì |
+|---|---|
+| `endpoint` | thời gian + biến cố (0/1) cho từng kết cục, xếp từ nặng → nhẹ |
+| `genotype` | ma trận biến thể di truyền (cột = SNP, đã chuẩn hóa) |
+| `exposure` | giá trị phơi nhiễm của mỗi người |
+| `gwas` | hệ số GWAS (beta) và sai số chuẩn cho từng SNP |
+
+**🇬🇧** For a real cohort you provide four pieces (one row per person):
+endpoints (time + 0/1 event for each outcome, ranked severe → mild), a genotype
+matrix (columns = SNPs), the exposure, and GWAS weights (beta + se per SNP).
+
+```{r real-data, eval = FALSE}
+# Khung mẫu — thay bằng dữ liệu của bạn / template — replace with your data:
+fit <- mrwin(
+  endpoint = mrwin_endpoint(
+    time   = your_time_matrix,    # n × K: thời gian đến biến cố / time-to-event
+    status = your_status_matrix,  # n × K: 1 = có biến cố / event, 0 = bị kiểm duyệt
+    labels = c("death", "hospitalization", "minor_event")
+  ),
+  genotype = your_genotype_matrix,           # n × m
+  exposure = your_exposure_vector,           # length n
+  gwas     = mrwin_gwas(beta = your_betas, se = your_ses),
+  controls = mrwin_controls(n_strata = 10, bootstrap = 1000, backend = "fast")
+)
+```
+
+**🇻🇳** Trước khi ước lượng, hãy kiểm tra dữ liệu bằng `mrwin_validate_data(...)`.
+Xem bài *Methods* để hiểu giả định và cách chọn `n_strata`.
+**🇬🇧** Validate inputs first with `mrwin_validate_data(...)`. See the *Methods*
+article for the assumptions and how to choose `n_strata`.
+
+---
+
+## Khắc phục sự cố · Troubleshooting
+
+**🇻🇳 / 🇬🇧**
+
+- *"installation of package had non-zero exit status"* hoặc lỗi liên quan biên
+  dịch → bạn thiếu **Rtools** (Windows) / **Xcode CLT** (macOS). Xem Bước 1.
+  *(missing build tools — see Step 1.)*
+- *"there is no package called 'remotes'"* → chạy `install.packages("remotes")`
+  trước.
+- Công cụ yếu / khoảng tin cậy rất rộng → cần cỡ mẫu lớn hơn hoặc công cụ di
+  truyền mạnh hơn. *(weak instrument — need a larger sample or stronger SNPs.)*
+
+---
+
+## Tiếp theo · Next steps
+
+**🇻🇳 / 🇬🇧**
+
+- Bài *Methods* / the *Methods* article — `vignette("mrwin")` — giải thích ước
+  lượng, tính nhất quán, hiệu chỉnh.
+- Danh mục hàm / function reference: trang **Reference** của website tài liệu.
+- Lộ trình tính năng / roadmap: [`ROADMAP.md`](https://github.com/nguyenminh2301/mrwin/blob/main/ROADMAP.md).

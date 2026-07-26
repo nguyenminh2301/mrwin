@@ -1,15 +1,20 @@
 Package: mrwin
-Title: Causal Win Statistics
-Version: 0.0.0.9000
+Title: Scalable Causal Win Statistics for Hierarchical Composite Endpoints
+Version: 0.1.0
 Authors@R:
     person("Nguyen Thien", "Minh", email = "minhnt@ump.edu.vn", role = c("aut", "cre"))
-Author: Nguyen Thien Minh [aut, cre]
-Maintainer: Nguyen Thien Minh <minhnt@ump.edu.vn>
-Description: R implementation of causal win-statistic methods for hierarchical
-    composite endpoints, including the hierarchical comparison kernel,
-    adjacent-stratum causal win ratios, dose-standardised GLS pooling,
-    multiplier-bootstrap uncertainty propagation, and SDPD MR-Egger diagnostics.
+Description: Causal win-statistic methods for hierarchical composite endpoints
+    in Mendelian randomization. Estimates a dose-standardised causal win ratio
+    by forming polygenic-score strata, computing adjacent-stratum
+    instrument-standardised gradients, and pooling them by generalised least
+    squares. Provides a subquadratic, compiled hierarchical win/loss kernel for
+    biobank-scale data, an analytic influence-function variance as a fast
+    alternative to the multiplier bootstrap, Fieller confidence intervals for
+    the ratio estimand, optional ordinal inverse-probability-of-treatment
+    weighting, and step-down pleiotropy ('MR-Egger') diagnostics.
 License: MIT + file LICENSE
+URL: https://github.com/nguyenminh2301/mrwin
+BugReports: https://github.com/nguyenminh2301/mrwin/issues
 Encoding: UTF-8
 Depends:
     R (>= 4.1.0)
@@ -22,9 +27,12 @@ LinkingTo:
 Suggests:
     covr,
     knitr,
+    pkgdown,
     rmarkdown,
+    roxygen2,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
+Config/Needs/website: pkgdown
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

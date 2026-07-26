@@ -297,6 +297,37 @@ inline vi icol(const IntegerMatrix& m, int c) { int n = m.nrow(); vi v(n); for (
 
 } // namespace
 
+// Per-subject weighted win/loss counts of each "subject" row against the full
+// "other" group, under the hierarchical first-priority decision rule (identical
+// to mrwin_kernel: i beats j at the first level where opp fails first, i.e.
+// status_o==1 & t_i > t_o; i loses where status_s==1 & t_o > t_i). Returns an
+// ns x 2 matrix of (P_plus, P_minus) = (sum_o w_o 1{win}, sum_o w_o 1{loss}).
+// O(ns * no * K); used only for the closed-form win-odds SE (subsampled rows),
+// the point estimate stays on the subquadratic kernel.
+// [[Rcpp::export]]
+NumericMatrix mrwin_subject_win_loss_cpp(NumericMatrix time_s, IntegerMatrix status_s,
+                                         NumericMatrix time_o, IntegerMatrix status_o,
+                                         NumericVector weights_o) {
+  int ns = time_s.nrow(), no = time_o.nrow(), K = time_s.ncol();
+  NumericMatrix out(ns, 2);
+  for (int i = 0; i < ns; i++) {
+    double wp = 0.0, wm = 0.0;
+    for (int j = 0; j < no; j++) {
+      int res = 0;
+      for (int p = 0; p < K; p++) {
+        double ti = time_s(i, p), tj = time_o(j, p);
+        int di = status_s(i, p), dj = status_o(j, p);
+        if (dj == 1 && ti > tj) { res = 1; break; }
+        if (di == 1 && tj > ti) { res = -1; break; }
+      }
+      if (res == 1) wp += weights_o[j];
+      else if (res == -1) wm += weights_o[j];
+    }
+    out(i, 0) = wp; out(i, 1) = wm;
+  }
+  return out;
+}
+
 // [[Rcpp::export]]
 NumericVector mrwin_fast_pair_cpp(NumericMatrix time_high, IntegerMatrix status_high,
                                   NumericMatrix time_low, IntegerMatrix status_low,

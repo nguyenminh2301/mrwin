@@ -1,6 +1,6 @@
 # mrwin : Statistiques de Gain Causales pour Critères Composites Hiérarchisés
 
-[English](README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
+[English](../README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 ## Ce que fait ce package
 
@@ -395,11 +395,11 @@ L'ajustement IPTW améliore la précision en équilibrant les covariables entre 
 - **Covariance GWAS diagonale** : Le bootstrap actuel utilise les erreurs standard SNP par SNP, pas la matrice de covariance LD complète. Cela peut sous-estimer l'incertitude lorsque les SNPs sont en déséquilibre de liaison.
 - **Vulnérabilité à la pléiotropie** : Le cCWR est sensible à la pléiotropie contaminant la hiérarchie. Une pléiotropie au niveau de la mortalité aussi faible que gamma = 0,05 peut réduire la couverture à 12 %.
 - **Exigences de taille d'échantillon** : Des échantillons de taille biobanque (N > 100 000) sont un prérequis statistique strict pour une inférence fiable.
-- **Nombre de strates `D`** : l'estimateur de type décile nécessite de choisir un nombre de strates. Un estimateur de gradient continu, contrôlé par largeur de bande (dont l'estimateur décile est le cas particulier boxcar exact), a été implémenté et validé, mais des vérifications externes ont montré qu'il est plus bruité que le décile et ne réduit pas la sensibilité à `D` (le gradient standardisé par instrument est un rapport, et un lissage plus fin rétrécit son dénominateur). La pratique recommandée est l'estimateur discret avec une analyse de sensibilité sur `D`, et non une reparamétrisation continue (voir `inst/spec/wp15-continuous-isg.md`).
+- **Nombre de strates `D`** : l'estimateur de type décile nécessite de choisir un nombre de strates. Un estimateur de gradient continu, contrôlé par largeur de bande (dont l'estimateur décile est le cas particulier boxcar exact), a été implémenté et validé, mais des vérifications externes ont montré qu'il est plus bruité que le décile et ne réduit pas la sensibilité à `D` (le gradient standardisé par instrument est un rapport, et un lissage plus fin rétrécit son dénominateur). La pratique recommandée est l'estimateur discret avec une analyse de sensibilité sur `D`, et non une reparamétrisation continue (voir `dev/wp15-continuous-isg.md`).
 
 ### Backends de performance et d'inférence (en option)
 
-Le backend par défaut est inchangé, mais le travail de la Phase II (`inst/spec/acceleration-roadmap.md`) a ajouté des alternatives validées et optionnelles via `mrwin_controls()` :
+Le backend par défaut est inchangé, mais le travail de la Phase II (`dev/acceleration-roadmap.md`) a ajouté des alternatives validées et optionnelles via `mrwin_controls()` :
 
 - `backend = "fast"` — un noyau win/loss sous-quadratique, compilé (Rcpp) (`Theta(N log^{K-1} N)` pour `K` niveaux de priorité) qui est identique bit à bit au backend dense et porte l'estimateur à l'échelle biobanque (ex. : `K = 3`, `N = 80 000` en moins d'une seconde).
 - `inference = "analytic"` — une variance par fonction d'influence en forme close qui reproduit le bootstrap multiplicatif (avec un terme de Monte-Carlo exact pour l'incertitude des poids GWAS), supprimant la boucle bootstrap pour la composante d'échantillonnage.

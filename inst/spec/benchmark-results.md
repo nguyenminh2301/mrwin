@@ -29,7 +29,7 @@ Empirical log-log exponent:
   full fit is dragged down by numpy block overhead at small N).
 - fast: full-fit `p = 1.17`, tail `p = 1.21`.
 
-Gate (`implementation-plan.md` S1.6): `p_fast < 1.3` ✅ and `p_dense_tail > 1.6`
+Gate (`dev/implementation-plan.md` S1.6): `p_fast < 1.3` ✅ and `p_dense_tail > 1.6`
 ✅. This is the concrete evidence that the algorithm changes **order**, not just
 the constant factor.
 

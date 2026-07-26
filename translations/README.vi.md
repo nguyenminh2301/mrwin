@@ -1,6 +1,6 @@
 # mrwin: Causal Win Statistics cho Tiêu chí Tổng hợp Phân cấp
 
-[English](README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
+[English](../README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 ## Chức năng của Gói
 
@@ -502,12 +502,12 @@ suốt các tầng PRS. SDPD kiểm tra pleiotropy trực tiếp.
   độ nhạy theo `D` (gradient chuẩn-hoá-theo-công-cụ là một tỉ số, làm mịn càng
   nhỏ thì mẫu số càng co lại). Khuyến nghị là dùng ước lượng rời rạc kèm phân
   tích độ nhạy theo `D`, không tái tham số hoá liên tục
-  (xem `inst/spec/wp15-continuous-isg.md`).
+  (xem `dev/wp15-continuous-isg.md`).
 
 ### Backend hiệu năng và suy luận (tuỳ chọn)
 
 Backend mặc định không đổi, nhưng công việc Giai đoạn II
-(`inst/spec/acceleration-roadmap.md`) đã bổ sung các lựa chọn tuỳ chọn đã thẩm
+(`dev/acceleration-roadmap.md`) đã bổ sung các lựa chọn tuỳ chọn đã thẩm
 định qua `mrwin_controls()`:
 
 - `backend = "fast"` — nhân win/loss dưới-bậc-hai, biên dịch (Rcpp)

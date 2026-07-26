@@ -62,7 +62,11 @@ src/*.so
 src/symbols.rds
 *.Rcheck/
 
-# Manuscript drafts and generated writing artifacts
+# Manuscript drafts and generated writing artifacts.
+# Paper drafts live entirely under papers/<slug>/ (one folder per manuscript;
+# see papers/README.md), kept private via paper*/ below. drafts/ and the legacy
+# manuscript/ name are also ignored. Do NOT blanket-ignore *.Rmd / *.qmd here:
+# that would also swallow legitimate package content such as vignettes/*.Rmd.
 manuscript/
 drafts/
 paper*/
@@ -70,8 +74,6 @@ paper*/
 *.docx
 *.pdf
 *.tex
-*.qmd
-*.Rmd
 PRODUCTION_PARAMETERS.md
 REPLICATION_LOG.md
 REPLICATION_CHECKSUMS.txt
@@ -102,3 +104,7 @@ scratch/
 TODO.local
 .agent/
 .sessions/
+
+# pkgdown-generated website (build locally / via CI, do not commit)
+docs/
+testthat-problems.rds
