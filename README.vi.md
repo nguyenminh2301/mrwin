@@ -321,15 +321,22 @@ mrwin fit
   Adjustment: none
   delta_GLS: -0.2000
   DS-CWR: 0.8187
-  95% CI: 0.7000 to 0.9600
+  95% CI (Fieller): 0.7000 to 0.9600
+    delta-method CI (reference): 0.6900 to 0.9700
   Q: 1.2345 ( df = 2 , p = 0.5394 )
 ```
+
+Khoảng tin cậy 95% chính là khoảng **Fieller**. Mô phỏng (sai lầm loại I / độ phủ)
+cho thấy khoảng delta-method (bivariate-Delta) quá bảo thủ (rộng khoảng 2 lần), nên
+chỉ được giữ lại như một tham chiếu có nhãn; khi công cụ yếu, khoảng Fieller được báo
+cáo là `unbounded (weak instrument)` thay vì một khoảng bị chặn sai lệch. Xem
+`inst/spec/validation-findings.md`.
 
 | Trường | Ý nghĩa | Cần chú ý gì |
 |---|---|---|
 | `delta_GLS` | Hiệu ứng gộp chung trên thang log | Âm = có hại, dương = có lợi |
 | `DS-CWR` | Hiệu ứng lũy thừa hóa (win ratio) | < 1 = có hại, > 1 = có lợi, 1 = không hiệu ứng |
-| `95% CI` | Khoảng tin cậy bootstrap | Có chứa 1 không? |
+| `95% CI (Fieller)` | Khoảng tin cậy chính, đã hiệu chuẩn | Có chứa 1 không? (hoặc "unbounded" = công cụ yếu) |
 | `Q` | Thống kê không đồng nhất | Giá trị p nhỏ = hiệu ứng thay đổi giữa các tầng |
 | `Warnings` | Cảnh báo có cấu trúc | Luôn kiểm tra trước khi diễn giải |
 
@@ -640,11 +647,13 @@ BibTeX:
 
 **Win statistics:**
 - Pocock SJ, et al. The win ratio: a new approach to the analysis of
-  composite endpoints in clinical trials. *Eur Heart J*. 2012;33(14):1744-1749.
+  composite endpoints in clinical trials based on clinical priorities.
+  *Eur Heart J*. 2012;33(2):176-182.
 - Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a
-  composite endpoint based on prioritized components. *Biostatistics*.
-  2016;17(1):178-191.
-- Even Z, Josse A. Causal win ratio. *arXiv preprint*. 2025.
+  composite outcome based on prioritized components. *Biostatistics*.
+  2016;17(1):178-187.
+- Even M, Josse J. Rethinking the win ratio: a causal framework for
+  hierarchical outcome analysis. *arXiv*:2501.16933. 2025.
 
 **Mendelian randomization:**
 - Lawlor DA, et al. Mendelian randomization: using genes as instruments for
@@ -685,10 +694,16 @@ mrwin/
     backend_sparse.R   # Backend thưa
     config.R           # Cấu hình mô phỏng
     strata.R           # Gán tầng PRS
+    kernel_fast.R      # Kernel thắng/thua dưới bậc hai (backend nhanh)
+    analytic_variance.R # Phương sai giải tích theo hàm ảnh hưởng
+    continuous_isg.R   # ISG liên tục, bản tham chiếu (đã thử, không khuyến nghị)
+    validate_calibration.R # Công cụ kiểm tra hiệu chuẩn nội bộ
+  src/
+    fast_kernel.cpp    # Kernel nhanh biên dịch (Rcpp)
   tests/
-    testthat/          # 273 bài kiểm tra đơn vị
-  vignettes/           # 3 vignette
+    testthat/          # 99 khối kiểm thử (887 phép kiểm)
   inst/spec/           # Đặc tả triển khai
+  tools/               # Script thẩm định, đường cơ sở cục bộ (không đóng gói)
 ```
 
 ---

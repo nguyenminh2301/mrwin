@@ -4,6 +4,11 @@ Cập nhật: 29/09/2026. Người đọc: cộng sự, nghiên cứu sinh, bác
 tức là những người cần hiểu dự án mà không phải đọc công thức.
 
 Bản học thuật có cùng nội dung và cùng mã số mốc: `completion-roadmap-academic.vi.md`.
+
+> **Trạng thái (29/09/2026):** ✅ **G0 đã hoàn thành.** Mọi kiểm tra chạy xanh trên máy cục bộ:
+> 887 phép kiểm, 0 lỗi, độ bao phủ 88,30%. Tài liệu đã được sửa cho khớp thực tế. Nhóm đã chốt
+> D1 (dbGaP, máy chủ cơ sở) và D3 (bỏ GPS; hỗ trợ tương quan gen LD). Chi tiết ở
+> `baseline-verification.md` và `project-checkpoint.md`. **Việc tiếp theo: G1.**
 Hai bản dùng chung các mã: **KQ1–KQ5** (kết quả cuối cùng), **G0–G6** (giai đoạn),
 **D1–D5** (quyết định cần chốt).
 
@@ -137,7 +142,7 @@ sự thật đã biết không?) thì lại phát hiện vấn đề:
 Bài học: *hai máy tính cùng ra một đáp số chưa chắc đáp số đó đúng.* Vì vậy giai đoạn tới đặt
 trọng tâm vào **kiểm nghiệm bên ngoài**.
 
-### Những chỗ tài liệu đang "lệch" với thực tế (sẽ sửa ở G0)
+### Những chỗ tài liệu từng "lệch" với thực tế (✅ đã sửa ở G0, 29/09/2026)
 
 - Tệp trích dẫn (`CITATION.cff`) vẫn ghi phần mềm là "bộ khung, chưa kiểm chứng".
 - README nói có 3 bài hướng dẫn, nhưng thư mục hướng dẫn **không có trong kho mã**, vì một quy
@@ -153,8 +158,16 @@ trọng tâm vào **kiểm nghiệm bên ngoài**.
 Thời gian tính theo **tuần làm việc tập trung**, bắt đầu từ tuần 1 (đầu tháng 10/2026). Đây là
 ước tính; các con số sẽ được điều chỉnh sau bước chạy thử ở G2.
 
-### G0 — Dọn nhà và chuẩn bị (tuần 1)
+### G0 — Dọn nhà và chuẩn bị (tuần 1) — ✅ Hoàn thành 29/09/2026
 
+- **Kết quả:**
+  - Có script `tools/baseline/run-baseline.sh` để chạy lại mọi kiểm tra bằng một lệnh.
+  - Mọi kiểm tra đều đạt; độ bao phủ 88,30%.
+  - Sửa trích dẫn sai trong 7 README.
+  - Phát hiện các bài hướng dẫn chưa từng được lưu vào kho mã; sẽ viết ở G3.
+  - Đã chốt D1 và D3.
+  - Hồ sơ xin dữ liệu dbGaP đã soạn sẵn ở `tools/data-access/dbgap-dar-pack.md`; chủ nhiệm đề tài
+    cần nộp.
 - **Mục đích:** biết chính xác mình đang đứng ở đâu, trên chính máy của nhóm.
 - **Việc cần làm:**
   - Cài R và các gói cần thiết trên máy trạm của nhóm. Chạy lại toàn bộ kiểm tra để có "ảnh
@@ -262,9 +275,9 @@ nộp bài với phần mô phỏng trước và bổ sung ứng dụng trong v�
 
 | Mã | Câu hỏi | Gợi ý |
 |---|---|---|
-| **D1** | Dùng đoàn hệ nào cho ví dụ thật? Có chấp nhận nền tảng đám mây của biobank không? | Nếu giữ nguyên tắc "không đám mây": chọn đoàn hệ cho phép phân tích tại máy chủ của cơ sở (xem mục 8). |
+| **D1** | Dùng đoàn hệ nào cho ví dụ thật? Có chấp nhận nền tảng đám mây của biobank không? | ✅ **Đã chốt 29/09/2026:** dbGaP (ARIC trước, sau đó MESA/CHS/FHS), phân tích trên máy chủ của cơ sở, không dùng đám mây. |
 | **D2** | Nộp tạp chí nào? | *International Journal of Epidemiology* (đã định hướng từ trước); dự phòng: *Statistics in Medicine*, *Genetic Epidemiology*. |
-| **D3** | Phiên bản 1.0 gồm những gì? | Bỏ GPS, để các mở rộng lớn sang bài báo thứ hai; cân nhắc hỗ trợ tương quan gen (LD). |
+| **D3** | Phiên bản 1.0 gồm những gì? | ✅ **Đã chốt 29/09/2026:** bỏ GPS (chuyển sang bài báo thứ hai); **có** hỗ trợ tương quan gen (LD), làm trong G1. |
 | **D4** | Mặc định tính độ bất định bằng cách nào? | Quyết định **sau** G2, dựa trên kết quả mô phỏng. |
 | **D5** | Có đưa AL-CWR và bảng hiệu chỉnh sai lệch vào bài báo đầu? | Chỉ đưa vào nếu làm xong và kiểm chứng kịp trong G1. |
 

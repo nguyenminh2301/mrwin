@@ -243,15 +243,22 @@ mrwin fit
   Adjustment: none
   delta_GLS: -0.2000
   DS-CWR: 0.8187
-  95% CI: 0.7000 to 0.9600
+  95% CI (Fieller): 0.7000 to 0.9600
+    delta-method CI (reference): 0.6900 to 0.9700
   Q: 1.2345 ( df = 2 , p = 0.5394 )
 ```
+
+主要な95%信頼区間は**Fieller**区間です。シミュレーション（第1種の過誤／被覆率）により、
+デルタ法（二変量デルタ）区間は過度に保守的（約2倍広い）であることが示されたため、
+ラベル付きの参照値としてのみ残しています。弱い操作変数の場合、Fieller区間は誤って
+有界な区間ではなく `unbounded (weak instrument)` と報告されます。
+`inst/spec/validation-findings.md` を参照してください。
 
 | フィールド | 意味 | 注目すべき点 |
 |---|---|---|
 | `delta_GLS` | 対数スケールでのプールされた効果 | 負 = 有害、正 = 有益 |
 | `DS-CWR` | 指数化された効果（Win比） | < 1 = 有害、> 1 = 有益、1 = 効果なし |
-| `95% CI` | ブートストラップ信頼区間 | 1をまたぐか？ |
+| `95% CI (Fieller)` | 主要な較正済み信頼区間 | 1をまたぐか？（"unbounded" = 弱い操作変数） |
 | `Q` | 異質性統計量 | 小さいp値 = 効果が層間で異なる |
 | `Warnings` | 構造化された注意事項 | 解釈前に必ず確認する |
 
@@ -504,11 +511,13 @@ BibTeX:
 
 **Win統計：**
 - Pocock SJ, et al. The win ratio: a new approach to the analysis of
-  composite endpoints in clinical trials. *Eur Heart J*. 2012;33(14):1744-1749.
+  composite endpoints in clinical trials based on clinical priorities.
+  *Eur Heart J*. 2012;33(2):176-182.
 - Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a
-  composite endpoint based on prioritized components. *Biostatistics*.
-  2016;17(1):178-191.
-- Even Z, Josse A. Causal win ratio. *arXiv preprint*. 2025.
+  composite outcome based on prioritized components. *Biostatistics*.
+  2016;17(1):178-187.
+- Even M, Josse J. Rethinking the win ratio: a causal framework for
+  hierarchical outcome analysis. *arXiv*:2501.16933. 2025.
 
 **メンデルランダム化：**
 - Lawlor DA, et al. Mendelian randomization: using genes as instruments for
@@ -549,10 +558,16 @@ mrwin/
     backend_sparse.R   # スパースバックエンド
     config.R           # シミュレーション設定
     strata.R           # PRS層割り当て
+    kernel_fast.R      # 劣二次時間の勝敗カーネル（高速バックエンド）
+    analytic_variance.R # 影響関数による解析的分散
+    continuous_isg.R   # 連続ISGの参照実装（検討済み・非推奨）
+    validate_calibration.R # 内部キャリブレーション検証
+  src/
+    fast_kernel.cpp    # コンパイル済み（Rcpp）高速カーネル
   tests/
-    testthat/          # 273のユニットテスト
-  vignettes/           # 3つのビネット
+    testthat/          # 99のテストブロック（887の期待値）
   inst/spec/           # 実装仕様
+  tools/               # 検証スクリプト、ローカルベースライン（パッケージ外）
 ```
 
 ---

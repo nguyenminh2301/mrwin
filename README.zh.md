@@ -244,15 +244,21 @@ mrwin fit
   Adjustment: none
   delta_GLS: -0.2000
   DS-CWR: 0.8187
-  95% CI: 0.7000 to 0.9600
+  95% CI (Fieller): 0.7000 to 0.9600
+    delta-method CI (reference): 0.6900 to 0.9700
   Q: 1.2345 ( df = 2 , p = 0.5394 )
 ```
+
+主要的 95% 置信区间是 **Fieller** 区间。模拟（I 类错误 / 覆盖率）显示，delta 方法
+（二元 Delta）区间过于保守（约宽 2 倍），因此仅作为带标签的参考保留；在弱工具变量
+情况下，Fieller 区间报告为 `unbounded (weak instrument)`，而不是错误地给出有界区间。
+参见 `inst/spec/validation-findings.md`。
 
 | 字段 | 含义 | 需要关注的内容 |
 |---|---|---|
 | `delta_GLS` | 对数尺度的汇聚效应 | 负值 = 有害，正值 = 有益 |
 | `DS-CWR` | 指数化的效应（赢比） | < 1 = 有害，> 1 = 有益，1 = 无效应 |
-| `95% CI` | 自助法置信区间 | 是否跨越 1？ |
+| `95% CI (Fieller)` | 主要的、已校准的置信区间 | 是否跨越 1？（或 "unbounded" = 弱工具变量） |
 | `Q` | 异质性统计量 | p 值较小 = 效应在各层之间变化 |
 | `Warnings` | 结构化警告 | 解读前务必检查 |
 
@@ -504,11 +510,13 @@ BibTeX：
 
 **赢统计：**
 - Pocock SJ, et al. The win ratio: a new approach to the analysis of
-  composite endpoints in clinical trials. *Eur Heart J*. 2012;33(14):1744-1749.
+  composite endpoints in clinical trials based on clinical priorities.
+  *Eur Heart J*. 2012;33(2):176-182.
 - Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a
-  composite endpoint based on prioritized components. *Biostatistics*.
-  2016;17(1):178-191.
-- Even Z, Josse A. Causal win ratio. *arXiv preprint*. 2025.
+  composite outcome based on prioritized components. *Biostatistics*.
+  2016;17(1):178-187.
+- Even M, Josse J. Rethinking the win ratio: a causal framework for
+  hierarchical outcome analysis. *arXiv*:2501.16933. 2025.
 
 **孟德尔随机化：**
 - Lawlor DA, et al. Mendelian randomization: using genes as instruments for
@@ -549,10 +557,16 @@ mrwin/
     backend_sparse.R   # 稀疏后端
     config.R           # 模拟配置
     strata.R           # PRS 层分配
+    kernel_fast.R      # 次二次复杂度胜/负核（快速后端）
+    analytic_variance.R # 基于影响函数的解析方差
+    continuous_isg.R   # 连续 ISG 参考实现（已探索，不推荐）
+    validate_calibration.R # 内部校准验证工具
+  src/
+    fast_kernel.cpp    # 编译版（Rcpp）快速核
   tests/
-    testthat/          # 273 个单元测试
-  vignettes/           # 3 个小品文
+    testthat/          # 99 个测试块（887 个断言）
   inst/spec/           # 实现规范
+  tools/               # 验证脚本、本地基线（不纳入包构建）
 ```
 
 ---

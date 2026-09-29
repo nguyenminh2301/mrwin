@@ -633,11 +633,13 @@ BibTeX:
 
 **Win statistics:**
 - Pocock SJ, et al. The win ratio: a new approach to the analysis of
-  composite endpoints in clinical trials. *Eur Heart J*. 2012;33(14):1744-1749.
+  composite endpoints in clinical trials based on clinical priorities.
+  *Eur Heart J*. 2012;33(2):176-182.
 - Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a
-  composite endpoint based on prioritized components. *Biostatistics*.
-  2016;17(1):178-191.
-- Even Z, Josse A. Causal win ratio. *arXiv preprint*. 2025.
+  composite outcome based on prioritized components. *Biostatistics*.
+  2016;17(1):178-187.
+- Even M, Josse J. Rethinking the win ratio: a causal framework for
+  hierarchical outcome analysis. *arXiv*:2501.16933. 2025.
 
 **Mendelian randomization:**
 - Lawlor DA, et al. Mendelian randomization: using genes as instruments for
@@ -678,10 +680,16 @@ mrwin/
     backend_sparse.R   # Sparse backend
     config.R           # Simulation configuration
     strata.R           # PRS stratum assignment
+    kernel_fast.R      # Sub-quadratic win/loss kernel (fast backend)
+    analytic_variance.R # Analytic influence-function variance
+    continuous_isg.R   # Continuous-ISG reference (explored, not recommended)
+    validate_calibration.R # Internal calibration harness
+  src/
+    fast_kernel.cpp    # Compiled (Rcpp) fast kernel
   tests/
-    testthat/          # 273 unit tests
-  vignettes/           # 3 vignettes
+    testthat/          # 99 test blocks (887 expectations)
   inst/spec/           # Implementation specifications
+  tools/               # Validation scripts, local baseline (not in the package build)
 ```
 
 ---

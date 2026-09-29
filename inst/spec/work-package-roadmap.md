@@ -3,9 +3,9 @@
 Status: canonical implementation roadmap.
 
 Date recorded: 2026-05-09.
-Last updated: 2026-05-10.
+Last updated: 2026-09-29.
 
-Progress: WP0, WP1, WP2, WP3, WP4, WP5, WP6, WP7, WP8, WP9, WP10, WP11, and WP12 are complete (Phase I). A second program of work (Phase II, WP13–WP19) covers scalability, a continuous estimator, and the theory manuscript.
+Progress: WP0, WP1, WP2, WP3, WP4, WP5, WP6, WP7, WP8, WP9, WP10, WP11, and WP12 are complete (Phase I), with one correction: the WP11 vignettes were never committed (excluded by a `.gitignore` rule, fixed on 2026-09-29) and are rewritten in completion stage G3.4. A second program of work (Phase II, WP13–WP19) covers scalability, a continuous estimator, and the theory manuscript. The completion program (Phase III, stages G0–G6) is defined in `inst/spec/completion-roadmap-academic.vi.md` and `inst/spec/completion-roadmap-plain.vi.md`.
 
 Phase II is defined in its own canonical file: `inst/spec/acceleration-roadmap.md`. WP13–WP19 specs live in `inst/spec/wp13-*.md` … `wp19-*.md`. Read the acceleration roadmap before starting any WP13+ task.
 

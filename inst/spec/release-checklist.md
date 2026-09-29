@@ -1,8 +1,12 @@
 # Release Checklist
 
-Last updated: 2026-05-10.
+Last updated: 2026-09-29.
 
 Use this checklist before any release candidate. All items must pass.
+
+Gates 1-3 and 8 are automated by the local baseline script
+`tools/baseline/run-baseline.sh` (no cloud services); its latest result is
+recorded in `inst/spec/baseline-verification.md`.
 
 ## 1. R CMD check
 
@@ -22,7 +26,7 @@ devtools::load_all()
 testthat::test_dir("tests/testthat")
 ```
 
-- [ ] All tests pass (currently 273)
+- [ ] All tests pass (currently 887 expectations in 99 test blocks)
 - [ ] No warnings from test execution
 
 ## 3. Coverage
@@ -124,20 +128,22 @@ python -m pytest tests/python/ -v
 
 ## Current Status
 
-As of 2026-05-10 (WP12 checkpoint):
+As of 2026-09-29 (G0 local baseline, version `0.1.1.9000`):
 
 | Gate | Status |
 |---|---|
-| R CMD check --as-cran | PASS (local) |
-| Tests (273) | PASS |
-| Vignettes (3) | PASS |
-| Documentation | Complete |
-| Coverage | Not yet measured (needs CI) |
-| Install from GitHub | Not yet tested |
+| R CMD check --as-cran | No ERROR; no package-caused WARNING; remaining NOTEs are expected for a development version or environment-only (see `baseline-verification.md`). PDF manual not built (no LaTeX on the baseline machine) |
+| Tests (887 expectations, 99 blocks) | PASS (0 failures, 0 warnings, 0 skips) |
+| Vignettes (3) | **Missing**: never committed (the `*.Rmd` gitignore rule excluded them; fixed in G0). To be written in G3.4 |
+| Documentation | All 42 exports have Rd documentation; READMEs synchronised in G0 |
+| Coverage | 88.30% line coverage (target >= 80%) |
+| Python oracle tests | 45 passed, 22 skipped by design (replication outputs are generated only by `run_all.sh`) |
+| Install from GitHub | Not yet tested in a clean environment |
 
 ## Remaining Work
 
-- [ ] Run `R CMD check --as-cran` on CI (multiple OS, R versions)
-- [ ] Measure and report coverage via covr
-- [ ] Verify install from GitHub in clean environment
-- [ ] Full Monte Carlo validation (deferred to post-release)
+- [ ] Write the three vignettes (G3.4) and restore gate 4
+- [ ] Build the PDF manual on a machine with LaTeX before submission
+- [ ] Verify install from GitHub in a clean environment
+- [ ] Full Monte Carlo validation (G2, ADEMP protocol) before release
+- [ ] Reporting polish found in G0: `print()` spacing, `tidy()` bounds and row name when the Fieller interval is unbounded (G3)

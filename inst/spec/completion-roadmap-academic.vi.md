@@ -3,7 +3,7 @@
 | Mục | Nội dung |
 |---|---|
 | Phiên bản | 29/09/2026 |
-| Trạng thái | Đề xuất; chờ nhóm nghiên cứu chốt các điểm quyết định D1–D5 (§8) |
+| Trạng thái | **G0 hoàn thành 29/09/2026** (§6.1); D1 và D3 đã chốt; D2, D4, D5 còn mở (§8). Giai đoạn kế tiếp: G1 |
 | Tài liệu gốc | `acceleration-roadmap.md`, `phase2-direction.md`, `wp18-theory-foundation.md`, `wp19-scalability-validation.md`, `validation-findings.md`, `project-checkpoint.md`, `algorithm-spec.md` |
 | Bản phổ thông tương ứng | `completion-roadmap-plain.vi.md` (cùng mã KQ1–KQ5, G0–G6, D1–D5) |
 | Ràng buộc vận hành | Không sử dụng hạ tầng điện toán đám mây cho tính toán hay lưu trữ dữ liệu (§6.8, §10) |
@@ -210,7 +210,12 @@ kiểm duyệt [3], do đó phải định nghĩa DS-CWR$(\tau)$; (iii) phân t�
 | `R CMD check --as-cran`, độ bao phủ ≥ 80% | WP19 T5; `release-checklist.md` | P0 | G3 |
 | Bản thảo và nghĩa vụ T4 (truy vết mọi con số) | WP18 | P0 | G5 |
 
-### 3.4 Sai lệch giữa tài liệu và hiện trạng (sửa trong G0)
+### 3.4 Sai lệch giữa tài liệu và hiện trạng (✅ đã xử lý trong G0, 29/09/2026)
+
+Các mục dưới đây là trạng thái trước G0. Cách xử lý từng mục được ghi trong
+`project-checkpoint.md`, mục "G0 record". Riêng CI: việc CI chỉ chạy trên `main` được giữ nguyên
+có chủ đích, vì `main` là nhánh tích hợp và kiểm định cục bộ là chuẩn chính thức theo ràng buộc
+không-đám-mây.
 
 - `CITATION.cff`: phiên bản `0.1.0-arxiv-theory`; phần tóm tắt ghi "không chứa kết quả mô
   phỏng đã thẩm định". Nội dung này đã lỗi thời.
@@ -263,7 +268,27 @@ kiểm duyệt [3], do đó phải định nghĩa DS-CWR$(\tau)$; (iii) phân t�
 Tuần 1 được tính từ đầu tháng 10/2026. Mỗi nhiệm vụ là một đơn vị kiểm thử độc lập (một
 commit kèm kiểm thử), theo giao thức ở `acceleration-roadmap.md` §4.
 
-### 6.1 G0 — Đồng bộ hiện trạng và môi trường cục bộ (tuần 1)
+### 6.1 G0 — Đồng bộ hiện trạng và môi trường cục bộ (tuần 1) — ✅ hoàn thành 29/09/2026
+
+**Kết quả G0.**
+
+- **G0.1:** đường cơ sở cục bộ (`tools/baseline/run-baseline.sh`) cho kết quả:
+  - testthat: 887 phép kiểm, 0 lỗi;
+  - `R CMD check --as-cran`: không có ERROR, không có WARNING do gói gây ra;
+  - pytest: 45 đạt, 22 bỏ qua có chủ đích;
+  - độ bao phủ 88,30%.
+
+  Biên bản chi tiết ở `baseline-verification.md`.
+- **G0.2:** đã sửa các sai lệch ở §3.4. Trong quá trình đó phát hiện thêm và sửa hai lỗi trích
+  dẫn (Bebu & Lachin, Even & Josse), và thêm `out/` cùng các README dịch vào `.Rbuildignore`.
+- **G0.3:** D3 đã chốt: bỏ GPS, hỗ trợ $\Sigma_{\mathrm{GWAS}}$ đầy đủ.
+- **G0.4:** D1 đã chốt là dbGaP. Bộ hồ sơ nháp ở `tools/data-access/dbgap-dar-pack.md`; việc nộp
+  do chủ nhiệm đề tài thực hiện.
+- **Phát hiện chuyển sang G3:**
+  - `print()` in thiếu khoảng trắng;
+  - `tidy()` trả biên $e^{\pm50}$ và tên hàng `low` khi khoảng Fieller không bị chặn.
+
+**Nhiệm vụ đã lên kế hoạch.**
 
 - **G0.1** Dựng môi trường R ≥ 4.3 cục bộ; chạy `testthat`, `R CMD check --as-cran` và `pytest`
   để lập đường cơ sở, lưu kèm `sessionInfo()`.
@@ -486,9 +511,9 @@ này cần được kiểm tra lại theo chính sách của tạp chí đích.
 
 | Mã | Câu hỏi | Phương án | Tiêu chí | Khuyến nghị | Hạn chót |
 |---|---|---|---|---|---|
-| D1 | Đoàn hệ cho KQ4; có chấp nhận môi trường nghiên cứu tin cậy trên đám mây không | dbGaP / Rhineland / UK Biobank-RAP | Ràng buộc đám mây, cỡ mẫu, thời gian cấp | Giữ ràng buộc; dbGaP hoặc Rhineland kèm tính lực kiểm định | T1 |
+| D1 | Đoàn hệ cho KQ4; có chấp nhận môi trường nghiên cứu tin cậy trên đám mây không | dbGaP / Rhineland / UK Biobank-RAP | Ràng buộc đám mây, cỡ mẫu, thời gian cấp | ✅ **Đã chốt (29/09/2026):** dbGaP (ARIC trước; MESA/CHS/FHS cho phân tích gộp), máy chủ cơ sở, không đám mây | T1 |
 | D2 | Tạp chí đích | IJE / *Stat Med* / *Genet Epidemiol* / *Biostatistics* | Độc giả, định dạng, thời gian xử lý | IJE (định hướng sẵn trong `run_all.sh`) | T8 |
-| D3 | Phạm vi v1.0 | Có/không GPS; có/không $\Sigma_{\mathrm{GWAS}}$ đầy đủ | Rủi ro phản biện so với chi phí | Bỏ GPS; làm $\Sigma_{\mathrm{GWAS}}$ đầy đủ (chi phí thấp) | T1 |
+| D3 | Phạm vi v1.0 | Có/không GPS; có/không $\Sigma_{\mathrm{GWAS}}$ đầy đủ | Rủi ro phản biện so với chi phí | ✅ **Đã chốt (29/09/2026):** bỏ GPS (G1.6); làm $\Sigma_{\mathrm{GWAS}}$ đầy đủ (G1.5) | T1 |
 | D4 | Engine suy luận mặc định | Bootstrap / giải tích | Kết quả hiệu chuẩn ở G2 | Quyết định sau M4 | T10 |
 | D5 | AL-CWR và Table 3 trong bài 1 | Có / không | Có hoàn tất và thẩm định kịp trong G1 không | Chỉ đưa vào nếu đạt trước M2 | T5 |
 

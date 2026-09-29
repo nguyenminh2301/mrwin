@@ -72,6 +72,8 @@ paper*/
 *.tex
 *.qmd
 *.Rmd
+# ...but package vignettes are source files and must be tracked
+!vignettes/*.Rmd
 PRODUCTION_PARAMETERS.md
 REPLICATION_LOG.md
 REPLICATION_CHECKSUMS.txt

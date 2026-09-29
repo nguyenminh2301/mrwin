@@ -19,3 +19,5 @@
 ^\.scratch$
 ^paper.*$
 ^.*\.local\.md$
+^out$
+^README\.[a-z]{2}\.md$

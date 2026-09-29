@@ -321,15 +321,23 @@ mrwin fit
   Adjustment: none
   delta_GLS: -0.2000
   DS-CWR: 0.8187
-  95% CI: 0.7000 to 0.9600
+  95% CI (Fieller): 0.7000 to 0.9600
+    delta-method CI (reference): 0.6900 to 0.9700
   Q: 1.2345 ( df = 2 , p = 0.5394 )
 ```
+
+Das primäre 95%-KI ist das **Fieller**-Intervall. Simulationen (Fehler 1. Art /
+Überdeckung) zeigten, dass das Delta-Methoden-Intervall (bivariates Delta) übermäßig
+konservativ ist (~2× zu breit); es wird daher nur als gekennzeichnete Referenz geführt.
+Bei einem schwachen Instrument wird das Fieller-Intervall als
+`unbounded (weak instrument)` ausgewiesen statt als fälschlich beschränktes Intervall.
+Siehe `inst/spec/validation-findings.md`.
 
 | Feld | Was es bedeutet | Worauf zu achten ist |
 |---|---|---|
 | `delta_GLS` | Gepoolter Effekt auf der Log-Skala | Negativ = schädlich, positiv = vorteilhaft |
 | `DS-CWR` | Exponentierter Effekt (Win-Ratio) | < 1 = schädlich, > 1 = vorteilhaft, 1 = kein Effekt |
-| `95% CI` | Bootstrap-Konfidenzintervall | Kreuzt es 1? |
+| `95% CI (Fieller)` | Primäres, kalibriertes Konfidenzintervall | Kreuzt es 1? (oder "unbounded" = schwaches Instrument) |
 | `Q` | Heterogenitätsstatistik | Kleiner p-Wert = Effekt variiert über Strata |
 | `Warnings` | Strukturierte Vorbehalte | Immer vor der Interpretation prüfen |
 
@@ -650,11 +658,13 @@ BibTeX:
 
 **Win-Statistiken:**
 - Pocock SJ, et al. The win ratio: a new approach to the analysis of
-  composite endpoints in clinical trials. *Eur Heart J*. 2012;33(14):1744-1749.
+  composite endpoints in clinical trials based on clinical priorities.
+  *Eur Heart J*. 2012;33(2):176-182.
 - Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a
-  composite endpoint based on prioritized components. *Biostatistics*.
-  2016;17(1):178-191.
-- Even Z, Josse A. Causal win ratio. *arXiv preprint*. 2025.
+  composite outcome based on prioritized components. *Biostatistics*.
+  2016;17(1):178-187.
+- Even M, Josse J. Rethinking the win ratio: a causal framework for
+  hierarchical outcome analysis. *arXiv*:2501.16933. 2025.
 
 **Mendelsche Randomisierung:**
 - Lawlor DA, et al. Mendelian randomization: using genes as instruments for
@@ -695,10 +705,16 @@ mrwin/
     backend_sparse.R   # Sparse-Backend
     config.R           # Simulationskonfiguration
     strata.R           # PRS-Stratumzuweisung
+    kernel_fast.R      # Subquadratischer Win/Loss-Kernel (schnelles Backend)
+    analytic_variance.R # Analytische Einflussfunktions-Varianz
+    continuous_isg.R   # Kontinuierlicher ISG, Referenz (untersucht, nicht empfohlen)
+    validate_calibration.R # Interne Kalibrierungsprüfung
+  src/
+    fast_kernel.cpp    # Kompilierter (Rcpp) schneller Kernel
   tests/
-    testthat/          # 273 Unit-Tests
-  vignettes/           # 3 Vignetten
+    testthat/          # 99 Testblöcke (887 Erwartungen)
   inst/spec/           # Implementierungsspezifikationen
+  tools/               # Validierungsskripte, lokale Baseline (nicht im Paket-Build)
 ```
 
 ---

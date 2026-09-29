@@ -243,15 +243,23 @@ mrwin fit
   Adjustment: none
   delta_GLS: -0.2000
   DS-CWR: 0.8187
-  95% CI: 0.7000 to 0.9600
+  95% CI (Fieller): 0.7000 to 0.9600
+    delta-method CI (reference): 0.6900 to 0.9700
   Q: 1.2345 ( df = 2 , p = 0.5394 )
 ```
+
+L'IC à 95 % principal est l'intervalle de **Fieller**. Les simulations (erreur de type I /
+couverture) ont montré que l'intervalle par méthode delta (delta bivarié) est trop
+conservateur (~2× trop large) ; il n'est donc conservé que comme référence étiquetée. En
+cas d'instrument faible, l'intervalle de Fieller est rapporté comme
+`unbounded (weak instrument)` plutôt que comme un intervalle faussement borné. Voir
+`inst/spec/validation-findings.md`.
 
 | Champ | Signification | Ce qu'il faut rechercher |
 |---|---|---|
 | `delta_GLS` | Effet regroupé sur échelle logarithmique | Négatif = nocif, positif = bénéfique |
 | `DS-CWR` | Effet exponentiel (ratio de gain) | < 1 = nocif, > 1 = bénéfique, 1 = pas d'effet |
-| `95% CI` | Intervalle de confiance bootstrap | Franchit-il 1 ? |
+| `95% CI (Fieller)` | Intervalle de confiance principal, calibré | Franchit-il 1 ? (ou « unbounded » = instrument faible) |
 | `Q` | Statistique d'hétérogénéité | Petite valeur p = l'effet varie selon les strates |
 | `Warnings` | Mises en garde structurées | Toujours vérifier avant d'interpréter |
 
@@ -505,9 +513,9 @@ BibTeX :
 ## Références associées
 
 **Statistiques de gain :**
-- Pocock SJ, et al. The win ratio: a new approach to the analysis of composite endpoints in clinical trials. *Eur Heart J*. 2012;33(14):1744-1749.
-- Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a composite endpoint based on prioritized components. *Biostatistics*. 2016;17(1):178-191.
-- Even Z, Josse A. Causal win ratio. *arXiv preprint*. 2025.
+- Pocock SJ, et al. The win ratio: a new approach to the analysis of composite endpoints in clinical trials based on clinical priorities. *Eur Heart J*. 2012;33(2):176-182.
+- Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a composite outcome based on prioritized components. *Biostatistics*. 2016;17(1):178-187.
+- Even M, Josse J. Rethinking the win ratio: a causal framework for hierarchical outcome analysis. *arXiv*:2501.16933. 2025.
 
 **Randomisation mendélienne :**
 - Lawlor DA, et al. Mendelian randomization: using genes as instruments for making causal inferences in epidemiology. *Stat Med*. 2008;27(8):1133-1163.
@@ -541,10 +549,16 @@ mrwin/
     backend_sparse.R   # Backend sparse
     config.R           # Configuration de simulation
     strata.R           # Assignation des strates de PRS
+    kernel_fast.R      # Noyau victoires/défaites sous-quadratique (backend rapide)
+    analytic_variance.R # Variance analytique par fonction d'influence
+    continuous_isg.R   # ISG continu, référence (exploré, non recommandé)
+    validate_calibration.R # Harnais interne de calibration
+  src/
+    fast_kernel.cpp    # Noyau rapide compilé (Rcpp)
   tests/
-    testthat/          # 273 tests unitaires
-  vignettes/           # 3 vignettes
+    testthat/          # 99 blocs de tests (887 assertions)
   inst/spec/           # Spécifications d'implémentation
+  tools/               # Scripts de validation, référence locale (hors build du package)
 ```
 
 ---

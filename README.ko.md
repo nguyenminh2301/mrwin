@@ -299,15 +299,22 @@ mrwin fit
   Adjustment: none
   delta_GLS: -0.2000
   DS-CWR: 0.8187
-  95% CI: 0.7000 to 0.9600
+  95% CI (Fieller): 0.7000 to 0.9600
+    delta-method CI (reference): 0.6900 to 0.9700
   Q: 1.2345 ( df = 2 , p = 0.5394 )
 ```
+
+주요 95% 신뢰구간은 **Fieller** 구간입니다. 시뮬레이션(제1종 오류 / 포함 확률) 결과
+델타 방법(이변량 델타) 구간은 지나치게 보수적(약 2배 넓음)이어서 라벨이 붙은
+참조값으로만 유지합니다. 약한 도구변수의 경우 Fieller 구간은 잘못 유계된 구간 대신
+`unbounded (weak instrument)`로 보고됩니다. `inst/spec/validation-findings.md`를
+참조하십시오.
 
 | 항목 | 의미 | 확인 사항 |
 |---|---|---|
 | `delta_GLS` | 로그 척도 통합 효과 | 음수 = 유해, 양수 = 유익 |
 | `DS-CWR` | 지수화된 효과 (승리비) | < 1 = 유해, > 1 = 유익, 1 = 효과 없음 |
-| `95% CI` | 부트스트랩 신뢰구간 | 1을 교차하는가? |
+| `95% CI (Fieller)` | 주요 보정된 신뢰구간 | 1을 교차하는가? ("unbounded" = 약한 도구변수) |
 | `Q` | 이질성 통계량 | 작은 p-값 = 효과가 계층 간에 변동 |
 | `Warnings` | 구조화된 주의사항 | 해석 전에 항상 확인 |
 
@@ -598,11 +605,13 @@ BibTeX:
 
 **승리 통계량:**
 - Pocock SJ, et al. The win ratio: a new approach to the analysis of
-  composite endpoints in clinical trials. *Eur Heart J*. 2012;33(14):1744-1749.
+  composite endpoints in clinical trials based on clinical priorities.
+  *Eur Heart J*. 2012;33(2):176-182.
 - Bebu I, Lachin JM. Large sample inference for a win ratio analysis of a
-  composite endpoint based on prioritized components. *Biostatistics*.
-  2016;17(1):178-191.
-- Even Z, Josse A. Causal win ratio. *arXiv preprint*. 2025.
+  composite outcome based on prioritized components. *Biostatistics*.
+  2016;17(1):178-187.
+- Even M, Josse J. Rethinking the win ratio: a causal framework for
+  hierarchical outcome analysis. *arXiv*:2501.16933. 2025.
 
 **멘델식 무작위화:**
 - Lawlor DA, et al. Mendelian randomization: using genes as instruments for
@@ -643,10 +652,16 @@ mrwin/
     backend_sparse.R   # 희소 백엔드
     config.R           # 시뮬레이션 구성
     strata.R           # PRS 계층 할당
+    kernel_fast.R      # 이차 미만(sub-quadratic) 승/패 커널 (고속 백엔드)
+    analytic_variance.R # 영향함수 기반 해석적 분산
+    continuous_isg.R   # 연속 ISG 참조 구현 (검토 완료, 비권장)
+    validate_calibration.R # 내부 보정 검증 도구
+  src/
+    fast_kernel.cpp    # 컴파일된(Rcpp) 고속 커널
   tests/
-    testthat/          # 273개 단위 테스트
-  vignettes/           # 3개 비네트
+    testthat/          # 99개 테스트 블록 (887개 기대값)
   inst/spec/           # 구현 명세
+  tools/               # 검증 스크립트, 로컬 기준선 (패키지 빌드 제외)
 ```
 
 ---

@@ -1,14 +1,14 @@
 cff-version: 1.2.0
-title: "mrwin: Skeleton implementation for causal win statistics with instrumental variables"
-version: "0.1.0-arxiv-theory"
+title: "mrwin: Causal Win Statistics for Hierarchical Composite Endpoints with Genetic Instruments"
+version: "0.1.1.9000"
 type: software
-message: "If you use this software or methodological skeleton, please cite the archived Zenodo release and the associated arXiv preprint."
+message: "If you use this software, please cite it using these metadata. The last tagged release is v0.1.1-arxiv-theory (2026-05-26), which accompanied the theory-only arXiv preprint; this entry describes the current development version."
 authors:
   - family-names: Nguyen
     given-names: Thien Minh
     affiliation: "University of Medicine and Pharmacy at Ho Chi Minh City, Ho Chi Minh City, Vietnam"
     orcid: "https://orcid.org/0009-0003-1090-6228"
-abstract: "mrwin is a theory-first skeleton implementation for causal win statistics integrating instrumental variable estimation with hierarchical composite endpoints. The package provides pseudocode and early implementation scaffolding for the continuous Causal Win Ratio, Instrument-Standardized Gradient scaling, GLS pooling of adjacent genetic-instrument strata, multiplier bootstrap variance estimation with GWAS uncertainty propagation, and the Step-Down Pleiotropy Diagnostic. This release is intended to accompany a theory-only arXiv preprint and does not contain validated simulation results or empirical applications."
+abstract: "mrwin is an R package for causal win statistics that integrates Mendelian randomization with hierarchical composite endpoints. It estimates the dose-standardised causal win ratio (DS-CWR) from adjacent polygenic-risk-score strata via instrument-standardised gradients and GLS pooling, with Fieller confidence intervals, multiplier-bootstrap or analytic influence-function variance including GWAS-weight uncertainty, ordinal inverse-probability weighting, and the Step-Down Pleiotropy Diagnostic. A compiled sub-quadratic win/loss kernel (up to three priority levels) makes the estimator feasible at biobank scale. Internal parity checks and a first external calibration grid (type-I error and coverage) have been completed; the full simulation study and an empirical application are in progress, so results should be treated as those of a development version."
 keywords:
   - causal inference
   - win ratio
@@ -19,4 +19,3 @@ keywords:
   - biostatistics
 license: "MIT"
 repository-code: "https://github.com/nguyenminh2301/mrwin"
-date-released: "2026-05-26"

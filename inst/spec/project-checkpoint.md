@@ -1,6 +1,6 @@
 # Project Checkpoint
 
-Last updated: 2026-05-10.
+Last updated: 2026-09-29.
 
 This file tracks current implementation state. The roadmap remains canonical for work-package definitions: `inst/spec/work-package-roadmap.md`.
 
@@ -8,13 +8,14 @@ This file tracks current implementation state. The roadmap remains canonical for
 
 | Area | State |
 |---|---|
-| Completed work packages | WP0-WP12 (Phase I) |
-| Current work package | Phase II (WP13-WP19): scalability, continuous estimator, theory |
-| Current branch | `C` |
-| Integration branch | `C` (Phase II); `main` holds Phase I |
+| Completed work | Phase I WP0-WP12; Phase II WP13 (fast kernel + Rcpp), WP17 (analytic variance), R2 calibration fix (Fieller primary); WP15 and WP16 closed as negative findings; WP14 and K>=4 deferred |
+| Current stage | Phase III (completion roadmap): **G0 done 2026-09-29**; next G1 (open statistical items) |
+| Version | `0.1.1.9000` (development after the `v0.1.1-arxiv-theory` tag of 2026-05-26) |
+| Integration branch | `main` (Phase II merged via PRs #2 and #3); CI runs on pushes and PRs to `main` |
+| Authoritative verification | Local baseline `tools/baseline/run-baseline.sh` (no-cloud constraint); CI is an optional extra layer |
 | Primary interface | R package |
 | Python role | Reference/oracle harness only |
-| Release readiness | Phase I core path works; Phase II makes it biobank-scale and adds the continuous estimator + analytic variance before external release |
+| Release readiness | Not yet: full simulation study (G2), release engineering (G3) and real-data application (G4) remain |
 
 ## Phase III (Completion) Pointer
 
@@ -25,6 +26,36 @@ sharing milestone codes KQ1–KQ5 (final outcomes), G0–G6 (stages) and D1–D5
 `inst/spec/completion-roadmap-academic.vi.md` (academic: estimand, open
 theoretical items, ADEMP simulation protocol, acceptance criteria, logframe,
 risks). Constraint: no cloud computing; all computation and data stay local.
+
+### G0 record (2026-09-29)
+
+- **G0.1 baseline:** all local gates pass; details, gate-by-gate classification
+  and `sessionInfo()` in `inst/spec/baseline-verification.md`. testthat 15 files,
+  99 blocks, 887 expectations, 0 failures/warnings/skips; line coverage 88.30%.
+- **G0.2 documentation drift fixed:** `.gitignore` now tracks `vignettes/*.Rmd`;
+  `DESCRIPTION` version `0.1.1.9000` and a Description covering the Phase II
+  features; `CITATION.cff` describes the current development version; README
+  (all 7 languages): citations corrected against PubMed/arXiv (Pocock 2012 is
+  Eur Heart J 33(2):176-182; Bebu & Lachin 2016 pages 178-187; Even & Josse is
+  arXiv:2501.16933), package structure and test counts updated, stale
+  "3 vignettes" claim removed (no vignettes exist yet; they are G3.4), and the
+  six translations synchronised with the English "Reading the Output" section
+  (Fieller primary CI). `.Rbuildignore` now excludes `out/` and the README
+  translations (they were bundled into the tarball and raised a check NOTE).
+- **G0.3 v1.0 scope (D3), decided by the maintainer:** drop GPS from v1.0
+  (remove `"gps"` from `mrwin_controls()` in G1.6; GPS moves to the paper-2
+  agenda); support a full, LD-aware GWAS covariance matrix in v1.0 (G1.5;
+  diagonal stays the default).
+- **G0.4 data access (D1), decided by the maintainer:** dbGaP cohorts analysed
+  on an institutional server, no cloud; ARIC first, MESA/CHS/FHS for pooled
+  analyses. Draft application pack: `tools/data-access/dbgap-dar-pack.md`.
+  Submission itself is done by the PI (eRA Commons, signing official, IRB).
+- **Found during G0, scheduled for G3:** `print.mrwin_fit` prints
+  `Bootstrap:100(100valid )` (missing spaces); when the Fieller interval is
+  unbounded, `tidy()` reports `ci_low`/`ci_high` as `exp(-50)`/`exp(50)` instead
+  of `0`/`Inf`, and its row name is `low`; no Rd file has `\examples`; `LICENSE`
+  holds the full MIT text instead of CRAN's two-line template and names two
+  copyright holders while `Authors@R` lists one author (maintainer decision).
 
 ## Phase II Pointer
 
@@ -148,13 +179,17 @@ remain to a publishable + released package.
 
 ## Latest Verification
 
-Latest full verification was performed at the WP12 checkpoint:
+Latest full verification: **G0 local baseline, 2026-09-29** (`inst/spec/baseline-verification.md`):
 
-- `testthat::test_dir('tests/testthat')`: 273 passing tests.
-- `R CMD check --as-cran` on source tarball: `Status: 2 WARNINGs (expected vignette pre-built), 3 NOTEs (standard dev submission)`.
-- CI pipeline: GitHub Actions configured for R CMD check (3 OS x 2 R versions), coverage via covr, and Python tests.
+- testthat: 15 files, 99 blocks, 887 expectations; 0 failures, errors, skips or warnings.
+- `R CMD check --as-cran --no-manual` on the source tarball: 0 ERROR, 0 WARNING, 3 NOTEs (CRAN-incoming note expected for a development version; two environment-only notes).
+- pytest: 45 passed, 22 skipped by design (replication outputs are not tracked).
+- covr: 88.30% line coverage.
+- CI pipeline: GitHub Actions for R CMD check (3 OS x 2 R versions), coverage and Python tests on pushes/PRs to `main`; an optional layer beside the authoritative local baseline.
 
-Re-run these gates after each implementation work package and before any release candidate.
+Re-run `tools/baseline/run-baseline.sh` after each implementation stage and before any release candidate.
+
+Earlier record (WP12 checkpoint, 2026-05-10): 273 passing tests; `R CMD check --as-cran` 2 WARNINGs, 3 NOTEs.
 
 ## Implemented Capability
 
@@ -197,6 +232,11 @@ These are the remaining items after WP12 (deferred to post-release):
 3. All exported functions documented via .Rd files (mrwin.Rd covers core API; dedicated .Rd files for WP9/WP10 functions).
 4. DESCRIPTION updated with knitr/rmarkdown Suggests and VignetteBuilder.
 5. All vignettes pass R CMD check (running R code and re-building outputs).
+
+Correction (2026-09-29, G0): the vignette sources were never committed — the
+`*.Rmd` rule in `.gitignore` excluded them, and no `vignettes/` directory exists
+in the repository history. The ignore rule is fixed; the three vignettes are
+rewritten in G3.4.
 
 ## WP12 Completion Summary
 

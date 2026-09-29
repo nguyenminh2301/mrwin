@@ -1,14 +1,18 @@
 Package: mrwin
 Title: Causal Win Statistics
-Version: 0.0.0.9000
+Version: 0.1.1.9000
 Authors@R:
     person("Nguyen Thien", "Minh", email = "minhnt@ump.edu.vn", role = c("aut", "cre"))
 Author: Nguyen Thien Minh [aut, cre]
 Maintainer: Nguyen Thien Minh <minhnt@ump.edu.vn>
 Description: R implementation of causal win-statistic methods for hierarchical
-    composite endpoints, including the hierarchical comparison kernel,
-    adjacent-stratum causal win ratios, dose-standardised GLS pooling,
-    multiplier-bootstrap uncertainty propagation, and SDPD MR-Egger diagnostics.
+    composite endpoints with a polygenic-risk-score instrument (Mendelian
+    randomization), including the hierarchical comparison kernel with a
+    compiled sub-quadratic win/loss backend, adjacent-stratum causal win
+    ratios, dose-standardised GLS pooling, Fieller confidence intervals,
+    multiplier-bootstrap and analytic influence-function variance with GWAS
+    uncertainty propagation, ordinal inverse-probability weighting, and SDPD
+    MR-Egger diagnostics.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Depends:
