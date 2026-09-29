@@ -16,6 +16,16 @@ This file tracks current implementation state. The roadmap remains canonical for
 | Python role | Reference/oracle harness only |
 | Release readiness | Phase I core path works; Phase II makes it biobank-scale and adds the continuous estimator + analytic variance before external release |
 
+## Phase III (Completion) Pointer
+
+The plan to take the package from "internally consistent" to "externally
+validated, peer-reviewed and released" is in two parallel documents (Vietnamese),
+sharing milestone codes KQ1–KQ5 (final outcomes), G0–G6 (stages) and D1–D5
+(decisions): `inst/spec/completion-roadmap-plain.vi.md` (plain language) and
+`inst/spec/completion-roadmap-academic.vi.md` (academic: estimand, open
+theoretical items, ADEMP simulation protocol, acceptance criteria, logframe,
+risks). Constraint: no cloud computing; all computation and data stay local.
+
 ## Phase II Pointer
 
 The second program of work is canonically defined in
